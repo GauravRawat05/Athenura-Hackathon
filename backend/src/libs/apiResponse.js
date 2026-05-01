@@ -2,12 +2,17 @@
   apiResponse.js
   Response formatter that keeps success responses consistent across controllers.
  */
-const apiResponse = (res, statusCode, success, message, data = null) => {   
-  return res.status(statusCode).json({
-    success,
-    message,
-    data,
-  });
-};
+class ApiResponse {
+  constructor (
+      statusCode,
+      data,
+      message = "success"
+  )
+   {
+        this.statusCode = statusCode,
+        this.data = data,
+        this.message =  message
+   }
+}
 
-export default apiResponse;
+export default ApiResponse;

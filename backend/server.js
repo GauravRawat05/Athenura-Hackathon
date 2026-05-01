@@ -2,11 +2,11 @@
   server.js
   Entry point for the application. Starts the server and connects to the database.
  */
-import app from './app.js'
-import connectDB from './database/indexes.js';
-import { portNumber } from './utils/config.js'
+import app from './src/app.js';
+import connectDB from './src/config/db.js';
+import envConfig from './src/config/envConfig.js'
 
-const port =  portNumber  || 5001
+const port =  envConfig.portNumber  || 5000
 
 connectDB().then(()=>{
   app.listen(port, ()=>{

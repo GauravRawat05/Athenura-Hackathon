@@ -3,7 +3,7 @@
   Database connection and configuration setup.
  */
 import mongoose from 'mongoose';
-import envConfig from './env.js';
+import envConfig from '../config/envConfig.js';
 
 const connectDB = async () => {
     try {

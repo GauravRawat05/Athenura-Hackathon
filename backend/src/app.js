@@ -7,7 +7,7 @@ import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 import helmet from "helmet";
-import { errorHandler } from "./";
+import errorHandler from "./middleware/errorHandler.js";
 import router from "./routes/api.js";
 
 const app = express();
@@ -29,7 +29,7 @@ app.use(
 );
 
 // API routes
-app.use("v1/api", router);
+app.use("/api/v1", router);
 
 // Error handling middleware
 app.use(errorHandler);

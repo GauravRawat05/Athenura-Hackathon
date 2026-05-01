@@ -7,7 +7,7 @@ import { userRoles, userRolesEnums } from "./user.constants.js";
 import bcrypt from "bcryptjs";
 import crypto from 'crypto'
 import jwt from 'jsonwebtoken'
-import { accessTokenExpiry, accessTokenSecret, refreshTokenExpiry, refreshTokenSecret } from "../../utils/config.js";
+import envConfig from "../../config/envConfig.js";
 
 const userSchema = new mongoose.Schema(
   {
@@ -34,11 +34,11 @@ const userSchema = new mongoose.Schema(
       required : [true, "Phone no. is required"],
       unique : true
     },
-    dob : {
+    dateOfBirth : {
       type : Date,
       required : [true,"Date of Birth is required"]
     },
-    clgOrUni : {
+    collegeOrUniversity : {
       type : String,
       required : [true,"College or University is required"]
     },
@@ -105,16 +105,17 @@ userSchema.methods.generateAccessToken = function() {
       _id : this._id,
       fullName : this.fullName,
       email : this.email,
-    }, accessTokenSecret, {
-    expiresIn : accessTokenExpiry
+      role : this.role
+    }, envConfig.accessTokenSecret, {
+    expiresIn : envConfig.accessTokenExpiry
    })
 }
 
 userSchema.methods.generateRefreshToken = function() {
    return jwt.sign({
       _id : this._id
-    }, refreshTokenSecret, {
-    expiresIn :  refreshTokenExpiry
+    }, envConfig.refreshTokenSecret, {
+    expiresIn : envConfig.refreshTokenExpiry
    })
 }
 
