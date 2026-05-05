@@ -10,4 +10,4 @@ export const hackathonCurrencyType = {
   DOLLER : "DOLLER"
 }
 
-export const hackathonCurrencyType = Object.values(hackathonCurrencyType)
+export const hackathonCurrencyTypeEnums = Object.values(hackathonCurrencyType)

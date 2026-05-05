@@ -1,5 +1,5 @@
 import mongoose from 'mongoose'
-import { hackathonCurrencyType, hackathonModeEnums } from './hackathon.constant'
+// import { hackathonCurrencyType, hackathonCurrencyTypeEnums, hackathonModeEnums } from './hackathon.constant.js'
 
 
 const hackathonSchema = new mongoose.Schema({
@@ -17,11 +17,11 @@ const hackathonSchema = new mongoose.Schema({
   },
   mode:{
     type:[String],
-    enum:hackathonModeEnums
+    enum:["Solo","Both"]
   },
   allowedModes:{
     type:[String],
-    
+
   },
   startDate:{
     type:Date,
@@ -49,8 +49,8 @@ const hackathonSchema = new mongoose.Schema({
   },
   currency:{
     type:String,
-    enum:hackathonCurrencyType,
-    required:ture,
+    enum:["INR","DOLLAR"],
+    required:true,
     default:"INR"
   },
   minTeamSize:{
@@ -92,7 +92,7 @@ const hackathonSchema = new mongoose.Schema({
   // sponsors:{
   //   type:[
   //     {
-        
+
   //     }
   //   ]
   // }
@@ -100,3 +100,7 @@ const hackathonSchema = new mongoose.Schema({
 },{
   timestamps:true
 })
+
+const Hackathon =  mongoose.model("Hackathon", hackathonSchema)
+
+export default Hackathon
