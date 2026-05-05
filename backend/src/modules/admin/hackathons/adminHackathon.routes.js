@@ -2,11 +2,17 @@
   adminHackathon.routes.js
   Defines Express routes for adminHackathon domain.
  */
-import { Router } from 'express'
+// routes/hackathonRoutes.js
+import express, { Router } from 'express'
+import { createHackathon, updateHackathon, deleteHackathon } from './adminHackathon.controller.js'
 
-const router = Router()
 
-// Admin hackathon routes go here.
-// This router is intentionally stubbed until hackathon endpoints are implemented.
+const router = Router();
 
-export default router
+// Apply admin middleware to routes that require admin access
+
+router.route("/create-hackathon").post(createHackathon)
+router.patch('/:hackathonId', updateHackathon);
+router.delete('/delete-hackathon/:hackathonId', deleteHackathon);
+
+export default router;
