@@ -62,6 +62,10 @@ const userSchema = new mongoose.Schema(
       type : String,
       default : ""
     },
+    isSuspended : {
+      type : Boolean,
+      default : false
+    },
     isEmailVerified : {
       type : Boolean,
       default : false
