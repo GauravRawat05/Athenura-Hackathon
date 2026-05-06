@@ -2,24 +2,43 @@
   auth.service.js
   Contains the core business rules for auth.
  */
-import AuthRepository from "./auth.repository.js"
+import authRepository from "./auth.repository.js"
 import UserUtils from "../users/user.utils.js"
 import jwt from "jsonwebtoken"
 import envConfig from "../../config/envConfig.js"
+const userUtils = new UserUtils()
 
 class AuthService {
 
   /**
    * Generate access and refresh tokens for a user
+   * 
+   * Use case:
+   * - Access Token: Short-lived JWT for API authentication. Contains user identity 
+   *   (_id, fullName, email, role) for quick auth checks on every request.
+   *   Sent in Authorization header, expires quickly for security.
+   * - Refresh Token: Long-lived JWT stored securely (httpOnly cookie). Used ONLY 
+   *   to obtain new access tokens when they expire. Contains minimal data (_id only).
+   * 
+   * Security: Implements token rotation - new refresh token issued on each refresh,
+   *   old one invalidated to prevent replay attacks.
    */
   async generateAccessAndRefreshTokens(user) {
-    const accessToken = user.generateAccessToken()
-    const refreshToken = user.generateRefreshToken()
+    try {
+      if (!user || !user.generateAccessToken || !user.generateRefreshToken) {
+        throw new Error("Invalid user object or missing token generation methods")
+      }
 
-    user.refreshToken = refreshToken
-    await authRepository.saveUser(user, { validateBeforeSave: false })
+      const accessToken = user.generateAccessToken()
+      const refreshToken = user.generateRefreshToken()
 
-    return { accessToken, refreshToken }
+      user.refreshToken = refreshToken
+      await authRepository.saveUser(user, { validateBeforeSave: false })
+
+      return { accessToken, refreshToken }
+    } catch (error) {
+      throw new Error(`Token generation failed: ${error.message}`)
+    }
   }
 
   /**
@@ -72,7 +91,7 @@ class AuthService {
 
       await authRepository.saveUser(existingUser, { validateBeforeSave: false })
 
-      const updatedUser = await getSanitizedUser(existingUser._id)
+      const updatedUser = await this.getSanitizedUser(existingUser._id)
 
       return { user: updatedUser, otp }
     }
@@ -107,7 +126,7 @@ class AuthService {
 
     await authRepository.saveUser(user, { validateBeforeSave: false })
 
-    const createdUser = await getSanitizedUser(user._id)
+    const createdUser = await this.getSanitizedUser(user._id)
 
     return { user: createdUser, otp }
   }
@@ -164,9 +183,9 @@ class AuthService {
       throw new Error("Invalid credentials")
     }
 
-    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user)
+    const { accessToken, refreshToken } = await this.generateAccessAndRefreshTokens(user)
 
-    const sanitizedUser = await getSanitizedUser(user._id)
+    const sanitizedUser = await this.getSanitizedUser(user._id)
 
     return { user: sanitizedUser, accessToken, refreshToken }
   }
@@ -211,7 +230,7 @@ class AuthService {
    * Get current user data
    */
   async getCurrentUserService(userId) {
-    const user = await getSanitizedUser(userId)
+    const user = await this.getSanitizedUser(userId)
 
     if (!user) {
       throw new Error("User not found")
@@ -236,7 +255,7 @@ class AuthService {
       throw new Error("Refresh token expired or used")
     }
 
-    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user)
+    const { accessToken, refreshToken } = await this.generateAccessAndRefreshTokens(user)
 
     return { accessToken, refreshToken }
   }

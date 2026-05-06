@@ -3,3 +3,6 @@ node_modules
 scaffold.py
 *.log
 Hackathon_API_Developer_Guide.md
+*.txt
+review.md
+.windsurf

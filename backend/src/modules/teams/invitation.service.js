@@ -2,3 +2,156 @@
   invitation.service.js
   Handles logic for sending, tracking, and consuming team invitations.
  */
+import invitationRepository from "./invitation.repository.js";
+import teamRepository from "./team.repository.js";
+import User from "../users/user.model.js";
+import ApiError from "../../libs/apiError.js";
+import invitationToken from "./invitation.token.js";
+import { INVITATION_EXPIRY_MS, invitationStatus, teamRoles } from "./team.constants.js";
+
+class InvitationService {
+  /**
+   * Create a new team invitation
+   */
+  async createInvitation({ teamId, email, invitedById }) {
+    // Verify team exists
+    const team = await teamRepository.findById(teamId);
+    if (!team) {
+      throw new ApiError(404, "Team not found");
+    }
+
+    // Verify inviter is team leader
+    if (team.leader.toString() !== invitedById.toString()) {
+      throw new ApiError(403, "Only team leader can invite members");
+    }
+
+    // Find invited user by email
+    const invitedUser = await User.findOne({ email: email.toLowerCase() });
+    if (!invitedUser) {
+      throw new ApiError(404, "User with this email is not registered");
+    }
+
+    // Check if user is already in the team
+    const isAlreadyMember = team.members.some(
+      (m) => m.userId.toString() === invitedUser._id.toString()
+    );
+    if (isAlreadyMember) {
+      throw new ApiError(400, "User is already a member of this team");
+    }
+
+    // Check for existing pending invitation
+    const existingInvitation = await invitationRepository.findPendingByTeamAndUser(
+      teamId,
+      invitedUser._id
+    );
+    if (existingInvitation) {
+      throw new ApiError(400, "An invitation is already pending for this user");
+    }
+
+    // Generate secure token
+    const { unhashedToken, hashedToken } = invitationToken.generateToken();
+
+    // Calculate expiry (12 hours from now)
+    const expiresAt = new Date(Date.now() + INVITATION_EXPIRY_MS);
+
+    // Create invitation
+    const invitation = await invitationRepository.create({
+      teamId,
+      invitedBy: invitedById,
+      invitedUserId: invitedUser._id,
+      invitedEmail: email.toLowerCase(),
+      token: hashedToken,
+      status: invitationStatus.PENDING,
+      expiresAt
+    });
+
+    return {
+      invitation,
+      inviteLink: `/team-invitations/${unhashedToken}/accept`
+    };
+  }
+
+  /**
+   * Accept a team invitation
+   */
+  async acceptInvitation(token, userId) {
+    const hashedToken = invitationToken.hashToken(token);
+
+    const invitation = await invitationRepository.findByToken(hashedToken);
+
+    if (!invitation) {
+      throw new ApiError(404, "Invitation not found");
+    }
+
+    if (invitation.status !== invitationStatus.PENDING) {
+      throw new ApiError(400, `Invitation has already been ${invitation.status}`);
+    }
+
+    if (invitation.expiresAt < new Date()) {
+      await invitationRepository.updateStatus(invitation._id, invitationStatus.EXPIRED);
+      throw new ApiError(400, "Invitation has expired");
+    }
+
+    // Verify accepting user matches invited user
+    if (invitation.invitedUserId._id.toString() !== userId.toString()) {
+      throw new ApiError(403, "This invitation is for a different user");
+    }
+
+    // Check team size limit
+    const team = await teamRepository.findById(invitation.teamId._id);
+    const hackathon = await this.getHackathonMaxTeamSize(team.hackathonId);
+    if (hackathon && team.members.length >= hackathon.maxTeamSize) {
+      throw new ApiError(400, "Team has reached maximum member limit");
+    }
+
+    // Add user to team
+    await teamRepository.addMember(invitation.teamId._id, {
+      userId,
+      role: teamRoles.MEMBER,
+      joinedAt: new Date()
+    });
+
+    // Update invitation status
+    await invitationRepository.updateStatus(invitation._id, invitationStatus.ACCEPTED);
+
+    return { teamId: invitation.teamId._id };
+  }
+
+  /**
+   * Decline a team invitation
+   */
+  async declineInvitation(token, userId) {
+    const hashedToken = invitationToken.hashToken(token);
+
+    const invitation = await invitationRepository.findByToken(hashedToken);
+
+    if (!invitation) {
+      throw new ApiError(404, "Invitation not found");
+    }
+
+    if (invitation.status !== invitationStatus.PENDING) {
+      throw new ApiError(400, `Invitation has already been ${invitation.status}`);
+    }
+
+    // Verify declining user matches invited user
+    if (invitation.invitedUserId._id.toString() !== userId.toString()) {
+      throw new ApiError(403, "This invitation is for a different user");
+    }
+
+    await invitationRepository.updateStatus(invitation._id, invitationStatus.DECLINED);
+
+    return { message: "Invitation declined successfully" };
+  }
+
+  /**
+   * Helper to get hackathon max team size
+   */
+  async getHackathonMaxTeamSize(hackathonId) {
+    // Import dynamically to avoid circular dependency
+    const { default: Hackathon } = await import("../hackathons/hackathon.model.js");
+    return await Hackathon.findById(hackathonId).select("maxTeamSize");
+  }
+}
+
+const invitationService = new InvitationService();
+export default invitationService;
