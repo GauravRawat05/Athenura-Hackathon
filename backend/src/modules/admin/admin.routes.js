@@ -13,10 +13,12 @@ import adminUniversityRouter from './universities/adminUniversity.routes.js';
 import adminAnalyticsRouter from './analytics/adminAnalytics.routes.js';
 import adminReportRouter from './reports/adminReport.routes.js';
 import adminSettingRouter from './settings/adminSetting.routes.js';
+import adminAuthRouter from './auth/adminAuth.routes.js';
 
 const router = Router();
 
 // Mount all admin sub-routers under /admin
+router.use('/auth', adminAuthRouter); 
 router.use('/users', adminUserRouter);
 router.use('/hackathons', adminHackathonRouter);
 router.use('/payments', adminPaymentRouter);

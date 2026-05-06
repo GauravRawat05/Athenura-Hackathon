@@ -85,17 +85,24 @@ const hackathonSchema = new mongoose.Schema({
     ]
   },
   eligibility:{
-    type:[String],
+    type: mongoose.Schema.Types.Mixed,
     required:true,
-    default:"Student"
+    default: { studentOnly: true, allowedGraduationYears: [] }
+  },
+  sponsors:{
+    type:[
+      {
+        name: {
+          type: String,
+          required: true
+        },
+        logoUrl: {
+          type: String
+        }
+      }
+    ],
+    default: []
   }
-  // sponsors:{
-  //   type:[
-  //     {
-
-  //     }
-  //   ]
-  // }
 
 },{
   timestamps:true

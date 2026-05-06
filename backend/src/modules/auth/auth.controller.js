@@ -19,7 +19,8 @@ class AuthController {
       graduationYear,
       resumeLink,
       secretKey,
-      skills
+      skills,
+      gender
     } = req.body
 
     const { user, otp } = await authService.registerUserService({
@@ -32,7 +33,8 @@ class AuthController {
       graduationYear,
       resumeLink,
       skills,
-      secretKey
+      secretKey,
+      gender
     })
 
     // 🧪 Dev logs (remove in production)

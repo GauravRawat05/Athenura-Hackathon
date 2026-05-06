@@ -53,7 +53,7 @@ class AuthService {
    * Register a new user
    */
   async registerUserService(userInputData) {
-    const { fullName, email, password, phone, dateOfBirth, collegeOrUniversity, graduationYear, resumeLink, skills, secretKey } = userInputData
+    const { fullName, email, password, phone, dateOfBirth, collegeOrUniversity, graduationYear, resumeLink, skills, secretKey, gender } = userInputData
 
     const existingUser = await authRepository.findUserByEmail(email)
 
@@ -82,6 +82,7 @@ class AuthService {
       existingUser.resumeLink = resumeLink || existingUser.resumeLink
       existingUser.skills = skills && skills.length > 0 ? skills : []
       existingUser.role = role
+      existingUser.gender = gender
 
       const otp = userUtils.generateOTP()
       const hashedOTP = await userUtils.hashOTP(otp)
@@ -113,7 +114,8 @@ class AuthService {
       graduationYear,
       resumeLink,
       skills,
-      role
+      role,
+      gender
     })
 
     const user = await authRepository.createUser(userData)

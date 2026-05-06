@@ -23,7 +23,19 @@ const createHackathonValidation = Joi.object({
       weight: Joi.number().required(),
     })
   ).optional(),
-  eligibility: Joi.array().items(Joi.string()).required(),
+  eligibility: Joi.alternatives().try(
+    Joi.array().items(Joi.string()),
+    Joi.object({
+      studentOnly: Joi.boolean(),
+      allowedGraduationYears: Joi.array().items(Joi.number())
+    })
+  ).required(),
+  sponsors: Joi.array().items(
+    Joi.object({
+      name: Joi.string().required(),
+      logoUrl: Joi.string().uri().optional()
+    })
+  ).optional(),
 });
 
 const updateHackathonValidation = Joi.object({
@@ -49,7 +61,19 @@ const updateHackathonValidation = Joi.object({
       weight: Joi.number().required(),
     })
   ),
-  eligibility: Joi.array().items(Joi.string()),
+  eligibility: Joi.alternatives().try(
+    Joi.array().items(Joi.string()),
+    Joi.object({
+      studentOnly: Joi.boolean(),
+      allowedGraduationYears: Joi.array().items(Joi.number())
+    })
+  ),
+  sponsors: Joi.array().items(
+    Joi.object({
+      name: Joi.string().required(),
+      logoUrl: Joi.string().uri().optional()
+    })
+  ),
 });
 
 export {

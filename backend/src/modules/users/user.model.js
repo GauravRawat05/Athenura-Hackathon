@@ -53,6 +53,12 @@ const userSchema = new mongoose.Schema(
     resumeLink : {
       type : String
     },
+    gender:{
+      type : String,
+      enum : ["Male", "Female", "Other"],
+      default : "Other",
+      required : [true,"Gender is required"]
+    },
     role : {
       type : String,
       enums : userRolesEnums,

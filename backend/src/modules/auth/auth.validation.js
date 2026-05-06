@@ -55,7 +55,11 @@ export const registerUserValidation = Joi.object({
   skills: Joi.array().items(Joi.string().trim().min(1)).messages({
     "array.base": "Skills must be an array of strings"
   }),
-  secretKey: Joi.string().allow("").optional()
+  secretKey: Joi.string().allow("").optional(),
+
+  gender: Joi.string().valid("Male", "Female", "Other").required().messages({
+    "any.only": "Gender must be Male, Female, or Other"
+  })
 })
 
 // Login validation
