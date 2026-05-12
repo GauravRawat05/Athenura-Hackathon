@@ -1,3 +1,56 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
+
+:root {
+  --navy: #03045E;
+  --ocean: #0077B6;
+  --sky: #00B4D8;
+  --mist: #90E0EF;
+  --fog: #CAF0F8;
+  --white: #ffffff;
+  --gray-50: #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-400: #94a3b8;
+  --gray-600: #475569;
+  --gray-800: #1e293b;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+  --shadow-sm: 0 1px 3px rgba(3,4,94,0.08);
+  --shadow-md: 0 4px 16px rgba(3,4,94,0.12);
+  --shadow-lg: 0 20px 40px rgba(3,4,94,0.16);
+  --shadow-glow: 0 0 30px rgba(0,180,216,0.3);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-full: 9999px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: var(--font-body); background: var(--white); color: var(--gray-800); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+h1, h2, h3, h4, h5 { font-family: var(--font-display); line-height: 1.2; }
+button { cursor: pointer; border: none; outline: none; font-family: var(--font-body); }
+input, select, textarea { font-family: var(--font-body); outline: none; border: none; }
+a { text-decoration: none; color: inherit; }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--fog); }
+::-webkit-scrollbar-thumb { background: var(--ocean); border-radius: 3px; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+.animate-fade-up { animation: fadeUp 0.6s ease both; }
+.animate-fade-in { animation: fadeIn 0.4s ease both; }
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+.delay-3 { animation-delay: 0.3s; }
+.delay-4 { animation-delay: 0.4s; }
+.delay-5 { animation-delay: 0.5s; }
