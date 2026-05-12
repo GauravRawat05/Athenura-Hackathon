@@ -5,7 +5,6 @@
 import mongoose from "mongoose";
 import { userRoles, userRolesEnums } from "./user.constants.js";
 import bcrypt from "bcryptjs";
-import crypto from 'crypto'
 import jwt from 'jsonwebtoken'
 import envConfig from "../../config/envConfig.js";
 
@@ -76,12 +75,6 @@ const userSchema = new mongoose.Schema(
       type : Boolean,
       default : false
     },
-    emailVerificationToken : {
-      type : String
-    },
-    emailVerificationTokenExpiry : {
-      type : Date
-    },
     emailOTP : {
       type : String,
     },
@@ -128,23 +121,6 @@ userSchema.methods.generateRefreshToken = function() {
     expiresIn : envConfig.refreshTokenExpiry
    })
 }
-
-userSchema.methods.generateTemporaryToken = function () {
-  const unHashedToken = crypto.randomBytes(20).toString("hex");
-
-  const hashedToken = crypto
-    .createHash("sha256")
-    .update(unHashedToken)
-    .digest("hex");
-
-  const tokenExpiry = Date.now() + 10 * 60 * 1000;
-
-  return {
-    unHashedToken,
-    hashedToken,
-    tokenExpiry,
-  };
-};
 
 const User = mongoose.model("User",userSchema)
 export default User;

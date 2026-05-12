@@ -158,8 +158,6 @@ class AuthService {
     user.isEmailVerified = true
     user.emailOTP = undefined
     user.emailOTPExpiry = undefined
-    user.emailVerificationToken = undefined
-    user.emailVerificationTokenExpiry = undefined
 
     await authRepository.saveUser(user, { validateBeforeSave: false })
 
@@ -177,7 +175,22 @@ class AuthService {
     }
 
     if (!user.isEmailVerified) {
-      throw new Error("Please verify your email first. Check inbox or resend OTP")
+      // Check if OTP is expired and auto-resend
+      if (!user.emailOTPExpiry || user.emailOTPExpiry < Date.now()) {
+        const plainOTP = userUtils.generateOTP()
+        const hashedOTP = await userUtils.hashOTP(plainOTP)
+
+        user.emailOTP = hashedOTP
+        user.emailOTPExpiry = userUtils.getOTPExpiryTime()
+        await authRepository.saveUser(user, { validateBeforeSave: false })
+
+        // TODO: Send email with new OTP
+        console.log("New OTP sent (expired previous):", plainOTP)
+
+        throw new Error("Email not verified. New OTP sent to your email. Please verify before logging in.")
+      }
+
+      throw new Error("Email not verified. Please check your email for OTP or request a new one.")
     }
 
     const isPasswordValid = await user.isPasswordCorrect(password)
@@ -208,16 +221,12 @@ class AuthService {
     const plainOTP = userUtils.generateOTP()
     const hashedOTP = await userUtils.hashOTP(plainOTP)
 
-    const tokenData = user.generateTemporaryToken()
-
     user.emailOTP = hashedOTP
     user.emailOTPExpiry = userUtils.getOTPExpiryTime()
-    user.emailVerificationToken = tokenData.hashedToken
-    user.emailVerificationTokenExpiry = tokenData.tokenExpiry
 
     await authRepository.saveUser(user, { validateBeforeSave: false })
 
-    return { otp: plainOTP, token: tokenData.unHashedToken, fullName: user.fullName, email: user.email }
+    return { otp: plainOTP, fullName: user.fullName, email: user.email }
   }
 
   /**
@@ -295,34 +304,42 @@ class AuthService {
   }
 
   /**
-   * Verify email with token service
+   * Refresh access token using a valid refresh token
+   * Implements token rotation: new refresh token issued, old one invalidated
    */
-  async verifyEmailWithTokenService(token, email) {
-    const hashedToken = await userUtils.hashToken(token)
+  async refreshAccessTokenService(incomingRefreshToken) {
+    try {
+      // Verify the incoming refresh token
+      const decodedToken = jwt.verify(incomingRefreshToken, envConfig.refreshTokenSecret)
 
-    let user
+      // Find user by ID from token payload
+      const user = await authRepository.findUserById(decodedToken._id)
 
-    if (email) {
-      user = await authRepository.findUserByEmail(email)
-    } else {
-      user = await authRepository.findUserByVerificationToken(hashedToken)
+      if (!user) {
+        throw new Error("User not found")
+      }
+
+      // Check if the incoming token matches the stored refresh token
+      // This prevents reuse of old/rotated tokens
+      if (user.refreshToken !== incomingRefreshToken) {
+        throw new Error("Invalid refresh token")
+      }
+
+      // Generate new tokens (rotation)
+      const accessToken = user.generateAccessToken()
+      const refreshToken = user.generateRefreshToken()
+
+      // Save new refresh token to DB
+      user.refreshToken = refreshToken
+      await authRepository.saveUser(user, { validateBeforeSave: false })
+
+      return { accessToken, refreshToken }
+    } catch (error) {
+      if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
+        throw new Error("Invalid or expired refresh token")
+      }
+      throw error
     }
-
-    if (!user) {
-      throw new Error("User not found")
-    }
-
-    if (user.emailVerificationToken !== hashedToken || user.emailVerificationTokenExpiry < Date.now()) {
-      throw new Error("Invalid or expired verification token")
-    }
-
-    user.isEmailVerified = true
-    user.emailVerificationToken = undefined
-    user.emailVerificationTokenExpiry = undefined
-
-    await authRepository.saveUser(user, { validateBeforeSave: false })
-
-    return { message: "Email verified successfully" }
   }
 }
 

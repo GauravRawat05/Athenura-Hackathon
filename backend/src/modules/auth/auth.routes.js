@@ -13,15 +13,13 @@ import {
   verifyAccountValidation,
   resendVerificationValidation,
   forgotPasswordValidation,
-  resetPasswordValidation,
-  verifyEmailTokenValidation
+  resetPasswordValidation
 } from './auth.validation.js'
 
 const router = Router()
 
 router.route("/register").post(validate(registerUserValidation), asyncHandler(authController.registerUser))
 router.route("/verify-account").post(validate(verifyAccountValidation), asyncHandler(authController.verifyAccount))
-router.route("/verify-email/token").post(validate(verifyEmailTokenValidation), asyncHandler(authController.verifyEmailWithToken))
 router.route("/login").post(validate(loginUserValidation), asyncHandler(authController.loginUser))
 router.route("/reverify").post(validate(resendVerificationValidation), asyncHandler(authController.reverifyUser))
 router.route("/forgot-password").post(validate(forgotPasswordValidation), asyncHandler(authController.forgotPassword))
