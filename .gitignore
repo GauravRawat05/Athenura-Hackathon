@@ -1,2 +1,14 @@
 .windsurf
 node_modules
+
+# GetShitDone / AI Assistant Local State
+.gemini/
+.gsd/
+.agent/
+.agents/
+adapters/
+scripts/
+docs/
+PROJECT_RULES.md
+GSD-STYLE.md
+model_capabilities.yaml
