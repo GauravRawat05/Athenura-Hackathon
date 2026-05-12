@@ -16,7 +16,7 @@ import userRoute from '../modules/users/user.routes.js';
 import teamRoute from '../modules/teams/team.routes.js';
 import hackathonRoute from '../modules/admin/hackathons/adminHackathon.routes.js';
 // import registrationRoute from '../modules/registrations/registration.routes.js';
-// import submissionRoute from '../modules/submissions/submission.routes.js';
+import submissionRoute from '../modules/submissions/submission.routes.js';
 // import resultRoute from '../modules/results/result.routes.js';
 
 const router = Router();
@@ -32,7 +32,7 @@ router.use('/users', userRoute);
 router.use('/teams', teamRoute);
 router.use('/hackathons', hackathonRoute);
 // router.use('/registrations', registrationRoute);
-// router.use('/submissions', submissionRoute);
+router.use('/submissions', submissionRoute);
 // router.use('/results', resultRoute);
 
 // Health check endpoint
