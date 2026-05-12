@@ -2,7 +2,7 @@ import {
   createHackathon as createHackathonService,
   updateHackathon as updateHackathonService,
   deleteHackathon as deleteHackathonService,
-  findHackathonById,
+  findHackathonById, updateHackathonRuleService
 } from './adminHackathon.service.js';
 
 export const createHackathon = async (req, res) => {
@@ -23,6 +23,17 @@ export const updateHackathon = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
+
+export const updateHackathonsRules = async (req, res) => {
+  const { hackathonId } = req.params;
+  try {
+    const hackathon = await updateHackathonRuleService(hackathonId, req.body);
+    res.json(hackathon);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+}
 
 export const deleteHackathon = async (req, res) => {
   const { hackathonId } = req.params;

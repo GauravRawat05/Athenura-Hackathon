@@ -105,14 +105,6 @@ export const resetPasswordValidation = Joi.object({
   newPassword: passwordSchema
 })
 
-// Verify email with token validation
-export const verifyEmailTokenValidation = Joi.object({
-  token: Joi.string().required().messages({
-    "any.required": "Verification token is required"
-  }),
-  email: emailSchema.optional()
-})
-
 // Validation middleware factory
 export const validate = (schema) => {
   return (req, res, next) => {

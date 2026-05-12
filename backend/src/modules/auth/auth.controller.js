@@ -37,9 +37,6 @@ class AuthController {
       gender
     })
 
-    // 🧪 Dev logs (remove in production)
-    console.log("OTP:", otp)
-
     return res
       .status(201)
       .json(new ApiResponse(201, {}, "OTP has been sent to your email"))
@@ -85,12 +82,10 @@ class AuthController {
 
     const result = await authService.resendVerificationService(email)
 
-    console.log(result)
-
     return res
       .status(200)
       .json(
-        new ApiResponse(200, {}, "New OTP and verification link sent to email")
+        new ApiResponse(200, {}, "New OTP sent to your email")
       )
   }
 
@@ -106,14 +101,6 @@ class AuthController {
     const { token, newPassword } = req.body
 
     const result = await authService.resetPasswordService(token, newPassword)
-
-    return res.status(200).json(new ApiResponse(200, {}, result.message))
-  }
-
-  async verifyEmailWithToken(req, res) {
-    const { token, email } = req.body
-
-    const result = await authService.verifyEmailWithTokenService(token, email)
 
     return res.status(200).json(new ApiResponse(200, {}, result.message))
   }
