@@ -40,7 +40,7 @@ class AdminAuthService {
    * Register a new admin user
    */
   async registerAdminService(userInputData) {
-    const { email, password, adminSecretKey, confirmPassword } = userInputData
+    const { email, password, phone, adminSecretKey, confirmPassword } = userInputData
 
     // Validate admin secret key
     if (adminSecretKey !== envConfig.admineSecretKey) {
@@ -63,9 +63,9 @@ class AdminAuthService {
       fullName: "Admin",
       email,
       password,
+      phone,
       role: userRoles.ADMIN,
       isEmailVerified: true,
-      phone: 0,
       dateOfBirth: new Date(),
       collegeOrUniversity: "N/A",
       graduationYear: new Date().getFullYear(),

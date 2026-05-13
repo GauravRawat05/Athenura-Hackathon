@@ -9,13 +9,14 @@ import adminAuthService from "./adminAuth.service.js"
 class AdminAuthController {
 
   async registerAdmin(req, res) {
-    const { email, password, adminSecretKey,confirmPassword } = req.body
+    const { email, password, adminSecretKey,confirmPassword,phone } = req.body
 
     const { user, accessToken, refreshToken } = await adminAuthService.registerAdminService({
       email,
       password,
       adminSecretKey,
-      confirmPassword
+      confirmPassword,
+      phone
     })
 
     const options = {

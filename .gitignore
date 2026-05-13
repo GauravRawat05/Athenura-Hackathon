@@ -12,3 +12,6 @@ docs/
 PROJECT_RULES.md
 GSD-STYLE.md
 model_capabilities.yaml
+.kilo
+.blackboxrules
+.vscode

@@ -46,11 +46,11 @@ This platform is a multi-role hackathon management backend. The API is organized
 
 | Method  | Path  | Access  | Purpose |
 | :---- | :---- | :---- | :---- |
-| GET  | http://localhost:3000/api/v1/health  | Public  | Service health check |
-| GET  | http://localhost:3000/api/v1/public/hackathons  | Public  | Public hackathon listing (**Not Implemented**) |
-| GET  | http://localhost:3000/api/v1/public/hackathons/{hackathonId}  | Public  | Public hackathon details (**Not Implemented**) |
-| GET  | http://localhost:3000/api/v1/public/hackathons/{hackathonId}/winners  | Public  | Public winners list (**Not Implemented**) |
-| GET  | http://localhost:3000/api/v1/public/certificates/verify/{certificateCode}  | Public  | Public certificate verification (**Not Implemented**) |
+| GET  | http://localhost:3000/api/v1/health  | Public  | Service health check (Implemented) |
+| GET  | http://localhost:3000/api/v1/public/hackathons  | Public  | Public hackathon listing (Not Implemented) |
+| GET  | http://localhost:3000/api/v1/public/hackathons/{hackathonId}  | Public  | Public hackathon details (Not Implemented) |
+| GET  | http://localhost:3000/api/v1/public/hackathons/{hackathonId}/winners  | Public  | Public winners list (Not Implemented) |
+| GET  | http://localhost:3000/api/v1/public/certificates/verify/{certificateCode}  | Public  | Public certificate verification (Not Implemented) |
 
 **GET /health** 
 
@@ -120,7 +120,7 @@ Authentication is JWT-based with a short-lived access token and a longer-lived r
 | skills | array of strings | No |
 | resumeLink | optional portfolio or resume URL | No |
 | gender | "Male", "Female", or "Other" | Yes |
-| secretKey | optional secret key for special registrations | No |
+| secretKey | optional secret key for special registrations(admin) | No |
 
  Accepted input options: 
 
@@ -361,15 +361,15 @@ Request body fields (all optional, at least one required):
 
 Hackathon endpoints are split between public read routes and admin CRUD routes. Public routes  support browsing and discovery. Admin routes own event setup, rules, deadlines, prizes, and judging  criteria.
 
-| Method  | Path  | Access  | Purpose |
+| Method  | Path  | Access  | Purpose
 | :---- | :---- | :---- | :---- |
-| GET  | http://localhost:3000/api/v1/hackathons  | Public  | Filterable hackathon catalogue (**Not Implemented**) |
-| GET  | http://localhost:3000/api/v1/hackathons/{hackathonId}  | Public  | Single hackathon details (**Not Implemented**) |
-| POST  | http://localhost:3000/api/v1/hackathons/create-hackathon  | Admin  | Create hackathon |
-| PATCH  | http://localhost:3000/api/v1/hackathons/{hackathonId}  | Admin  | Update hackathon |
-| DELETE  | http://localhost:3000/api/v1/hackathons/delete-hackathon/{hackathonId}  | Admin  | Delete or archive hackathon |
-| PATCH  | http://localhost:3000/api/v1/admin/hackathons/{hackathonId}/rules  | Admin  | Update rules only (**Not Implemented**) |
-| PATCH  | http://localhost:3000/api/v1/admin/hackathons/{hackathonId}/rubric  | Admin  | Update judging criteria (**Not Implemented**) |
+| GET  | http://localhost:3000/api/v1/hackathons  | Public  | Filterable hackathon catalogue (Not Implemented) |
+| GET  | http://localhost:3000/api/v1/hackathons/{hackathonId}  | Public  | Single hackathon details (Not Implemented) |
+| POST  | http://localhost:3000/api/v1/hackathons/create-hackathon  | Admin  | Create hackathon (Implemented) |
+| PATCH  | http://localhost:3000/api/v1/hackathons/{hackathonId}  | Admin  | Update hackathon (Implemented) |
+| DELETE  | http://localhost:3000/api/v1/hackathons/delete-hackathon/{hackathonId}  | Admin  | Delete or archive hackathon (Implemented) |
+| PATCH  | http://localhost:3000/api/v1/admin/hackathons/{hackathonId}/rules  | Admin  | Update rules only (Not Implemented) |
+| PATCH  | http://localhost:3000/api/v1/admin/hackathons/{hackathonId}/rubric  | Admin  | Update judging criteria (Not Implemented) |
 
 **GET http://localhost:3000/api/v1/hackathons (Not Implemented)**
 
@@ -383,9 +383,11 @@ Hackathon endpoints are split between public read routes and admin CRUD routes. 
 
 **Status:** This endpoint is not yet implemented in the backend.
 
-**POST http://localhost:3000/api/v1/hackathons/create-hackathon**
+**POST http://localhost:3000/api/v1/hackathons/create-hackathon (Implemented)**
 
 **Access:** Admin | **Purpose:** Create a new hackathon with rules, rubric, pricing, and timeline. **Content-Type:** application/json
+
+**Status:** Implemented in the backend.
 
 Request body fields:
 
@@ -411,21 +413,22 @@ Request body fields:
 | eligibility  | array of strings OR object with studentOnly, allowedGraduationYears | Yes |
 | sponsors  | array of { name, logoUrl } objects | No |
 
- Accepted input options: 
+ Accepted input options:
 
- Use mode="both" if you prefer one enum field 
+ Use mode="both" if you prefer one enum field
 
- Use allowedModes=\["solo", "team"\] if you prefer a normalized array 
+ Use allowedModes=["solo", "team"] if you prefer a normalized array
 
  Example request:
 
-| {  "title": "Hack the Future 2026",   "slug": "hack-the-future-2026",   "description": "National hackathon for web and AI projects",   "allowedModes": \["solo", "team"\],   "startDate": "2026-07-15T09:00:00.000Z",   "endDate": "2026-07-17T18:00:00.000Z",   "registrationDeadline": "2026-07-10T23:59:59.000Z",   "submissionDeadline": "2026-07-17T16:00:00.000Z",   "prizePool": 250000,   "registrationFee": 499,   "currency": "INR",   "minTeamSize": 2,   "maxTeamSize": 4,   "technologyDomains": \["AI", "Web", "Blockchain"\],   "rules": \["Original work only", "No plagiarism"\],   "judgingCriteria": \[   { "name": "Innovation", "weight": 30 },   { "name": "Technical Complexity", "weight": 30 },   { "name": "Presentation", "weight": 20 },   { "name": "Impact", "weight": 20 }   \]  } |
+| {  "title": "Hack the Future 2026",   "slug": "hack-the-future-2026",   "description": "National hackathon for web and AI projects",   "allowedModes": ["solo", "team"],   "startDate": "2026-07-15T09:00:00.000Z",   "endDate": "2026-07-17T18:00:00.000Z",   "registrationDeadline": "2026-07-10T23:59:59.000Z",   "submissionDeadline": "2026-07-17T16:00:00.000Z",   "prizePool": 250000,   "registrationFee": 499,   "currency": "INR",   "minTeamSize": 2,   "maxTeamSize": 4,   "technologyDomains": ["AI", "Web", "Blockchain"],   "rules": ["Original work only", "No plagiarism"],   "judgingCriteria": [   { "name": "Innovation", "weight": 30 },   { "name": "Technical Complexity", "weight": 30 },   { "name": "Presentation", "weight": 20 },   { "name": "Impact", "weight": 20 }   ]  } |
 | :---- |
 
-   
-**PATCH http://localhost:3000/api/v1/hackathons/{hackathonId}**
+**PATCH http://localhost:3000/api/v1/hackathons/{hackathonId} (Implemented)**
 
 **Access:** Admin | **Purpose:** Update any subset of mutable hackathon fields.
+
+**Status:** Implemented in the backend.
 
 Path parameters:
 
@@ -441,7 +444,20 @@ Treat this as a partial update endpoint.
 
 Revalidate timeline consistency after every change.
 
-**DELETE http://localhost:3000/api/v1/hackathons/delete-hackathon/{hackathonId}** 
+**DELETE http://localhost:3000/api/v1/hackathons/delete-hackathon/{hackathonId} (Implemented)**
+
+**Access:** Admin | **Purpose:** Delete or soft-delete a hackathon.
+
+**Status:** Implemented in the backend.
+
+Path parameters:
+
+| Parameter  | Description |
+| :---- | :---- |
+| hackathonId  | target event identifier |
+
+Implementation notes:
+Soft delete is usually safer than hard delete because payments, submissions, and certificates may already exist.
 
 **Access:** Admin | **Purpose:** Delete or soft-delete a hackathon.
 
@@ -742,16 +758,16 @@ Payments cover order creation, client-side verification, status checks, refunds,
 
 | Method  | Path  | Access  | Purpose |
 | :---- | :---- | :---- | :---- |
-| POST | http://localhost:3000/api/v1/payments/create-order | Authenticated | Create payment order (**Not Implemented**) |
-| POST | http://localhost:3000/api/v1/payments/verify | Authenticated | Verify client-side payment callback (**Not Implemented**) |
-| GET | http://localhost:3000/api/v1/payments/{paymentId}/status | Authenticated | Get payment status (**Not Implemented**) |
-| GET | http://localhost:3000/api/v1/admin/payments | Admin | List all payments |
-| GET | http://localhost:3000/api/v1/admin/payments/{paymentId} | Admin | Get payment details |
-| PATCH | http://localhost:3000/api/v1/admin/payments/{paymentId} | Admin | Update payment status |
-| POST | http://localhost:3000/api/v1/admin/payments/{paymentId}/refund | Admin | Refund payment |
-| GET | http://localhost:3000/api/v1/admin/payments/stats | Admin | Get payment statistics |
-| POST | http://localhost:3000/api/v1/payments/webhooks/razorpay | Public gateway | Ingest Razorpay webhook (**Not Implemented**) |
-| POST | http://localhost:3000/api/v1/payments/webhooks/stripe | Public gateway | Ingest Stripe webhook (**Not Implemented**) |
+| POST | http://localhost:3000/api/v1/payments/create-order | Authenticated | Create payment order (Not Implemented) |
+| POST | http://localhost:3000/api/v1/payments/verify | Authenticated | Verify client-side payment callback (Not Implemented) |
+| GET | http://localhost:3000/api/v1/payments/{paymentId}/status | Authenticated | Get payment status (Not Implemented) |
+| GET | http://localhost:3000/api/v1/admin/payments | Admin | List all payments (Implemented) |
+| GET | http://localhost:3000/api/v1/admin/payments/{paymentId} | Admin | Get payment details (Implemented) |
+| PATCH | http://localhost:3000/api/v1/admin/payments/{paymentId} | Admin | Update payment status (Implemented) |
+| POST | http://localhost:3000/api/v1/admin/payments/{paymentId}/refund | Admin | Refund payment (Implemented) |
+| GET | http://localhost:3000/api/v1/admin/payments/stats | Admin | Get payment statistics (Implemented) |
+| POST | http://localhost:3000/api/v1/payments/webhooks/razorpay | Public gateway | Ingest Razorpay webhook (Not Implemented) |
+| POST | http://localhost:3000/api/v1/payments/webhooks/stripe | Public gateway | Ingest Stripe webhook (Not Implemented) |
 
   20   
 **POST http://localhost:3000/api/v1/payments/create-order (Not Implemented)** 
@@ -827,13 +843,17 @@ Payments cover order creation, client-side verification, status checks, refunds,
 | :---- | :---- |
 | paymentId  | payment identifier |
 
-**GET http://localhost:3000/api/v1/admin/payments**
+**GET http://localhost:3000/api/v1/admin/payments (Implemented)**
 
 **Access:** Admin | **Purpose:** List all payments with optional filters.
 
-**GET http://localhost:3000/api/v1/admin/payments/{paymentId}**
+**Status:** Implemented in the backend.
+
+**GET http://localhost:3000/api/v1/admin/payments/{paymentId} (Implemented)**
 
 **Access:** Admin | **Purpose:** Get detailed payment information.
+
+**Status:** Implemented in the backend.
 
 Path parameters:
 
@@ -841,9 +861,11 @@ Path parameters:
 | :---- | :---- |
 | paymentId | Payment identifier (24-char hex ObjectId) |
 
-**PATCH http://localhost:3000/api/v1/admin/payments/{paymentId}**
+**PATCH http://localhost:3000/api/v1/admin/payments/{paymentId} (Implemented)**
 
 **Access:** Admin | **Purpose:** Update payment status and details.
+
+**Status:** Implemented in the backend.
 
 Path parameters:
 
@@ -861,9 +883,11 @@ Request body fields (optional):
 | amount | numeric amount (min 0) |
 | currency | 3-letter currency code |
 
-**POST http://localhost:3000/api/v1/admin/payments/{paymentId}/refund** 
+**POST http://localhost:3000/api/v1/admin/payments/{paymentId}/refund (Implemented)**
 
 **Access:** Admin | **Purpose:** Initiate full or partial refund.
+
+**Status:** Implemented in the backend.
 
 Path parameters:
 
@@ -878,9 +902,11 @@ Request body fields (optional):
 | amount | partial refund amount (if omitted, full refund) |
 | reason | refund reason (max 500 chars) |
 
-**GET http://localhost:3000/api/v1/admin/payments/stats**
+**GET http://localhost:3000/api/v1/admin/payments/stats (Implemented)**
 
-**Access:** Admin | **Purpose:** Get payment statistics and analytics. 
+**Access:** Admin | **Purpose:** Get payment statistics and analytics.
+
+**Status:** Implemented in the backend.
 
  Path parameters: 
 
@@ -938,27 +964,25 @@ Submissions are versioned project entries attached to a registration. The system
 
 | Method  | Path  | Access  | Purpose |
 | :---- | :---- | :---- | :---- |
-| POST | http://localhost:3000/api/v1/hackathons/{hackathonId}/submissions | Authenticated | Create submission (**Not Implemented**) |
-| PATCH | http://localhost:3000/api/v1/submissions/{submissionId} | Authenticated | Update submission (**Not Implemented**) |
-| POST | http://localhost:3000/api/v1/submissions/{submissionId}/assets | Authenticated | Upload or attach assets (**Not Implemented**) |
-| GET | http://localhost:3000/api/v1/hackathons/{hackathonId}/submissions/me | Authenticated | Current user submission(s) (**Not Implemented**) |
-| GET | http://localhost:3000/api/v1/submissions/{submissionId}/versions | Authenticated | Version history (**Not Implemented**) |
+| POST | http://localhost:3000/api/v1/submissions/hackathons/{hackathonId}/submissions | Authenticated | Create submission (Implemented) |
+| PATCH | http://localhost:3000/api/v1/submissions/{submissionId} | Authenticated | Update submission (Implemented) |
+| POST | http://localhost:3000/api/v1/submissions/{submissionId}/assets | Authenticated | Upload or attach assets (Implemented) |
+| GET | http://localhost:3000/api/v1/submissions/hackathons/{hackathonId}/submissions/me | Authenticated | Current user submission(s) (Implemented) |
+| GET | http://localhost:3000/api/v1/submissions/{submissionId}/versions | Authenticated | Version history (Implemented) |
 
-**POST http://localhost:3000/api/v1/hackathons/{hackathonId}/submissions (Not Implemented)** 
+**POST http://localhost:3000/api/v1/submissions/hackathons/{hackathonId}/submissions (Implemented)**
 
 **Access:** Authenticated | **Purpose:** Create a project submission for a registered participant or team. **Content-Type:** application/json or multipart/form-data
 
-**Status:** This endpoint is not yet implemented in the backend. 
+**Status:** Implemented in the backend.
 
  Path parameters:
-
-  23 
 
 | Parameter  | Description |
 | :---- | :---- |
 | hackathonId  | target event identifier |
 
- Request body fields: 
+ Request body fields:
 
 | Field  | Meaning |
 | :---- | :---- |
@@ -969,28 +993,28 @@ Submissions are versioned project entries attached to a registration. The system
 | imageUrls  | array of already-uploaded asset URLs |
 | additionalNotes  | notes for judges |
 
- Accepted input options: 
+ Accepted input options:
 
- Pure JSON when image assets already exist as URLs 
+ Pure JSON when image assets already exist as URLs
 
- Multipart form-data when images are uploaded directly in the request 
+ Multipart form-data when images are uploaded directly in the request
 
- Implementation notes: 
+ Implementation notes:
 
- Reject new submissions after the submission deadline. 
+ Reject new submissions after the submission deadline.
 
- If multiple submissions are allowed, store them as versioned records instead of destructive  overwrites. 
+ If multiple submissions are allowed, store them as versioned records instead of destructive  overwrites.
 
- Example request: 
+ Example request:
 
 | {  "registrationId": "registration\_id",   "repositoryUrl": "https://github.com/team/project",   "liveDemoUrl": "https://project.vercel.app",   "videoDemoUrl": "https://youtube.com/watch?v=abc",   "imageUrls": \[   "https://res.cloudinary.com/.../1.png",   "https://res.cloudinary.com/.../2.png"   \],   "additionalNotes": "Built with MERN and OpenAI API"  } |
 | :---- |
 
-**PATCH http://localhost:3000/api/v1/submissions/{submissionId} (Not Implemented)** 
+**PATCH http://localhost:3000/api/v1/submissions/{submissionId} (Implemented)**
 
 **Access:** Authenticated | **Purpose:** Update an existing submission or create a new version.
 
-**Status:** This endpoint is not yet implemented in the backend. 
+**Status:** Implemented in the backend.
 
  Path parameters:
 
@@ -998,8 +1022,7 @@ Submissions are versioned project entries attached to a registration. The system
 | :---- | :---- |
 | submissionId  | submission identifier |
 
-  24   
- Request body fields: 
+ Request body fields:
 
 | Field  | Meaning |
 | :---- | :---- |
@@ -1008,53 +1031,56 @@ Submissions are versioned project entries attached to a registration. The system
 | videoDemoUrl  | updated video URL |
 | additionalNotes  | updated judge notes |
 
-**POST http://localhost:3000/api/v1/submissions/{submissionId}/assets (Not Implemented)** 
+**POST http://localhost:3000/api/v1/submissions/{submissionId}/assets (Implemented)**
 
 **Access:** Authenticated | **Purpose:** Add images or external asset URLs to an existing submission.
 
-**Status:** This endpoint is not yet implemented in the backend. 
+**Status:** Implemented in the backend.
 
- Path parameters: 
+ Path parameters:
 
 | Parameter  | Description |
 | :---- | :---- |
 | submissionId  | submission identifier |
 
- Request body fields: 
+ Request body fields:
 
 | Field  | Meaning |
 | :---- | :---- |
 | imageUrls  | array of externally stored image URLs |
-| images\[\]  | actual file upload field if using multipart |
+| images[]  | actual file upload field if using multipart |
 
- Accepted input options: 
+ Accepted input options:
 
- JSON with imageUrls 
+ JSON with imageUrls
 
- Multipart with images\[\] files 
+ Multipart with images[] files
 
-**GET http://localhost:3000/api/v1/hackathons/{hackathonId}/submissions/me (Not Implemented)** 
+**GET http://localhost:3000/api/v1/submissions/hackathons/{hackathonId}/submissions/me (Implemented)**
 
 **Access:** Authenticated | **Purpose:** Return the current user or team submission(s) for an event.
 
-**Status:** This endpoint is not yet implemented in the backend.  Path parameters: 
+**Status:** Implemented in the backend.
+
+ Path parameters:
 
 | Parameter  | Description |
 | :---- | :---- |
 | hackathonId  | target event identifier |
 
-**GET http://localhost:3000/api/v1/submissions/{submissionId}/versions (Not Implemented)** 
+**GET http://localhost:3000/api/v1/submissions/{submissionId}/versions (Implemented)**
 
 **Access:** Authenticated | **Purpose:** Show all saved versions of the same project submission.
 
-**Status:** This endpoint is not yet implemented in the backend.
+**Status:** Implemented in the backend.
 
-  25   
- Path parameters: 
+ Path parameters:
 
 | Parameter  | Description |
 | :---- | :---- |
 | submissionId  | submission identifier |
+
+
 
 **9\. Judging and scoring** 
 
@@ -1062,115 +1088,116 @@ Judging endpoints support judge assignment, judge-specific submission views, rub
 
 | Method  | Path  | Access  | Purpose |
 | :---- | :---- | :---- | :---- |
-| POST | http://localhost:3000/api/v1/admin/hackathons/{hackathonId}/judges/assign | Admin | Assign judges (**Not Implemented**) |
-| GET | http://localhost:3000/api/v1/judge/assignments | Judge | Judge assignment list (**Not Implemented**) |
-| GET | http://localhost:3000/api/v1/judge/hackathons/{hackathonId}/submissions | Judge | Judge-visible submissions (**Not Implemented**) |
-| POST | http://localhost:3000/api/v1/judge/submissions/{submissionId}/scores | Judge | Create score (**Not Implemented**) |
-| PATCH | http://localhost:3000/api/v1/judge/scores/{scoreId} | Judge | Update score (**Not Implemented**) |
+| POST | http://localhost:3000/api/v1/admin/hackathons/{hackathonId}/judges/assign | Admin | Assign judges (Implemented) |
+| GET | http://localhost:3000/api/v1/judge/assignments | Judge | Judge assignment list (Implemented) |
+| GET | http://localhost:3000/api/v1/judge/hackathons/{hackathonId}/submissions | Judge | Judge-visible submissions (Implemented) |
+| POST | http://localhost:3000/api/v1/judge/submissions/{submissionId}/scores | Judge | Create score (Implemented) |
+| PATCH | http://localhost:3000/api/v1/judge/scores/{scoreId} | Judge | Update score (Implemented) |
 
-**POST http://localhost:3000/api/v1/admin/hackathons/{hackathonId}/judges/assign (Not Implemented)** 
+**POST http://localhost:3000/api/v1/admin/hackathons/{hackathonId}/judges/assign (Implemented)**
 
 **Access:** Admin | **Purpose:** Assign judges to an event.
 
-**Status:** This endpoint is not yet implemented in the backend. 
+**Status:** Implemented in the backend.
 
- Path parameters: 
+ Path parameters:
 
 | Parameter  | Description |
 | :---- | :---- |
 | hackathonId  | target event identifier |
 
- Request body fields: 
+ Request body fields:
 
 | Field  | Meaning |
 | :---- | :---- |
 | judgeId  | single judge assignment |
 | judgeIds  | bulk judge assignment array |
 
- Accepted input options: 
+ Accepted input options:
 
- { judgeId } for one judge 
+ { judgeId } for one judge
 
- { judgeIds: \[ ... \] } for bulk assignment
+ { judgeIds: [ ... ] } for bulk assignment
 
-  26   
-**GET http://localhost:3000/api/v1/judge/assignments (Not Implemented)** 
+**GET http://localhost:3000/api/v1/judge/assignments (Implemented)**
 
 **Access:** Judge | **Purpose:** Return the current judge's event assignments.
 
-**Status:** This endpoint is not yet implemented in the backend. 
+**Status:** Implemented in the backend.
 
-**GET http://localhost:3000/api/v1/judge/hackathons/{hackathonId}/submissions (Not Implemented)** 
+**GET http://localhost:3000/api/v1/judge/hackathons/{hackathonId}/submissions (Implemented)**
 
 **Access:** Judge | **Purpose:** List only submissions assigned to the current judge.
 
-**Status:** This endpoint is not yet implemented in the backend.
-**Status:** This endpoint is not yet implemented in the backend.  Path parameters: 
+**Status:** Implemented in the backend.
+
+ Path parameters:
 
 | Parameter  | Description |
 | :---- | :---- |
 | hackathonId  | target event identifier |
 
- Query parameters: 
+ Query parameters:
 
 | Query  | Description |
 | :---- | :---- |
 | status  | pending or scored |
 | page / limit  | pagination controls |
 
- Implementation notes: 
+ Implementation notes:
 
- Never expose all submissions and then filter on the frontend. 
+ Never expose all submissions and then filter on the frontend.
 
- This is a classic object-level authorization risk area. 
+ This is a classic object-level authorization risk area.
 
-**POST http://localhost:3000/api/v1/judge/submissions/{submissionId}/scores (Not Implemented)** 
+**POST http://localhost:3000/api/v1/judge/submissions/{submissionId}/scores (Implemented)**
 
 **Access:** Judge | **Purpose:** Create a rubric-based score record for a submission.
 
-**Status:** This endpoint is not yet implemented in the backend.  Path parameters: 
+**Status:** Implemented in the backend.
+
+ Path parameters:
 
 | Parameter  | Description |
 | :---- | :---- |
 | submissionId  | submission identifier |
 
- Request body fields: 
+ Request body fields:
 
 | Field  | Meaning |
 | :---- | :---- |
 | criteriaScores  | either a criterion map or an array of criterion score pairs |
 | comments  | optional written feedback |
 
- Accepted input options: 
+ Accepted input options:
 
- Object map shape, for example { innovation: 8, impact: 7 } 
+ Object map shape, for example { innovation: 8, impact: 7 }
 
- Array shape, for example \[{ criterion: "Innovation", score: 8 }\]
+ Array shape, for example [{ criterion: "Innovation", score: 8 }]
 
-  27   
- Example request: 
+ Example request:
 
 | {  "criteriaScores": {   "innovation": 8,   "technical\_complexity": 9,   "presentation": 7,   "impact": 8   },   "comments": "Strong product-market fit"  } |
 | :---- |
 
- Alternative request shape: 
+ Alternative request shape:
 
 | {  "criteriaScores": \[   { "criterion": "Innovation", "score": 8 },   { "criterion": "Technical Complexity", "score": 9 },   { "criterion": "Presentation", "score": 7 },   { "criterion": "Impact", "score": 8 }   \],   "comments": "Strong product-market fit"  } |
 | :---- |
 
-**PATCH http://localhost:3000/api/v1/judge/scores/{scoreId} (Not Implemented)** 
+**PATCH http://localhost:3000/api/v1/judge/scores/{scoreId} (Implemented)**
 
 **Access:** Judge | **Purpose:** Update a previously submitted score.
 
-**Status:** This endpoint is not yet implemented in the backend. 
+**Status:** Implemented in the backend.
 
- Path parameters: 
+ Path parameters:
 
 | Parameter  | Description |
 | :---- | :---- |
 | scoreId  | score identifier |
 
- Request body fields: 
+ Request body fields:
 
 | Field  | Meaning |
 | :---- | :---- |
@@ -1183,16 +1210,16 @@ Results are computed from weighted scores, adjusted by tie-break rules, optional
 
 | Method  | Path  | Access  | Purpose |
 | :---- | :---- | :---- | :---- |
-| POST | http://localhost:3000/api/v1/admin/hackathons/{hackathonId}/results/compute | Admin | Aggregate scores and compute ranks (**Not Implemented**) |
-| PATCH | http://localhost:3000/api/v1/admin/hackathons/{hackathonId}/results/override | Admin | Override ranks or awards (**Not Implemented**) |
-| POST | http://localhost:3000/api/v1/admin/results/publish/{hackathonId} | Admin | Publish results |
-| GET | http://localhost:3000/api/v1/hackathons/{hackathonId}/winners | Public | Winners list (**Not Implemented**) |
-| GET | http://localhost:3000/api/v1/hackathons/{hackathonId}/results | Authenticated | Result view (**Not Implemented**) |
-| GET | http://localhost:3000/api/v1/admin/results | Admin | List all results |
-| GET | http://localhost:3000/api/v1/admin/results/{resultId} | Admin | Get result details |
-| POST | http://localhost:3000/api/v1/admin/results | Admin | Create a result |
-| PATCH | http://localhost:3000/api/v1/admin/results/{resultId} | Admin | Update a result |
-| GET | http://localhost:3000/api/v1/admin/results/hackathon/{hackathonId} | Admin | Get hackathon results |
+| POST | http://localhost:3000/api/v1/admin/hackathons/{hackathonId}/results/compute | Admin | Aggregate scores and compute ranks (Not Implemented) |
+| PATCH | http://localhost:3000/api/v1/admin/hackathons/{hackathonId}/results/override | Admin | Override ranks or awards (Not Implemented) |
+| POST | http://localhost:3000/api/v1/admin/results/publish/{hackathonId} | Admin | Publish results (Implemented) |
+| GET | http://localhost:3000/api/v1/hackathons/{hackathonId}/winners | Public | Winners list (Not Implemented) |
+| GET | http://localhost:3000/api/v1/hackathons/{hackathonId}/results | Authenticated | Result view (Not Implemented) |
+| GET | http://localhost:3000/api/v1/admin/results | Admin | List all results (Implemented) |
+| GET | http://localhost:3000/api/v1/admin/results/{resultId} | Admin | Get result details (Implemented) |
+| POST | http://localhost:3000/api/v1/admin/results | Admin | Create a result (Implemented) |
+| PATCH | http://localhost:3000/api/v1/admin/results/{resultId} | Admin | Update a result (Implemented) |
+| GET | http://localhost:3000/api/v1/admin/results/hackathon/{hackathonId} | Admin | Get hackathon results (Implemented) |
 
 **POST http://localhost:3000/api/v1/admin/hackathons/{hackathonId}/results/compute (Not Implemented)** 
 
@@ -1260,9 +1287,11 @@ Accepted input options:
 | {  "specialAwards": \[   {   "submissionId": "sub\_2",   "award": "Best UI/UX"   }   \]  } |
 | :---- |
 
-**POST http://localhost:3000/api/v1/admin/results/publish/{hackathonId}** 
+**POST http://localhost:3000/api/v1/admin/results/publish/{hackathonId} (Implemented)**
 
 **Access:** Admin | **Purpose:** Finalize and publish results to dashboards and notifications.
+
+**Status:** Implemented in the backend.
 
 Path parameters:
 
@@ -1279,7 +1308,7 @@ Request body fields:
 | specialAwards | list of special award labels |
 | notifyParticipants | whether to trigger notifications |
 
-**GET http://localhost:3000/api/v1/hackathons/{hackathonId}/winners (Not Implemented)**  Path parameters: 
+**GET http://localhost:3000/api/v1/hackathons/{hackathonId}/winners (Not Implemented)**
 
 | Parameter  | Description |
 | :---- | :---- |
@@ -1322,13 +1351,17 @@ Request body fields:
 
 **Status:** This endpoint is not yet implemented in the backend.
 
-**GET http://localhost:3000/api/v1/admin/results**
+**GET http://localhost:3000/api/v1/admin/results (Implemented)**
 
 **Access:** Admin | **Purpose:** List all results with filters.
 
-**GET http://localhost:3000/api/v1/admin/results/{resultId}**
+**Status:** Implemented in the backend.
+
+**GET http://localhost:3000/api/v1/admin/results/{resultId} (Implemented)**
 
 **Access:** Admin | **Purpose:** Get detailed result information.
+
+**Status:** Implemented in the backend.
 
 Path parameters:
 
@@ -1336,9 +1369,11 @@ Path parameters:
 | :---- | :---- |
 | resultId | Result identifier (24-char hex ObjectId) |
 
-**POST http://localhost:3000/api/v1/admin/results**
+**POST http://localhost:3000/api/v1/admin/results (Implemented)**
 
 **Access:** Admin | **Purpose:** Create a new result record.
+
+**Status:** Implemented in the backend.
 
 Request body fields:
 
@@ -1351,9 +1386,11 @@ Request body fields:
 | awardCategory | "winner", "finalist", or "participant" | No |
 | remarks | Additional remarks (max 500 chars) | No |
 
-**PATCH http://localhost:3000/api/v1/admin/results/{resultId}**
+**PATCH http://localhost:3000/api/v1/admin/results/{resultId} (Implemented)**
 
 **Access:** Admin | **Purpose:** Update an existing result.
+
+**Status:** Implemented in the backend.
 
 Path parameters:
 
@@ -1370,17 +1407,19 @@ Request body fields (all optional):
 | awardCategory | "winner", "finalist", or "participant" |
 | remarks | Additional remarks (max 500 chars) |
 
-**GET http://localhost:3000/api/v1/admin/results/hackathon/{hackathonId}**
+**GET http://localhost:3000/api/v1/admin/results/hackathon/{hackathonId} (Implemented)**
 
-**Access:** Admin | **Purpose:** Get all results for a specific hackathon. 
+**Access:** Admin | **Purpose:** Get all results for a specific hackathon.
 
- Path parameters: 
+**Status:** Implemented in the backend.
+
+Path parameters:
 
 | Parameter  | Description |
 | :---- | :---- |
 | hackathonId  | target event identifier |
 
- Query parameters: 
+Query parameters:
 
 | Query  | Description |
 | :---- | :---- |
@@ -1394,16 +1433,16 @@ Certificates include participation certificates for all eligible participants an
 
 | Method  | Path  | Access  | Purpose |
 | :---- | :---- | :---- | :---- |
-| POST | http://localhost:3000/api/v1/admin/hackathons/{hackathonId}/certificates/generate | Admin | Generate certificates (**Not Implemented**) |
-| GET | http://localhost:3000/api/v1/users/me/certificates | Authenticated | Current user certificates (**Not Implemented**) |
-| GET | http://localhost:3000/api/v1/certificates/{certificateId}/download | Authenticated | Get signed download URL (**Not Implemented**) |
-| GET | http://localhost:3000/api/v1/certificates/verify/{certificateCode} | Public | Verify certificate (**Not Implemented**) |
-| GET | http://localhost:3000/api/v1/admin/certificates | Admin | List all certificates |
-| GET | http://localhost:3000/api/v1/admin/certificates/{certificateId} | Admin | Get certificate details |
-| POST | http://localhost:3000/api/v1/admin/certificates | Admin | Issue a certificate |
-| PATCH | http://localhost:3000/api/v1/admin/certificates/{certificateId} | Admin | Update certificate |
-| PATCH | http://localhost:3000/api/v1/admin/certificates/{certificateId}/revoke | Admin | Revoke certificate |
-| POST | http://localhost:3000/api/v1/admin/certificates/{certificateId}/resend-email | Admin | Resend certificate email |
+| POST | http://localhost:3000/api/v1/admin/hackathons/{hackathonId}/certificates/generate | Admin | Generate certificates (Not Implemented) |
+| GET | http://localhost:3000/api/v1/users/me/certificates | Authenticated | Current user certificates (Not Implemented) |
+| GET | http://localhost:3000/api/v1/certificates/{certificateId}/download | Authenticated | Get signed download URL (Not Implemented) |
+| GET | http://localhost:3000/api/v1/certificates/verify/{certificateCode} | Public | Verify certificate (Not Implemented) |
+| GET | http://localhost:3000/api/v1/admin/certificates | Admin | List all certificates (Implemented) |
+| GET | http://localhost:3000/api/v1/admin/certificates/{certificateId} | Admin | Get certificate details (Implemented) |
+| POST | http://localhost:3000/api/v1/admin/certificates | Admin | Issue a certificate (Implemented) |
+| PATCH | http://localhost:3000/api/v1/admin/certificates/{certificateId} | Admin | Update certificate (Implemented) |
+| PATCH | http://localhost:3000/api/v1/admin/certificates/{certificateId}/revoke | Admin | Revoke certificate (Implemented) |
+| POST | http://localhost:3000/api/v1/admin/certificates/{certificateId}/resend-email | Admin | Resend certificate email (Implemented) |
 
 **POST http://localhost:3000/api/v1/admin/hackathons/{hackathonId}/certificates/generate (Not Implemented)** 
 
@@ -1461,13 +1500,17 @@ Certificates include participation certificates for all eligible participants an
 
 **Status:** This endpoint is not yet implemented in the backend.
 
-**GET http://localhost:3000/api/v1/admin/certificates**
+**GET http://localhost:3000/api/v1/admin/certificates (Implemented)**
 
 **Access:** Admin | **Purpose:** List all certificates with filters.
 
-**GET http://localhost:3000/api/v1/admin/certificates/{certificateId}**
+**Status:** Implemented in the backend.
+
+**GET http://localhost:3000/api/v1/admin/certificates/{certificateId} (Implemented)**
 
 **Access:** Admin | **Purpose:** Get detailed certificate information.
+
+**Status:** Implemented in the backend.
 
 Path parameters:
 
@@ -1475,9 +1518,11 @@ Path parameters:
 | :---- | :---- |
 | certificateId | Certificate identifier (24-char hex ObjectId) |
 
-**POST http://localhost:3000/api/v1/admin/certificates**
+**POST http://localhost:3000/api/v1/admin/certificates (Implemented)**
 
 **Access:** Admin | **Purpose:** Issue a new certificate.
+
+**Status:** Implemented in the backend.
 
 Request body fields:
 
@@ -1488,9 +1533,11 @@ Request body fields:
 | certificateType | "participation", "winner", "finalist", or "judge" | Yes |
 | awardCategory | Award category description | No |
 
-**PATCH http://localhost:3000/api/v1/admin/certificates/{certificateId}**
+**PATCH http://localhost:3000/api/v1/admin/certificates/{certificateId} (Implemented)**
 
 **Access:** Admin | **Purpose:** Update certificate details.
+
+**Status:** Implemented in the backend.
 
 Path parameters:
 
@@ -1505,9 +1552,11 @@ Request body fields:
 | awardCategory | Award category description |
 | remarks | Additional remarks (max 500 chars) |
 
-**PATCH http://localhost:3000/api/v1/admin/certificates/{certificateId}/revoke**
+**PATCH http://localhost:3000/api/v1/admin/certificates/{certificateId}/revoke (Implemented)**
 
 **Access:** Admin | **Purpose:** Revoke a certificate.
+
+**Status:** Implemented in the backend.
 
 Path parameters:
 
@@ -1515,21 +1564,23 @@ Path parameters:
 | :---- | :---- |
 | certificateId | Certificate identifier (24-char hex ObjectId) |
 
-**POST http://localhost:3000/api/v1/admin/certificates/{certificateId}/resend-email**
+**POST http://localhost:3000/api/v1/admin/certificates/{certificateId}/resend-email (Implemented)**
 
-**Access:** Admin | **Purpose:** Resend certificate email to recipient. 
+**Access:** Admin | **Purpose:** Resend certificate email to recipient.
 
- Path parameters: 
+**Status:** Implemented in the backend.
+
+Path parameters:
 
 | Parameter  | Description |
 | :---- | :---- |
-| certificateCode  | public verification code |
+| certificateId  | certificate identifier |
 
- Implementation notes: 
+Implementation notes:
 
- Use a non-sequential random code to avoid enumeration. 
+ Use a non-sequential random code to avoid enumeration.
 
- Rate limit this endpoint because it is public. 
+ Rate limit this endpoint because it is public.
 
  Example response:
 
@@ -1540,24 +1591,26 @@ Path parameters:
 
 **12\. University dashboards** 
 
-University dashboards are institution-scoped read surfaces. Admins create university records and  domain mappings. University admins then inspect students, performance, and export reports, but do  not modify hackathons. 
+University dashboards are institution-scoped read surfaces. Admins create university records and domain mappings. University admins then inspect students, performance, and export reports, but do not modify hackathons. 
 
 | Method  | Path  | Access  | Purpose |
 | :---- | :---- | :---- | :---- |
-| POST | http://localhost:3000/api/v1/admin/universities | Admin | Create university |
-| GET | http://localhost:3000/api/v1/admin/universities | Admin | List universities |
-| GET | http://localhost:3000/api/v1/admin/universities/{universityId} | Admin | Get university details |
-| PATCH | http://localhost:3000/api/v1/admin/universities/{universityId} | Admin | Update university |
-| DELETE | http://localhost:3000/api/v1/admin/universities/{universityId} | Admin | Delete university |
-| GET | http://localhost:3000/api/v1/admin/universities/{universityId}/stats | Admin | Get university statistics |
-| GET | http://localhost:3000/api/v1/university/me | University | Dashboard overview (**Not Implemented**) |
-| GET | http://localhost:3000/api/v1/university/me/students | University | Student list (**Not Implemented**) |
-| GET | http://localhost:3000/api/v1/university/me/analytics | University | Institution analytics (**Not Implemented**) |
-| GET | http://localhost:3000/api/v1/university/me/reports/export | University | Export reports (**Not Implemented**) |
+| POST | http://localhost:3000/api/v1/admin/universities | Admin | Create university (Implemented) |
+| GET | http://localhost:3000/api/v1/admin/universities | Admin | List universities (Implemented) |
+| GET | http://localhost:3000/api/v1/admin/universities/{universityId} | Admin | Get university details (Implemented) |
+| PATCH | http://localhost:3000/api/v1/admin/universities/{universityId} | Admin | Update university (Implemented) |
+| DELETE | http://localhost:3000/api/v1/admin/universities/{universityId} | Admin | Delete university (Implemented) |
+| GET | http://localhost:3000/api/v1/admin/universities/{universityId}/stats | Admin | Get university statistics (Implemented) |
+| GET | http://localhost:3000/api/v1/university/me | University | Dashboard overview (Not Implemented) |
+| GET | http://localhost:3000/api/v1/university/me/students | University | Student list (Not Implemented) |
+| GET | http://localhost:3000/api/v1/university/me/analytics | University | Institution analytics (Not Implemented) |
+| GET | http://localhost:3000/api/v1/university/me/reports/export | University | Export reports (Not Implemented) |
 
-**POST http://localhost:3000/api/v1/admin/universities** 
+**POST http://localhost:3000/api/v1/admin/universities (Implemented)**
 
 **Access:** Admin | **Purpose:** Create a university record.
+
+**Status:** Implemented in the backend.
 
 Request body fields:
 
@@ -1572,18 +1625,22 @@ Request body fields:
 | country | Country (max 100 chars) | No |
 | website | Valid URL | No |
 
- Example request: 
+ Example request:
 
 | {  "name": "Delhi Technological University",   "emailDomain": "dtu.ac.in",   "contactEmail": "placement@dtu.ac.in",   "temporaryPassword": "TempPass@123"  } |
 | :---- |
 
-**GET http://localhost:3000/api/v1/admin/universities**
+**GET http://localhost:3000/api/v1/admin/universities (Implemented)**
 
 **Access:** Admin | **Purpose:** List all universities with filters.
 
-**GET http://localhost:3000/api/v1/admin/universities/{universityId}**
+**Status:** Implemented in the backend.
+
+**GET http://localhost:3000/api/v1/admin/universities/{universityId} (Implemented)**
 
 **Access:** Admin | **Purpose:** Get detailed university information.
+
+**Status:** Implemented in the backend.
 
 Path parameters:
 
@@ -1591,9 +1648,11 @@ Path parameters:
 | :---- | :---- |
 | universityId | University identifier (24-char hex ObjectId) |
 
-**PATCH http://localhost:3000/api/v1/admin/universities/{universityId}** 
+**PATCH http://localhost:3000/api/v1/admin/universities/{universityId} (Implemented)**
 
 **Access:** Admin | **Purpose:** Update university metadata.
+
+**Status:** Implemented in the backend.
 
 Path parameters:
 
@@ -1615,9 +1674,11 @@ Request body fields (all optional):
 | website | Valid URL |
 | status | "active" or "inactive" |
 
-**DELETE http://localhost:3000/api/v1/admin/universities/{universityId}**
+**DELETE http://localhost:3000/api/v1/admin/universities/{universityId} (Implemented)**
 
 **Access:** Admin | **Purpose:** Delete a university.
+
+**Status:** Implemented in the backend.
 
 Path parameters:
 
@@ -1625,9 +1686,17 @@ Path parameters:
 | :---- | :---- |
 | universityId | University identifier (24-char hex ObjectId) |
 
-**GET http://localhost:3000/api/v1/admin/universities/{universityId}/stats**
+Path parameters:
+
+| Parameter | Description |
+| :---- | :---- |
+| universityId | University identifier (24-char hex ObjectId) |
+
+**GET http://localhost:3000/api/v1/admin/universities/{universityId}/stats (Implemented)**
 
 **Access:** Admin | **Purpose:** Get university statistics and analytics.
+
+**Status:** Implemented in the backend.
 
 Path parameters:
 
@@ -1697,20 +1766,22 @@ Admin endpoints provide user oversight, account suspension, password reset assis
 
 | Method  | Path  | Access  | Purpose |
 | :---- | :---- | :---- | :---- |
-| GET | http://localhost:3000/api/v1/admin/auth/register | Admin | Register new admin (**Not in summary table - see below**) |
-| POST | http://localhost:3000/api/v1/admin/auth/login | Public | Admin login |
-| GET | http://localhost:3000/api/v1/admin/users | Admin | List users |
-| GET | http://localhost:3000/api/v1/admin/users/{userId} | Admin | User details |
-| PATCH | http://localhost:3000/api/v1/admin/users/{userId}/suspend | Admin | Suspend user |
-| PATCH | http://localhost:3000/api/v1/admin/users/{userId}/restore | Admin | Restore user |
-| POST | http://localhost:3000/api/v1/admin/users/{userId}/resetpassword | Admin | Reset user password |
-| GET | http://localhost:3000/api/v1/admin/settings | Admin | Get settings |
-| PATCH | http://localhost:3000/api/v1/admin/settings/payment | Admin | Update payment configuration |
-| PATCH | http://localhost:3000/api/v1/admin/settings/email-templates/{templateKey} | Admin | Update email template (**Not Implemented**) |
+| POST | http://localhost:3000/api/v1/admin/auth/register | Admin | Register new admin (Implemented) |
+| POST | http://localhost:3000/api/v1/admin/auth/login | Public | Admin login (Implemented) |
+| GET | http://localhost:3000/api/v1/admin/users | Admin | List users (Implemented) |
+| GET | http://localhost:3000/api/v1/admin/users/{userId} | Admin | User details (Implemented) |
+| PATCH | http://localhost:3000/api/v1/admin/users/{userId}/suspend | Admin | Suspend user (Implemented) |
+| PATCH | http://localhost:3000/api/v1/admin/users/{userId}/restore | Admin | Restore user (Implemented) |
+| POST | http://localhost:3000/api/v1/admin/users/{userId}/resetpassword | Admin | Reset user password (Implemented) |
+| GET | http://localhost:3000/api/v1/admin/settings | Admin | Get settings (Implemented) |
+| PATCH | http://localhost:3000/api/v1/admin/settings/payment | Admin | Update payment configuration (Implemented) |
+| PATCH | http://localhost:3000/api/v1/admin/settings/email-templates/{templateKey} | Admin | Update email template (Not Implemented) |
 
-**POST http://localhost:3000/api/v1/admin/auth/login**
+**POST http://localhost:3000/api/v1/admin/auth/login (Implemented)**
 
 **Access:** Public | **Purpose:** Authenticate an admin user.
+
+**Status:** Implemented in the backend.
 
 Request body fields:
 
@@ -1719,9 +1790,11 @@ Request body fields:
 | email | Admin email address | Yes |
 | password | Password | Yes |
 
-**POST http://localhost:3000/api/v1/admin/auth/register**
+**POST http://localhost:3000/api/v1/admin/auth/register (Implemented)**
 
 **Access:** Public (with admin secret key) | **Purpose:** Register a new admin account.
+
+**Status:** Implemented in the backend.
 
 Request body fields:
 
@@ -1732,9 +1805,11 @@ Request body fields:
 | confirmPassword | Must match password | Yes |
 | adminSecretKey | Secret key for admin registration | Yes |
 
-**GET http://localhost:3000/api/v1/admin/users** 
+**GET http://localhost:3000/api/v1/admin/users (Implemented)**
 
 **Access:** Admin | **Purpose:** Search and filter user accounts.
+
+**Status:** Implemented in the backend.
 
 Query parameters:
 
@@ -1745,20 +1820,11 @@ Query parameters:
 | search | Name or email search |
 | page / limit | Pagination controls |
 
-**GET http://localhost:3000/api/v1/admin/users/{userId}** 
-
- Query parameters: 
-
-| Query  | Description |
-| :---- | :---- |
-| role  | participant, judge, admin, or university |
-| status  | active or suspended |
-| search  | name or email search |
-| page / limit  | pagination controls |
-
-**GET /admin/users/{userId}** 
+**GET http://localhost:3000/api/v1/admin/users/{userId} (Implemented)**
 
 **Access:** Admin | **Purpose:** Return an admin view of a single user.
+
+**Status:** Implemented in the backend.
 
 Path parameters:
 
@@ -1766,19 +1832,13 @@ Path parameters:
 | :---- | :---- |
 | userId | User identifier (24-char hex ObjectId) |
 
-**PATCH http://localhost:3000/api/v1/admin/users/{userId}/suspend** 
 
- Path parameters:
 
-  36 
-
-| Parameter  | Description |
-| :---- | :---- |
-| userId  | user identifier |
-
-**PATCH /admin/users/{userId}/suspend** 
+**PATCH /admin/users/{userId}/suspend (Implemented)**
 
 **Access:** Admin | **Purpose:** Disable a user account.
+
+**Status:** Implemented in the backend.
 
 Path parameters:
 
@@ -1800,9 +1860,11 @@ Path parameters:
 | :---- | :---- |
 | reason  | human-readable admin reason |
 
-**PATCH /admin/users/{userId}/restore** 
+**PATCH /admin/users/{userId}/restore (Implemented)**
 
 **Access:** Admin | **Purpose:** Restore a suspended user.
+
+**Status:** Implemented in the backend.
 
 Path parameters:
 
@@ -1810,17 +1872,13 @@ Path parameters:
 | :---- | :---- |
 | userId | User identifier (24-char hex ObjectId) |
 
-**POST http://localhost:3000/api/v1/admin/users/{userId}/resetpassword** 
 
- Path parameters: 
 
-| Parameter  | Description |
-| :---- | :---- |
-| userId  | user identifier |
-
-**POST /admin/users/{userId}/reset-password** 
+**POST /admin/users/{userId}/reset-password (Implemented)**
 
 **Access:** Admin | **Purpose:** Help a user regain access.
+
+**Status:** Implemented in the backend.
 
 Path parameters:
 
@@ -1834,37 +1892,17 @@ Request body fields:
 | :---- | :---- |
 | password | New temporary password (min 6 chars, 1 uppercase, 1 special) |
 
-**GET http://localhost:3000/api/v1/admin/settings** 
-
- Path parameters: 
-
-| Parameter  | Description |
-| :---- | :---- |
-| userId  | user identifier |
-
- Request body fields:
-
-| Field  | Meaning |
-| :---- | :---- |
-| temporaryPassword  | set an immediate temporary password |
-| sendResetLink  | tell the system to send a reset link instead |
-
-  37   
- Accepted input options: 
-
- { temporaryPassword } 
-
- { sendResetLink: true } 
-
-**GET /admin/settings** 
+**GET http://localhost:3000/api/v1/admin/settings (Implemented)**
 
 **Access:** Admin | **Purpose:** Read current platform settings.
 
-**PATCH http://localhost:3000/api/v1/admin/settings/payment** 
+**Status:** Implemented in the backend.
 
-        **PATCH /admin/settings/payment** 
+**PATCH http://localhost:3000/api/v1/admin/settings/payment (Implemented)**
 
 **Access:** Admin | **Purpose:** Update payment gateway configuration.
+
+**Status:** Implemented in the backend.
 
 Request body: Flexible object with payment configuration (min 1 field required). Accepts any valid payment gateway configuration fields.
 
@@ -1913,34 +1951,36 @@ Analytics endpoints serve dashboard charts and aggregated metrics. Report endpoi
 
 | Method  | Path  | Access  | Purpose |
 | :---- | :---- | :---- | :---- |
-| GET | http://localhost:3000/api/v1/admin/analytics/dashboard | Admin | High-level metrics (dashboard) |
-| GET | http://localhost:3000/api/v1/admin/analytics/hackathons/stats | Admin | Hackathon statistics |
-| GET | http://localhost:3000/api/v1/admin/analytics/users/stats | Admin | User statistics |
-| GET | http://localhost:3000/api/v1/admin/analytics/registrations/stats | Admin | Registration statistics |
-| GET | http://localhost:3000/api/v1/admin/analytics/submissions/stats | Admin | Submission statistics |
-| GET | http://localhost:3000/api/v1/admin/analytics/results/stats | Admin | Results statistics |
-| GET | http://localhost:3000/api/v1/admin/analytics/payments/stats | Admin | Revenue/payment statistics |
-| GET | http://localhost:3000/api/v1/admin/analytics/overview | Admin | High-level metrics (**Not Implemented**) |
-| GET | http://localhost:3000/api/v1/admin/analytics/registrations | Admin | Registrations chart data (**Not Implemented**) |
-| GET | http://localhost:3000/api/v1/admin/analytics/revenue | Admin | Revenue chart data (**Not Implemented**) |
-| GET | http://localhost:3000/api/v1/admin/analytics/participation-trends | Admin | Solo vs team trends (**Not Implemented**) |
-| GET | http://localhost:3000/api/v1/admin/analytics/universities | Admin | Top universities (**Not Implemented**) |
-| GET | http://localhost:3000/api/v1/admin/analytics/judges | Admin | Judge activity (**Not Implemented**) |
-| GET | http://localhost:3000/api/v1/admin/analytics/certificates | Admin | Certificate metrics (**Not Implemented**) |
-| GET | http://localhost:3000/api/v1/admin/reports | Admin | List all reports |
-| GET | http://localhost:3000/api/v1/admin/reports/{reportId} | Admin | Get report details |
-| POST | http://localhost:3000/api/v1/admin/reports | Admin | Create a report |
-| PATCH | http://localhost:3000/api/v1/admin/reports/{reportId} | Admin | Update a report |
-| POST | http://localhost:3000/api/v1/admin/reports/{reportId}/run | Admin | Run a report |
-| DELETE | http://localhost:3000/api/v1/admin/reports/{reportId} | Admin | Delete a report |
-| GET | http://localhost:3000/api/v1/admin/reports/participants | Admin | Participant report export (**Not Implemented**) |
-| GET | http://localhost:3000/api/v1/admin/reports/winners | Admin | Winners report export (**Not Implemented**) |
-| GET | http://localhost:3000/api/v1/admin/reports/revenue | Admin | Revenue report export (**Not Implemented**) |
-| GET | http://localhost:3000/api/v1/admin/reports/universities | Admin | University report export (**Not Implemented**) |
+| GET | http://localhost:3000/api/v1/admin/analytics/dashboard | Admin | High-level metrics (dashboard) (Implemented) |
+| GET | http://localhost:3000/api/v1/admin/analytics/hackathons/stats | Admin | Hackathon statistics (Implemented) |
+| GET | http://localhost:3000/api/v1/admin/analytics/users/stats | Admin | User statistics (Implemented) |
+| GET | http://localhost:3000/api/v1/admin/analytics/registrations/stats | Admin | Registration statistics (Implemented) |
+| GET | http://localhost:3000/api/v1/admin/analytics/submissions/stats | Admin | Submission statistics (Implemented) |
+| GET | http://localhost:3000/api/v1/admin/analytics/results/stats | Admin | Results statistics (Implemented) |
+| GET | http://localhost:3000/api/v1/admin/analytics/payments/stats | Admin | Revenue/payment statistics (Implemented) |
+| GET | http://localhost:3000/api/v1/admin/analytics/overview | Admin | High-level metrics (Not Implemented) |
+| GET | http://localhost:3000/api/v1/admin/analytics/registrations | Admin | Registrations chart data (Not Implemented) |
+| GET | http://localhost:3000/api/v1/admin/analytics/revenue | Admin | Revenue chart data (Not Implemented) |
+| GET | http://localhost:3000/api/v1/admin/analytics/participation-trends | Admin | Solo vs team trends (Not Implemented) |
+| GET | http://localhost:3000/api/v1/admin/analytics/universities | Admin | Top universities (Not Implemented) |
+| GET | http://localhost:3000/api/v1/admin/analytics/judges | Admin | Judge activity (Not Implemented) |
+| GET | http://localhost:3000/api/v1/admin/analytics/certificates | Admin | Certificate metrics (Not Implemented) |
+| GET | http://localhost:3000/api/v1/admin/reports | Admin | List all reports (Implemented) |
+| GET | http://localhost:3000/api/v1/admin/reports/{reportId} | Admin | Get report details (Implemented) |
+| POST | http://localhost:3000/api/v1/admin/reports | Admin | Create a report (Implemented) |
+| PATCH | http://localhost:3000/api/v1/admin/reports/{reportId} | Admin | Update a report (Implemented) |
+| POST | http://localhost:3000/api/v1/admin/reports/{reportId}/run | Admin | Run a report (Implemented) |
+| DELETE | http://localhost:3000/api/v1/admin/reports/{reportId} | Admin | Delete a report (Implemented) |
+| GET | http://localhost:3000/api/v1/admin/reports/participants | Admin | Participant report export (Not Implemented) |
+| GET | http://localhost:3000/api/v1/admin/reports/winners | Admin | Winners report export (Not Implemented) |
+| GET | http://localhost:3000/api/v1/admin/reports/revenue | Admin | Revenue report export (Not Implemented) |
+| GET | http://localhost:3000/api/v1/admin/reports/universities | Admin | University report export (Not Implemented) |
 
-**GET http://localhost:3000/api/v1/admin/analytics/dashboard**
+**GET http://localhost:3000/api/v1/admin/analytics/dashboard (Implemented)**
 
 **Access:** Admin | **Purpose:** Return top-level dashboard metrics.
+
+**Status:** Implemented in the backend.
 
 Query parameters:
 
@@ -1948,29 +1988,41 @@ Query parameters:
 | :---- | :---- |
 | from / to | Optional date range |
 
-**GET http://localhost:3000/api/v1/admin/analytics/hackathons/stats**
+**GET http://localhost:3000/api/v1/admin/analytics/hackathons/stats (Implemented)**
 
 **Access:** Admin | **Purpose:** Return hackathon statistics.
 
-**GET http://localhost:3000/api/v1/admin/analytics/users/stats**
+**Status:** Implemented in the backend.
+
+**GET http://localhost:3000/api/v1/admin/analytics/users/stats (Implemented)**
 
 **Access:** Admin | **Purpose:** Return user statistics.
 
-**GET http://localhost:3000/api/v1/admin/analytics/registrations/stats**
+**Status:** Implemented in the backend.
+
+**GET http://localhost:3000/api/v1/admin/analytics/registrations/stats (Implemented)**
 
 **Access:** Admin | **Purpose:** Return registration statistics.
 
-**GET http://localhost:3000/api/v1/admin/analytics/submissions/stats**
+**Status:** Implemented in the backend.
+
+**GET http://localhost:3000/api/v1/admin/analytics/submissions/stats (Implemented)**
 
 **Access:** Admin | **Purpose:** Return submission statistics.
 
-**GET http://localhost:3000/api/v1/admin/analytics/results/stats**
+**Status:** Implemented in the backend.
+
+**GET http://localhost:3000/api/v1/admin/analytics/results/stats (Implemented)**
 
 **Access:** Admin | **Purpose:** Return results statistics.
 
-**GET http://localhost:3000/api/v1/admin/analytics/payments/stats**
+**Status:** Implemented in the backend.
+
+**GET http://localhost:3000/api/v1/admin/analytics/payments/stats (Implemented)**
 
 **Access:** Admin | **Purpose:** Return payment statistics.
+
+**Status:** Implemented in the backend.
 
 **GET http://localhost:3000/api/v1/admin/analytics/overview (Not Implemented)** 
 
@@ -2045,13 +2097,17 @@ Query parameters:
 
 **Status:** This endpoint is not yet implemented in the backend.
 
-**GET http://localhost:3000/api/v1/admin/reports**
+**GET http://localhost:3000/api/v1/admin/reports (Implemented)**
 
 **Access:** Admin | **Purpose:** List all reports with filters.
 
-**GET http://localhost:3000/api/v1/admin/reports/{reportId}**
+**Status:** Implemented in the backend.
+
+**GET http://localhost:3000/api/v1/admin/reports/{reportId} (Implemented)**
 
 **Access:** Admin | **Purpose:** Get detailed report information.
+
+**Status:** Implemented in the backend.
 
 Path parameters:
 
@@ -2059,9 +2115,11 @@ Path parameters:
 | :---- | :---- |
 | reportId | Report identifier (24-char hex ObjectId) |
 
-**POST http://localhost:3000/api/v1/admin/reports**
+**POST http://localhost:3000/api/v1/admin/reports (Implemented)**
 
 **Access:** Admin | **Purpose:** Create a new report.
+
+**Status:** Implemented in the backend.
 
 Request body fields:
 
@@ -2073,9 +2131,11 @@ Request body fields:
 | schedule | Object with cron and timezone | No |
 | filters | Custom filter object | No |
 
-**PATCH http://localhost:3000/api/v1/admin/reports/{reportId}**
+**PATCH http://localhost:3000/api/v1/admin/reports/{reportId} (Implemented)**
 
 **Access:** Admin | **Purpose:** Update an existing report.
+
+**Status:** Implemented in the backend.
 
 Path parameters:
 
@@ -2093,9 +2153,11 @@ Request body fields:
 | schedule | Object with cron and timezone |
 | filters | Custom filter object |
 
-**POST http://localhost:3000/api/v1/admin/reports/{reportId}/run**
+**POST http://localhost:3000/api/v1/admin/reports/{reportId}/run (Implemented)**
 
 **Access:** Admin | **Purpose:** Execute a report.
+
+**Status:** Implemented in the backend.
 
 Path parameters:
 
@@ -2103,9 +2165,11 @@ Path parameters:
 | :---- | :---- |
 | reportId | Report identifier (24-char hex ObjectId) |
 
-**DELETE http://localhost:3000/api/v1/admin/reports/{reportId}**
+**DELETE http://localhost:3000/api/v1/admin/reports/{reportId} (Implemented)**
 
 **Access:** Admin | **Purpose:** Delete a report.
+
+**Status:** Implemented in the backend.
 
 Path parameters:
 

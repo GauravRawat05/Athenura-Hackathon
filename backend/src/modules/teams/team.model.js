@@ -19,6 +19,11 @@ const memberSchema = new mongoose.Schema({
   joinedAt: {
     type: Date,
     default: Date.now
+  },
+  invitationStatus: {
+    type: String,
+    enum: ["pending", "accepted", "declined"],
+    default: "accepted"  // leader is auto-accepted; direct additions are accepted
   }
 });
 

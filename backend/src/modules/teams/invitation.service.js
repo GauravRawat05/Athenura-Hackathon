@@ -1,13 +1,16 @@
 /**
-  invitation.service.js
-  Handles logic for sending, tracking, and consuming team invitations.
- */
-import invitationRepository from "./invitation.repository.js";
-import teamRepository from "./team.repository.js";
-import User from "../users/user.model.js";
-import ApiError from "../../libs/apiError.js";
-import invitationToken from "./invitation.token.js";
-import { INVITATION_EXPIRY_MS, invitationStatus, teamRoles } from "./team.constants.js";
+   invitation.service.js
+   Handles logic for sending, tracking, and consuming team invitations.
+   */
+   import invitationRepository from "./invitation.repository.js";
+   import teamRepository from "./team.repository.js";
+   import User from "../users/user.model.js";
+   import ApiError from "../../libs/apiError.js";
+   import invitationToken from "./invitation.token.js";
+   import { INVITATION_EXPIRY_MS, invitationStatus, teamRoles } from "./team.constants.js";
+   import { sendEmail, EMAIL_TYPES } from "../notifications/notification.mailer.js";
+   import mongoose from "mongoose";
+   const ObjectId = mongoose.Types.ObjectId;
 
 class InvitationService {
   /**
@@ -65,6 +68,32 @@ class InvitationService {
       expiresAt
     });
 
+    // Get team leader info for email
+    const leader = await User.findById(invitedById).select("fullName");
+
+    // Get hackathon title if needed
+    let hackathonTitle = "Hackathon";
+    try {
+      const { default: Hackathon } = await import("../admin/hackathons/hackathon.model.js");
+      const hackathon = await Hackathon.findById(team.hackathonId).select("title");
+      hackathonTitle = hackathon?.title || "Hackathon";
+    } catch (e) {
+      console.error("Could not fetch hackathon title:", e.message);
+    }
+
+    // Send invitation email
+    try {
+      await sendEmail(invitedUser.email, EMAIL_TYPES.TEAM_INVITATION, {
+        teamName: team.teamName,
+        hackathonTitle: hackathonTitle,
+        invitedBy: leader?.fullName,
+        inviteLink: `/team-invitations/${unhashedToken}/accept`,
+        fullName: invitedUser.fullName
+      });
+    } catch (emailError) {
+      console.error("Failed to send team invitation email:", emailError.message);
+    }
+
     return {
       invitation,
       inviteLink: `/team-invitations/${unhashedToken}/accept`
@@ -114,6 +143,20 @@ class InvitationService {
     // Update invitation status
     await invitationRepository.updateStatus(invitation._id, invitationStatus.ACCEPTED);
 
+    // Notify team leader about acceptance
+    try {
+      const leader = await User.findById(invitation.invitedBy).select("email fullName");
+      const newMember = await User.findById(userId).select("fullName");
+      if (leader && team) {
+        await sendEmail(leader.email, EMAIL_TYPES.INVITATION_ACCEPTED, {
+          teamName: team.teamName,
+          memberName: newMember?.fullName
+        });
+      }
+    } catch (emailError) {
+      console.error("Failed to send invitation accepted notification:", emailError.message);
+    }
+
     return { teamId: invitation.teamId._id };
   }
 
@@ -139,6 +182,23 @@ class InvitationService {
     }
 
     await invitationRepository.updateStatus(invitation._id, invitationStatus.DECLINED);
+
+    // Get team info for the notification
+    const team = await teamRepository.findById(invitation.teamId._id);
+
+    // Notify team leader about decline
+    try {
+      const leader = await User.findById(invitation.invitedBy).select("email fullName");
+      const decliner = await User.findById(userId).select("fullName");
+      if (leader) {
+        await sendEmail(leader.email, EMAIL_TYPES.INVITATION_DECLINED, {
+          teamName: team?.teamName,
+          memberName: decliner?.fullName
+        });
+      }
+    } catch (emailError) {
+      console.error("Failed to send invitation declined notification:", emailError.message);
+    }
 
     return { message: "Invitation declined successfully" };
   }

@@ -76,7 +76,21 @@ const updateHackathonValidation = Joi.object({
   ),
 });
 
+/**
+ * Validation schema for listing hackathon registrations.
+ * Supports filtering by status, paymentStatus, mode, and search functionality.
+ */
+const listRegistrationsValidation = Joi.object({
+  page: Joi.number().integer().min(1).default(1),
+  limit: Joi.number().integer().min(1).max(100).default(20),
+  status: Joi.string().valid('pending', 'confirmed', 'cancelled', 'payment_failed'),
+  paymentStatus: Joi.string().valid('pending', 'completed', 'failed', 'refunded'),
+  mode: Joi.string().valid('solo', 'team'),
+  search: Joi.string().allow('').optional()
+});
+
 export {
   createHackathonValidation,
-  updateHackathonValidation
+  updateHackathonValidation,
+  listRegistrationsValidation
 };

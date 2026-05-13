@@ -1,12 +1,18 @@
 /**
-  auth.service.js
-  Contains the core business rules for auth.
- */
-import authRepository from "./auth.repository.js"
-import UserUtils from "../users/user.utils.js"
-import jwt from "jsonwebtoken"
-import envConfig from "../../config/envConfig.js"
-const userUtils = new UserUtils()
+   auth.service.js
+   Contains the core business rules for auth.
+   */
+   import authRepository from "./auth.repository.js"
+   import UserUtils from "../users/user.utils.js"
+   import jwt from "jsonwebtoken"
+   import envConfig from "../../config/envConfig.js"
+   import { 
+     sendEmail, 
+     sendVerificationEmail, 
+     sendPasswordResetEmail,
+     EMAIL_TYPES 
+   } from "../notifications/notification.mailer.js"
+   const userUtils = new UserUtils()
 
 class AuthService {
 
@@ -92,6 +98,13 @@ class AuthService {
 
       await authRepository.saveUser(existingUser, { validateBeforeSave: false })
 
+      // Send verification email
+      try {
+        await sendVerificationEmail(existingUser.email, otp, existingUser.fullName)
+      } catch (emailError) {
+        console.error("Failed to send verification email:", emailError.message)
+      }
+
       const updatedUser = await this.getSanitizedUser(existingUser._id)
 
       return { user: updatedUser, otp }
@@ -127,6 +140,13 @@ class AuthService {
     user.emailOTPExpiry = userUtils.getOTPExpiryTime()
 
     await authRepository.saveUser(user, { validateBeforeSave: false })
+
+    // Send verification email
+    try {
+      await sendVerificationEmail(user.email, otp, user.fullName)
+    } catch (emailError) {
+      console.error("Failed to send verification email:", emailError.message)
+    }
 
     const createdUser = await this.getSanitizedUser(user._id)
 
@@ -184,8 +204,12 @@ class AuthService {
         user.emailOTPExpiry = userUtils.getOTPExpiryTime()
         await authRepository.saveUser(user, { validateBeforeSave: false })
 
-        // TODO: Send email with new OTP
-        console.log("New OTP sent (expired previous):", plainOTP)
+        // Send new OTP email via Brevo
+        try {
+          await sendVerificationEmail(user.email, plainOTP, user.fullName)
+        } catch (emailError) {
+          console.error("Failed to resend OTP email:", emailError.message)
+        }
 
         throw new Error("Email not verified. New OTP sent to your email. Please verify before logging in.")
       }
@@ -205,29 +229,36 @@ class AuthService {
     return { user: sanitizedUser, accessToken, refreshToken }
   }
 
-  /**
-   * Resend verification OTP
-   */
-  async resendVerificationService(email) {
-    const user = await authRepository.findUserByEmail(email)
-    if (!user) {
-      throw new Error("User not found")
-    }
+/**
+    * Resend verification OTP
+    */
+   async resendVerificationService(email) {
+     const user = await authRepository.findUserByEmail(email)
+     if (!user) {
+       throw new Error("User not found")
+     }
 
-    if (user.isEmailVerified) {
-      throw new Error("User already verified")
-    }
+     if (user.isEmailVerified) {
+       throw new Error("User already verified")
+     }
 
-    const plainOTP = userUtils.generateOTP()
-    const hashedOTP = await userUtils.hashOTP(plainOTP)
+     const plainOTP = userUtils.generateOTP()
+     const hashedOTP = await userUtils.hashOTP(plainOTP)
 
-    user.emailOTP = hashedOTP
-    user.emailOTPExpiry = userUtils.getOTPExpiryTime()
+     user.emailOTP = hashedOTP
+     user.emailOTPExpiry = userUtils.getOTPExpiryTime()
 
-    await authRepository.saveUser(user, { validateBeforeSave: false })
+     await authRepository.saveUser(user, { validateBeforeSave: false })
 
-    return { otp: plainOTP, fullName: user.fullName, email: user.email }
-  }
+     // Send verification email via Brevo
+     try {
+       await sendVerificationEmail(user.email, plainOTP, user.fullName)
+     } catch (emailError) {
+       console.error("Failed to resend verification email:", emailError.message)
+     }
+
+     return { otp: plainOTP, fullName: user.fullName, email: user.email }
+   }
 
   /**
    * Logout user
@@ -275,9 +306,12 @@ class AuthService {
 
     await authRepository.saveUser(user, { validateBeforeSave: false })
 
-    // TODO: Send email or SMS with reset token
-    // For now, return the token (in production, send via email/SMS)
-    console.log("Reset token:", resetToken)
+    // Send password reset email via Brevo
+    try {
+      await sendPasswordResetEmail(user.email, resetToken, user.fullName)
+    } catch (emailError) {
+      console.error("Failed to send password reset email:", emailError.message)
+    }
 
     return { message: "Password reset link sent to your email" }
   }

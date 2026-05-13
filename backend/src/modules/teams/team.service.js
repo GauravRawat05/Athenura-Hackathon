@@ -34,7 +34,8 @@ class TeamService {
         {
           userId: leaderId,
           role: teamRoles.LEADER,
-          joinedAt: new Date()
+          joinedAt: new Date(),
+          invitationStatus: "accepted"  // leader is automatically accepted
         }
       ]
     };

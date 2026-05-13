@@ -19,6 +19,12 @@ const passwordSchema = Joi.string().min(8).max(128).required().messages({
 export const adminRegisterValidation = Joi.object({
   email: emailSchema,
   password: passwordSchema,
+  phone: Joi.number().integer().positive().required().messages({
+    "number.base": "Phone number must be a valid number",
+    "number.integer": "Phone number must be an integer",
+    "number.positive": "Phone number must be a positive number",
+    "any.required": "Phone number is required"
+  }),
   confirmPassword: Joi.string().valid(Joi.ref("password")).required().messages({
     "any.only": "Passwords do not match",
     "any.required": "Confirm password is required"

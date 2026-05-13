@@ -5,12 +5,29 @@
 import Team from "./team.model.js";
 
 class TeamRepository {
-  /**
-   * Create a new team
-   */
-  async create(teamData) {
-    return await Team.create(teamData);
-  }
+   /**
+    * Get team size (count of accepted members only)
+    * Handles backward compatibility: members without invitationStatus are treated as accepted
+    */
+   getAcceptedMemberCount(team) {
+     return team.members.filter(m => {
+       const status = m.invitationStatus || 'accepted';
+       return status === 'accepted';
+     }).length;
+   }
+
+   /**
+    * Get all accepted member user IDs
+    * Handles backward compatibility: members without invitationStatus are treated as accepted
+    */
+   getAcceptedMemberIds(team) {
+     return team.members
+       .filter(m => {
+         const status = m.invitationStatus || 'accepted';
+         return status === 'accepted';
+       })
+       .map(m => m.userId);
+   }
 
   /**
    * Find team by ID
@@ -52,16 +69,16 @@ class TeamRepository {
     );
   }
 
-  /**
-   * Add member to team
-   */
-  async addMember(teamId, memberData) {
-    return await Team.findByIdAndUpdate(
-      teamId,
-      { $push: { members: memberData } },
-      { new: true }
-    );
-  }
+   /**
+    * Add member to team
+    */
+   async addMember(teamId, memberData) {
+     return await Team.findByIdAndUpdate(
+       teamId,
+       { $push: { members: { ...memberData, invitationStatus: "accepted" } } },
+       { new: true }
+     );
+   }
 
   /**
    * Remove member from team

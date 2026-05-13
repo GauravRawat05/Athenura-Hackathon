@@ -16,7 +16,8 @@ const refreshTokenExpiry = String(process.env.REFRESH_TOKEN_EXPIRY)
 const cloudinaryCloudName = String(process.env.CLOUDINARY_CLOUD_NAME)
 const cloudinaryApiKey = String(process.env.CLOUDINARY_API_KEY)
 const cloudinaryApiSecret = String(process.env.CLOUDINARY_API_SECRET)
-const brevoApiKey = String(process.env.BREVO_API_KEY)
+const brevoApiKey = String(process.env.BREVO_API_KEY || process.env.BREVO_API)
+const brevoSenderEmail = String(process.env.BREVO_SENDER_EMAIL || process.env.BREVO_SENDER)
 const judgeSecretKey = String(process.env.JUDGE_SECRET_KEY)
 const universitySecretKey = String(process.env.UNIVERSITY_SECRET_KEY)
 const admineSecretKey = String(process.env.ADMIN_SECRET_KEY)
@@ -38,5 +39,6 @@ export {
   cloudinaryApiKey,
   cloudinaryApiSecret,
   cloudinaryCloudName,
-  brevoApiKey
+  brevoApiKey,
+  brevoSenderEmail
 }

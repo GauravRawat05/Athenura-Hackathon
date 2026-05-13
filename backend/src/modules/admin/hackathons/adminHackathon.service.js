@@ -1,4 +1,7 @@
 import Hackathon from './hackathon.model.js'; // Corrected filename
+import Registration from '../../registrations/registration.model.js';
+import Team from '../../teams/team.model.js';
+import User from '../../users/user.model.js';
 
 // Helper function to validate date types
 const isValidDate = (date) => {
@@ -94,10 +97,92 @@ const findHackathonById = async (hackathonId) => {
   return await Hackathon.findById(hackathonId);
 };
 
+/**
+ * List all registrations for a specific hackathon with filtering and pagination.
+ * @param {string} hackathonId - The MongoDB ObjectId of the hackathon
+ * @param {Object} filters - Filter options (page, limit, status, paymentStatus, mode, search)
+ * @returns {Object} Object containing registrations array and pagination metadata
+ */
+const listRegistrations = async (hackathonId, filters = {}) => {
+  const page = Math.max(1, parseInt(filters.page) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(filters.limit) || 20));
+  const skip = (page - 1) * limit;
+
+  // Build the query object
+  const query = { hackathonId };
+
+  // Add status filter if provided
+  if (filters.status) {
+    query.status = filters.status;
+  }
+
+  // Add paymentStatus filter if provided
+  if (filters.paymentStatus) {
+    query.paymentStatus = filters.paymentStatus;
+  }
+
+  // Add mode filter if provided
+  if (filters.mode) {
+    query.mode = filters.mode;
+  }
+
+  // Add search filter if provided - search by user email/fullName or team name
+  if (filters.search && filters.search.trim() !== '') {
+    const searchRegex = new RegExp(filters.search.trim(), 'i');
+    
+    // Find users matching the search term
+    const matchingUsers = await User.find({
+      $or: [
+        { email: searchRegex },
+        { fullName: searchRegex }
+      ]
+    }).select('_id');
+    
+    const userIds = matchingUsers.map(u => u._id);
+    
+    // Find teams matching the search term
+    const matchingTeams = await Team.find({
+      teamName: searchRegex
+    }).select('_id');
+    
+    const teamIds = matchingTeams.map(t => t._id);
+    
+    // Add OR condition for both userIds and teamIds
+    query.$or = [
+      { userId: { $in: userIds } },
+      { teamId: { $in: teamIds } }
+    ];
+  }
+
+  // Execute query with pagination and populate related fields
+  const [registrations, total] = await Promise.all([
+    Registration.find(query)
+      .populate('userId', 'fullName email collegeOrUniversity graduationYear skills')
+      .populate('teamId', 'teamName description leader members')
+      .populate('participantIds', 'fullName email')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    Registration.countDocuments(query)
+  ]);
+
+  return {
+    registrations,
+    meta: {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit)
+    }
+  };
+};
+
 export {
   createHackathon,
   updateHackathon,
   deleteHackathon,
   findHackathonById,
   updateHackathonRuleService,
+  listRegistrations
 };
