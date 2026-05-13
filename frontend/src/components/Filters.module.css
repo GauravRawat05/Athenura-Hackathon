@@ -1,0 +1,140 @@
+.wrapper {
+  margin-bottom: 32px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.tab {
+  padding: 10px 20px;
+  border-radius: var(--radius-full);
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: var(--gray-100);
+  color: var(--gray-600);
+  border: 1.5px solid transparent;
+  transition: all 0.2s;
+}
+.tab:hover { background: var(--fog); color: var(--ocean); }
+.active {
+  background: var(--navy);
+  color: var(--white);
+  border-color: var(--navy);
+}
+
+.filterBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--white);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  color: var(--gray-600);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  box-shadow: var(--shadow-sm);
+}
+.filterBtn:hover { border-color: var(--ocean); color: var(--ocean); }
+
+.rotated { transform: rotate(180deg); transition: transform 0.2s; }
+
+.panel {
+  margin-top: 12px;
+  padding: 24px;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.panelGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.group {}
+
+.label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gray-400);
+  margin-bottom: 10px;
+}
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pill {
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.82rem;
+  font-weight: 500;
+  background: var(--gray-100);
+  color: var(--gray-600);
+  border: 1.5px solid transparent;
+  transition: all 0.2s;
+}
+.pill:hover { background: var(--fog); color: var(--ocean); }
+.pillActive {
+  background: var(--fog);
+  border-color: var(--ocean);
+  color: var(--ocean);
+}
+
+.range {
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--ocean) 0%, var(--gray-200) 0%);
+  outline: none;
+  margin: 8px 0;
+}
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ocean);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,119,182,0.3);
+}
+
+.rangeLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--gray-400);
+}
+
+.clearBtn {
+  font-size: 0.82rem;
+  color: var(--danger);
+  background: none;
+  border: none;
+  font-weight: 500;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.clearBtn:hover { opacity: 0.7; }

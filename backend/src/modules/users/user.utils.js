@@ -45,7 +45,7 @@ class UserUtils {
 
   //Get user fields to exclude from response
   getSensitiveFieldsToExclude() {
-    return "-password -emailOTP -emailVerificationToken -refreshToken"
+    return "-password -emailOTP -refreshToken"
   }
 
   //Generate reset token

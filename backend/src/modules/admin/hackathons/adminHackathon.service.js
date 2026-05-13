@@ -67,6 +67,22 @@ const updateHackathon = async (hackathonId, updateData) => {
   return hackathon;
 };
 
+
+const updateHackathonRuleService = async (hackathonId, rules) => {
+  const updateRules = {}
+  if (rules && typeof rules === "string") {
+    updateRules.rules = String(rules).trim().split(",");
+  } else {
+    updateRules.rule = []
+  }
+
+  if (updateRules.rules.length < 0) {
+    throw new Error('Rules has been not Empty !');
+  }
+  const updateHackathonRules = await Hackathon.findByIdAndUpdate(hackathonId, updateRules, { new: true });
+  return updateHackathonRules
+}
+
 const deleteHackathon = async (hackathonId) => {
   const result = await Hackathon.findByIdAndDelete(hackathonId);
   if (!result) {
@@ -83,4 +99,5 @@ export {
   updateHackathon,
   deleteHackathon,
   findHackathonById,
+  updateHackathonRuleService,
 };

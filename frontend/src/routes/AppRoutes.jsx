@@ -34,15 +34,20 @@ import ScoreSubmission from '../pages/judge/ScoreSubmission'
 import UniversityDashboard from '../pages/university/UniversityDashboard'
 import UniversityReports from '../pages/university/UniversityReports'
 
+import About from '../pages/public/About'
+import Contact from '../pages/public/Contact'
 import VerifyCertificate from '../pages/public/VerifyCertificate'
 import PublicWinners from '../pages/public/PublicWinners'
 import NotFound from '../pages/public/NotFound'
+
 
 export default function AppRoutes() {
   return (
     <Routes>
       {/* Public */}
       <Route path="/" element={<Home />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/contact" element={<Contact />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/verify-email" element={<VerifyEmail />} />

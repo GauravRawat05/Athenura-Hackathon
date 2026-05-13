@@ -70,16 +70,6 @@ class AuthRepository {
       resetPasswordTokenExpiry: { $gt: Date.now() }
     })
   }
-
-  /**
-   * Find user by verification token
-   */
-  async findUserByVerificationToken(hashedToken) {
-    return await User.findOne({
-      emailVerificationToken: hashedToken,
-      emailVerificationTokenExpiry: { $gt: Date.now() }
-    })
-  }
 }
 
 const authRepository = new AuthRepository()
