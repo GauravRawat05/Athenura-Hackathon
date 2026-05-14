@@ -12,7 +12,7 @@ const router = Router()
 
 router.get('/', verifyJWT, verifyAdmin, asyncHandler(adminPaymentController.listPayments))
 router.get('/:paymentId', verifyJWT, verifyAdmin, validate(paymentIdValidation, 'params'), asyncHandler(adminPaymentController.getPaymentById))
-router.patch('/:paymentId', verifyJWT, verifyAdmin, validate(updatePaymentValidation), asyncHandler(adminPaymentController.updatePayment))
+router.patch('/:paymentId', verifyJWT, verifyAdmin, validate(paymentIdValidation, 'params'), validate(updatePaymentValidation), asyncHandler(adminPaymentController.updatePayment))
 router.post('/:paymentId/refund', verifyJWT, verifyAdmin, validate(refundPaymentValidation), asyncHandler(adminPaymentController.refundPayment))
 router.get('/stats', verifyJWT, verifyAdmin, asyncHandler(adminPaymentController.getPaymentStats))
 

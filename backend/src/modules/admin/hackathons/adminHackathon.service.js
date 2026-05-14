@@ -15,6 +15,20 @@ const validateAllowedModes = (modes) => {
 };
 
 const createHackathon = async (hackathonData) => {
+  // Map mode array to allowedModes if allowedModes not provided
+  // mode contains capitalized values like ['Solo', 'Both']
+  // allowedModes should contain lowercase values like ['solo', 'team']
+  if (hackathonData.mode && !hackathonData.allowedModes) {
+    hackathonData.allowedModes = hackathonData.mode.map(m => {
+      const modeLower = m.toLowerCase();
+      // Map 'both' to ['solo', 'team'] based on business logic
+      if (modeLower === 'both') {
+        return ['solo', 'team'];
+      }
+      return modeLower; // 'solo' -> 'solo'
+    }).flat();
+  }
+
   // Check if a hackathon with the same slug already exists
   const existingHackathon = await Hackathon.findOne({ slug: hackathonData.slug });
   if (existingHackathon) {
@@ -72,19 +86,35 @@ const updateHackathon = async (hackathonId, updateData) => {
 
 
 const updateHackathonRuleService = async (hackathonId, rules) => {
-  const updateRules = {}
+  const updateRules = {};
   if (rules && typeof rules === "string") {
     updateRules.rules = String(rules).trim().split(",");
+  } else if (rules && Array.isArray(rules)) {
+    updateRules.rules = rules;
   } else {
-    updateRules.rule = []
+    updateRules.rules = [];
   }
+
+  // Optional validation: uncomment if rules cannot be empty
+  if (updateRules.rules.length === 0) {
+    throw new Error('Rules cannot be empty');
+  }
+
+//   const updatedHackathon = await Hackathon.findByIdAndUpdate(
+//     hackathonId,
+//     updateRules,
+//     { new: true }
+//   );
+//   return updatedHackathon;
+// };
 
   if (updateRules.rules.length < 0) {
     throw new Error('Rules has been not Empty !');
   }
   const updateHackathonRules = await Hackathon.findByIdAndUpdate(hackathonId, updateRules, { new: true });
-  return updateHackathonRules
+  return updateHackathonRules;
 }
+
 
 const deleteHackathon = async (hackathonId) => {
   const result = await Hackathon.findByIdAndDelete(hackathonId);

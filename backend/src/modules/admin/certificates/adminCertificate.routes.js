@@ -13,7 +13,7 @@ const router = Router()
 router.get('/', verifyJWT, verifyAdmin, asyncHandler(adminCertificateController.listCertificates))
 router.get('/:certificateId', verifyJWT, verifyAdmin, validate(certificateIdValidation, 'params'), asyncHandler(adminCertificateController.getCertificateById))
 router.post('/', verifyJWT, verifyAdmin, validate(issueCertificateValidation), asyncHandler(adminCertificateController.issueCertificate))
-router.patch('/:certificateId', verifyJWT, verifyAdmin, validate(updateCertificateValidation), asyncHandler(adminCertificateController.updateCertificate))
+router.patch('/:certificateId', verifyJWT, verifyAdmin, validate(certificateIdValidation, 'params'), validate(updateCertificateValidation), asyncHandler(adminCertificateController.updateCertificate))
 router.patch('/:certificateId/revoke', verifyJWT, verifyAdmin, validate(certificateIdValidation, 'params'), asyncHandler(adminCertificateController.revokeCertificate))
 router.post('/:certificateId/resend-email', verifyJWT, verifyAdmin, validate(certificateIdValidation, 'params'), asyncHandler(adminCertificateController.resendCertificateEmail))
 

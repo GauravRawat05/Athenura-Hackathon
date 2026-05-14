@@ -1,10 +1,11 @@
 /**
-  adminAuth.service.js
-  Business logic for admin authentication.
- */
+   adminAuth.service.js
+   Business logic for admin authentication.
+*/
 import authRepository from "../../auth/auth.repository.js"
 import envConfig from "../../../config/envConfig.js"
 import { userRoles } from "../../users/user.constants.js"
+import ApiError from "../../../libs/apiError.js"
 
 class AdminAuthService {
 
@@ -37,25 +38,25 @@ class AdminAuthService {
   }
 
   /**
-   * Register a new admin user
-   */
+    * Register a new admin user
+    */
   async registerAdminService(userInputData) {
     const { email, password, phone, adminSecretKey, confirmPassword } = userInputData
 
     // Validate admin secret key
     if (adminSecretKey !== envConfig.admineSecretKey) {
-      throw new Error("Invalid admin secret key")
+      throw new ApiError(403, "Invalid admin secret key");
     }
 
     // Validate password match
     if (password !== confirmPassword) {
-      throw new Error("Passwords do not match")
+      throw new ApiError(400, "Passwords do not match");
     }
 
     // Check if user already exists
     const existingUser = await authRepository.findUserByEmail(email)
     if (existingUser) {
-      throw new Error("User already exists with this email")
+      throw new ApiError(409, "User already exists with this email");
     }
 
     // Create admin user data
@@ -83,24 +84,24 @@ class AdminAuthService {
   }
 
   /**
-   * Login admin user
-   */
+    * Login admin user
+    */
   async loginAdminService(email, password) {
     const user = await authRepository.findUserByEmail(email)
 
     if (!user) {
-      throw new Error("User not found")
+      throw new ApiError(404, "User not found");
     }
 
     // Verify admin role
     if (user.role !== userRoles.ADMIN) {
-      throw new Error("Access denied. Admin privileges required.")
+      throw new ApiError(403, "Access denied. Admin privileges required.");
     }
 
     // Validate password
     const isPasswordValid = await user.isPasswordCorrect(password)
     if (!isPasswordValid) {
-      throw new Error("Invalid credentials")
+      throw new ApiError(401, "Invalid credentials");
     }
 
     // Generate tokens

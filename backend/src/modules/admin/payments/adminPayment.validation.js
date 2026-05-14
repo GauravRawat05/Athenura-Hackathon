@@ -14,12 +14,6 @@ export const paymentIdValidation = Joi.object({
 })
 
 export const updatePaymentValidation = Joi.object({
-  paymentId: Joi.string().required().custom((value, helpers) => {
-    if (!value.match(/^[0-9a-fA-F]{24}$/)) {
-      return helpers.error('Invalid payment ID format')
-    }
-    return value
-  }),
   status: Joi.string().valid('pending', 'completed', 'failed', 'refunded').optional(),
   method: Joi.string().optional().max(50),
   transactionId: Joi.string().optional().max(100),
@@ -59,14 +53,14 @@ export const validate = (schema, source = 'body') => {
       })
     }
 
-    if (source === 'body') {
-      req.body = value
-    } else if (source === 'params') {
-      req.params = value
-    } else if (source === 'query') {
-      req.query = value
-    }
+     if (source === 'body') {
+       req.body = value
+     } else if (source === 'params') {
+       req.params = value
+     } else if (source === 'query') {
+       Object.assign(req.query, value)
+     }
 
-    next()
+     next()
   }
 }

@@ -4,7 +4,7 @@
  */
 // import app from './app.js'
 import app from './app.js'
-import connectDB from './database/indexes.js';
+import connectDB from './config/db.js';
 import { portNumber } from './utils/config.js'
 
 const port = portNumber || 5001
