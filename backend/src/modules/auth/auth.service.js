@@ -1,18 +1,20 @@
 /**
    auth.service.js
    Contains the core business rules for auth.
-   */
-   import authRepository from "./auth.repository.js"
-   import UserUtils from "../users/user.utils.js"
-   import jwt from "jsonwebtoken"
-   import envConfig from "../../config/envConfig.js"
-   import { 
-     sendEmail, 
-     sendVerificationEmail, 
-     sendPasswordResetEmail,
-     EMAIL_TYPES 
-   } from "../notifications/notification.mailer.js"
-   const userUtils = new UserUtils()
+*/
+import authRepository from "./auth.repository.js"
+import UserUtils from "../users/user.utils.js"
+import jwt from "jsonwebtoken"
+import envConfig from "../../config/envConfig.js"
+import ApiError from "../../libs/apiError.js"
+import {
+  sendEmail,
+  sendVerificationEmail,
+  sendPasswordResetEmail,
+  EMAIL_TYPES
+} from "../notifications/notification.mailer.js"
+
+const userUtils = new UserUtils()
 
 class AuthService {
 
@@ -91,6 +93,8 @@ class AuthService {
       existingUser.gender = gender
 
       const otp = userUtils.generateOTP()
+      console.log(otp);
+      
       const hashedOTP = await userUtils.hashOTP(otp)
 
       existingUser.emailOTP = hashedOTP
@@ -134,6 +138,8 @@ class AuthService {
     const user = await authRepository.createUser(userData)
 
     const otp = userUtils.generateOTP()
+    console.log(otp);
+    
     const hashedOTP = await userUtils.hashOTP(otp)
 
     user.emailOTP = hashedOTP
@@ -232,32 +238,39 @@ class AuthService {
 /**
     * Resend verification OTP
     */
+   /**
+    * Resend verification OTP
+    */
    async resendVerificationService(email) {
-     const user = await authRepository.findUserByEmail(email)
+     const user = await authRepository.findUserByEmail(email);
      if (!user) {
-       throw new Error("User not found")
+       throw new ApiError(404, "User not found");
      }
 
      if (user.isEmailVerified) {
-       throw new Error("User already verified")
+       throw new ApiError(400, "User already verified");
      }
 
-     const plainOTP = userUtils.generateOTP()
-     const hashedOTP = await userUtils.hashOTP(plainOTP)
+     const plainOTP = userUtils.generateOTP();
+     console.log("OTP:",plainOTP);
+     
+     const hashedOTP = await userUtils.hashOTP(plainOTP);
 
-     user.emailOTP = hashedOTP
-     user.emailOTPExpiry = userUtils.getOTPExpiryTime()
+     user.emailOTP = hashedOTP;
+     user.emailOTPExpiry = userUtils.getOTPExpiryTime();
 
-     await authRepository.saveUser(user, { validateBeforeSave: false })
+     await authRepository.saveUser(user, { validateBeforeSave: false });
 
      // Send verification email via Brevo
      try {
-       await sendVerificationEmail(user.email, plainOTP, user.fullName)
+       await sendVerificationEmail(user.email, plainOTP, user.fullName);
      } catch (emailError) {
-       console.error("Failed to resend verification email:", emailError.message)
+       console.error("Failed to resend verification email:", emailError.message);
+       // Optionally: still return OTP in dev mode, or throw if email is critical
+       // throw new ApiError(500, "Failed to send verification email");
      }
 
-     return { otp: plainOTP, fullName: user.fullName, email: user.email }
+     return { otp: plainOTP, fullName: user.fullName, email: user.email };
    }
 
   /**

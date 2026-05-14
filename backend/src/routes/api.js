@@ -11,15 +11,16 @@ import asyncHandler from '../libs/asyncHandler.js';
 import authRoute from '../modules/auth/auth.routes.js';
 import adminRoute from '../modules/admin/admin.routes.js';
 import userRoute from '../modules/users/user.routes.js';
-// import universityRoute from '../modules/universities/university.routes.js';
+import universityRoute from '../modules/universities/university.routes.js';
 // import notificationRoute from '../modules/notifications/notification.routes.js';
 // import certificateRoute from '../modules/certificates/certificate.routes.js';
 import teamRoute from '../modules/teams/team.routes.js';
-import hackathonRoute from '../modules/admin/hackathons/adminHackathon.routes.js';
+import adminHackathonRoute from '../modules/admin/hackathons/adminHackathon.routes.js';
 import registrationRoute from '../modules/registrations/registration.routes.js';
 import submissionRoute from '../modules/submissions/submission.routes.js';
 import judgingRoute from '../modules/judging/judging.routes.js';
 import publicWinnersRoute from '../modules/results/publicWinners.routes.js';
+import hackathonRoute from '../modules/hackathons/hackathon.routes.js';
 // import resultRoute from '../modules/results/result.routes.js';
 
 // Import controllers/validations for inline routes
@@ -43,15 +44,17 @@ router.post(
 router.use('/auth', authRoute);
 router.use('/admin', adminRoute);
 router.use('/users', userRoute);
-// router.use('/universities', universityRoute);
+router.use('/university', universityRoute);
 // router.use('/notifications', notificationRoute);
 // router.use('/certificates', certificateRoute);
 router.use('/teams', teamRoute);
 // Public winners endpoint (JWT required, non-admin)
 router.use('/hackathons', publicWinnersRoute);
+
 router.use('/hackathons', hackathonRoute);
 router.use('/registrations', registrationRoute);
 router.use('/submissions', submissionRoute);
+
 // router.use('/results', resultRoute);
 router.use('/', judgingRoute);
 

@@ -92,7 +92,8 @@ export const validate = (schema, source = 'body') => {
     } else if (source === 'params') {
       req.params = value;
     } else if (source === 'query') {
-      req.query = value;
+      // Use Object.assign to avoid issues with read-only properties
+      Object.assign(req.query, value);
     }
 
     next();

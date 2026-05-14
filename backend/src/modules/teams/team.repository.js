@@ -92,6 +92,13 @@ class TeamRepository {
   }
 
   /**
+   * Create a new team
+   */
+  async create(data) {
+    return await Team.create(data);
+  }
+
+  /**
    * Delete team (soft delete by setting isActive to false)
    */
   async softDelete(teamId) {

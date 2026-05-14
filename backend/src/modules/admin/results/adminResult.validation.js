@@ -33,12 +33,6 @@ export const createResultValidation = Joi.object({
 })
 
 export const updateResultValidation = Joi.object({
-  resultId: Joi.string().required().custom((value, helpers) => {
-    if (!value.match(/^[0-9a-fA-F]{24}$/)) {
-      return helpers.error('Invalid result ID format')
-    }
-    return value
-  }),
   rank: Joi.number().integer().min(1).optional(),
   score: Joi.number().min(0).max(100).optional(),
   awardCategory: Joi.string().valid('winner', 'finalist', 'participant').optional(),
@@ -75,14 +69,14 @@ export const validate = (schema, source = 'body') => {
       })
     }
 
-    if (source === 'body') {
-      req.body = value
-    } else if (source === 'params') {
-      req.params = value
-    } else if (source === 'query') {
-      req.query = value
-    }
+     if (source === 'body') {
+       req.body = value
+     } else if (source === 'params') {
+       req.params = value
+     } else if (source === 'query') {
+       Object.assign(req.query, value)
+     }
 
-    next()
+     next()
   }
 }

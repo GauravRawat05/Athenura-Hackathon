@@ -63,14 +63,14 @@ export const validate = (schema, source = 'body') => {
       })
     }
 
-    if (source === 'body') {
-      req.body = value
-    } else if (source === 'params') {
-      req.params = value
-    } else if (source === 'query') {
-      req.query = value
-    }
+     if (source === 'body') {
+       req.body = value
+     } else if (source === 'params') {
+       req.params = value
+     } else if (source === 'query') {
+       Object.assign(req.query, value)
+     }
 
-    next()
+     next()
   }
 }

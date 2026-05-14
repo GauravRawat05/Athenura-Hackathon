@@ -17,4 +17,5 @@ class PublicWinnersController {
   }
 }
 
-export default new PublicWinnersController();
+const publicWinnersController = new PublicWinnersController();
+export default publicWinnersController;
