@@ -12,7 +12,7 @@ class Hackathoncontroller {
     if (!hackathons) {
       throw new ApiError(ApiResponse.NOT_FOUND, 'No hackathons found');
     }
-    ApiResponse.sendSuccess(200, res, hackathons);
+    res.json(new ApiResponse(200, hackathons, 'Hackathons fetched successfully'));
   }
 
   // Get hackathon by ID
@@ -22,7 +22,7 @@ class Hackathoncontroller {
     if (!hackathon) {
       throw new ApiError(ApiResponse.NOT_FOUND, 'Hackathon not found');
     }
-    ApiResponse.sendSuccess(200, res, hackathon);
+    res.json(new ApiResponse(200, hackathon, 'Hackathon fetched successfully'));
   }
 };
 

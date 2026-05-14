@@ -35,19 +35,10 @@ class RegistrationService {
       throw new ApiError(404, "Hackathon not found");
     }
 
-    // Registration deadline check
+    // Registration deadline check - users can register before hackathon starts
+    // only the registration deadline matters
     if (new Date() > new Date(hackathon.registrationDeadline)) {
-      throw new ApiError(422, "Registration deadline has passed");
-    }
-
-    // Hackathon end date check (Bug #5)
-    if (new Date() > new Date(hackathon.endDate)) {
-      throw new ApiError(400, "Hackathon has already ended");
-    }
-
-    // Hackathon active period check (Bug #6: ensure hackathon is currently active)
-    if (new Date() < new Date(hackathon.startDate)) {
-      throw new ApiError(400, "Hackathon has not started yet");
+      throw new ApiError(422, "Registration deadline has passed. Cannot register for this hackathon.");
     }
 
     // Mode allowed? (handles "both" as wildcard)

@@ -87,7 +87,7 @@ class AdminHackathonController {
 
     try {
       await deleteHackathonService(hackathonId);
-      return res.status(204).send();
+      return res.json(new ApiResponse(200, null, 'Hackathon deleted successfully'));
     } catch (error) {
       if (error instanceof ApiError) throw error;
       throw new ApiError(400, error.message);
