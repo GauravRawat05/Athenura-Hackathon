@@ -7,19 +7,19 @@ import adminAuthController from "./adminAuth.controller.js"
 import asyncHandler from "../../../libs/asyncHandler.js"
 import {
   validate,
-  adminRegisterValidation,
-  adminLoginValidation
+  registerAdminValidation,
+  loginAdminValidation
 } from "./adminAuth.validation.js"
 
 const router = Router()
 
-router.route("/register").post(
-  validate(adminRegisterValidation),
+router.route("/registerAdminOrJudge").post(
+  validate(registerAdminValidation),
   asyncHandler(adminAuthController.registerAdmin)
 )
 
-router.route("/login").post(
-  validate(adminLoginValidation),
+router.route("/loginAdminOrJudge").post(
+  validate(loginAdminValidation),
   asyncHandler(adminAuthController.loginAdmin)
 )
 

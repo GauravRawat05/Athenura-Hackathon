@@ -1,22 +1,26 @@
 /**
   adminAuth.controller.js
-  Handles HTTP request/response flow for admin authentication.
- */
+  Handles HTTP request/response flow for admin AND judge authentication.
+*/
 import ApiResponse from "../../../libs/apiResponse.js"
 import ApiError from "../../../libs/apiError.js"
 import adminAuthService from "./adminAuth.service.js"
 
 class AdminAuthController {
 
+  // ── Register — role in body decides whether Admin or Judge is created ──────
   async registerAdmin(req, res) {
-    const { email, password, adminSecretKey,confirmPassword,phone } = req.body
+    const { email, password, confirmPassword, phone, role, adminSecretKey, judgeSecretKey, judgeId } = req.body
 
     const { user, accessToken, refreshToken } = await adminAuthService.registerAdminService({
       email,
       password,
-      adminSecretKey,
       confirmPassword,
-      phone
+      phone,
+      role,
+      adminSecretKey,
+      judgeSecretKey,
+      judgeId
     })
 
     const options = {
@@ -32,18 +36,16 @@ class AdminAuthController {
         new ApiResponse(
           201,
           { user, accessToken, refreshToken },
-          "Admin registered successfully"
+          `${ role === "Judge" ? "Judge" : "Admin" } registered successfully`
         )
       )
   }
 
+  // ── Login — checks stored role to decide the privilege level ──────────────
   async loginAdmin(req, res) {
     const { email, password } = req.body
 
-    const { user, accessToken, refreshToken } = await adminAuthService.loginAdminService(
-      email,
-      password
-    )
+    const { user, accessToken, refreshToken } = await adminAuthService.loginAdminService(email, password)
 
     const options = {
       httpOnly: true,
@@ -58,7 +60,7 @@ class AdminAuthController {
         new ApiResponse(
           200,
           { user, accessToken, refreshToken },
-          "Admin logged in successfully"
+          `${user.role === "Judge" ? "Judge" : "Admin"} logged in successfully`
         )
       )
   }

@@ -63,6 +63,14 @@ class UserRepository {
     )
   }
 
+  //get user results by ID (placeholder for actual implementation)
+  
+  async findUserResultsById(userId) {
+    // This is a placeholder. The actual implementation would depend on how results are stored in the database.
+    // For example, if results are stored in a separate collection, you would query that collection for entries related to the userId.
+    return await User.findById(userId).select('results') // Assuming 'results' is a field in the User model
+  }
+
   
    // Save user document
    

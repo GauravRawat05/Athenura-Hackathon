@@ -31,7 +31,7 @@ const userSchema = new mongoose.Schema(
     phone:{
       type : Number,
       required : [true, "Phone no. is required"],
-      unique : true
+      unique : [true, "Phone number must be unique"],
     },
     dateOfBirth : {
       type : Date,
@@ -62,6 +62,11 @@ const userSchema = new mongoose.Schema(
       type : String,
       enums : userRolesEnums,
       default : userRoles.USER
+    },
+    judgeId : {
+      type : String,
+      unique : true,
+      sparse : true
     },
     refreshToken : {
       type : String,

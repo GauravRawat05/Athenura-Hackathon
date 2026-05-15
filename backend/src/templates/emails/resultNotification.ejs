@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Hackathon Results Published</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #2c3e50;
+            margin: 0;
+        }
+        .content {
+            margin-bottom: 30px;
+        }
+        .result-card {
+            background: #f9f9f9;
+            border-left: 4px solid #3498db;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .result-item {
+            margin-bottom: 10px;
+        }
+        .result-label {
+            font-weight: bold;
+            color: #7f8c8d;
+            width: 120px;
+            display: inline-block;
+        }
+        .result-value {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #bdc3c7;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #3498db;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Congratulations!</h1>
+        </div>
+        <div class="content">
+            <p>Dear <%= userName %>,</p>
+            <p>The results for <strong><%= hackathonTitle %></strong> have been published. We are excited to share your performance with you!</p>
+            
+            <div class="result-card">
+                <div class="result-item">
+                    <span class="result-label">Submission:</span>
+                    <span class="result-value"><%= submissionTitle %></span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Rank:</span>
+                    <span class="result-value">#<%= rank %></span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Score:</span>
+                    <span class="result-value"><%= score %></span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Award:</span>
+                    <span class="result-value"><%= awardCategory %></span>
+                </div>
+            </div>
+
+            <p>We want to thank you for your incredible effort and participation. Every line of code contributes to the innovation of our community.</p>
+            
+            <% if (certificateUrl) { %>
+            <p>You can download your certificate of achievement below:</p>
+            <a href="<%= certificateUrl %>" class="btn">Download Certificate</a>
+            <% } %>
+
+            <p>Or visit the hackathon page to see the full leaderboard:</p>
+            <a href="<%= resultsLink %>" style="color: #3498db; text-decoration: underline;">View Full Results</a>
+        </div>
+        <div class="footer">
+            <p>&copy; <%= new Date().getFullYear() %> Athenura Hackathon Platform. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

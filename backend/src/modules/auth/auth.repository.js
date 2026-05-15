@@ -1,7 +1,7 @@
 /**
   auth.repository.js
   Encapsulates database reads/writes for auth.
- */
+*/
 import User from "../users/user.model.js"
 
 class AuthRepository {
@@ -27,6 +27,13 @@ class AuthRepository {
    */
   async userExistsByPhone(phone) {
     return await User.exists({ phone })
+  }
+
+  /**
+   * Find user by judgeId
+   */
+  async findByJudgeId(judgeId) {
+    return await User.findOne({ judgeId })
   }
 
   /**

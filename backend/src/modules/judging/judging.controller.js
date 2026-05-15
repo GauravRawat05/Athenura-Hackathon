@@ -14,6 +14,12 @@ class JudgingController {
 
     const result = await judgingService.assignJudges(hackathonId, judgeIds, adminId);
 
+    if (!result.assigned) {
+      return res
+        .status(409)
+        .json(new ApiResponse(409, result, result.message || "All judges are already assigned to this hackathon"));
+    }
+
     return res
       .status(201)
       .json(new ApiResponse(201, result, "Judges assigned successfully"));

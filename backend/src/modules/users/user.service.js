@@ -4,6 +4,7 @@
 */
 import UserRepository from "./user.repository.js"
 import UserUtils from "./user.utils.js"
+import resultRepository from "../results/result.repository.js"
 
 class UserService {
   constructor() {
@@ -55,6 +56,11 @@ class UserService {
 
     const excludeFields = this.userUtils.getSensitiveFieldsToExclude()
     return await this.userRepository.findUserById(userId, excludeFields)
+  }
+
+  async getMyResultsService(userId) {
+    const results = await resultRepository.findByUserId(userId);
+    return results;
   }
 }
 

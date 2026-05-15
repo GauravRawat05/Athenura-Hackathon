@@ -102,6 +102,10 @@ const hackathonSchema = new mongoose.Schema({
       }
     ],
     default: []
+  },
+  resultsPublished: {
+    type: Boolean,
+    default: false
   }
 
 },{

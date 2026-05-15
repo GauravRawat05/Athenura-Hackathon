@@ -6,9 +6,11 @@
 import judgingRepository from "./judging.repository.js";
 import judgingPolicy from "./judging.policy.js";
 import Hackathon from "../admin/hackathons/hackathon.model.js";
+import JudgeAssignment from "./judgeAssignment.model.js";
 import User from "../users/user.model.js";
 import Submission from "../submissions/submission.model.js";
 import ApiError from "../../libs/apiError.js";
+import { aggregateScoresForSubmission } from '../results/aggregation.service.js';
 
 class JudgingService {
   async assignJudges(hackathonId, judgeIds, adminId) {
@@ -22,30 +24,39 @@ class JudgingService {
       throw new ApiError(400, "One or more invalid judge IDs, or user is not a Judge");
     }
 
+    // Build the assignment documents for all provided judge IDs
     const assignments = judgeIds.map((id) => ({
       judgeId: id,
       hackathonId,
       assignedBy: adminId
     }));
 
-    try {
-      const result = await judgingRepository.createManyAssignments(assignments);
-      return {
-        assigned: result.length,
-        hackathonId
-      };
-    } catch (error) {
-      if (error.code === 11000) {
-        // Some or all were duplicates. insertMany with ordered:false still throws an error but inserts the valid ones.
-        // Mongoose 11000 with ordered:false often has insertedDocs in error.result
-        return {
-          assigned: error.insertedDocs ? error.insertedDocs.length : 0,
-          hackathonId,
-          message: "Some judges were already assigned"
-        };
-      }
-      throw error;
+    // Pre-check: find any that already exist before inserting so we can give a stable,
+    // reliable count of previously-assigned judges regardless of the Mongoose version
+    // or the internal shape of the raw 11000 error object.
+    const existingPairs = await JudgeAssignment.find({
+      judgeId: { $in: judgeIds },
+      hackathonId
+    }).select("judgeId");
+    const alreadyAssignedSet = new Set(existingPairs.map(a => a.judgeId.toString()));
+
+    // Only attempt to insert genuinely-new ones — no duplicates ever make it to
+    // insertMany, so there is nothing left for the catch-block to guess about.
+    const newAssignments = assignments.filter(a => !alreadyAssignedSet.has(a.judgeId.toString()));
+
+    if (newAssignments.length === 0) {
+      // Every judge was already assigned — return a clear 409 instead of
+      // silently counting on an implementation detail of Mongoose error objects.
+      throw new ApiError(409, "All provided judges are already assigned to this hackathon");
     }
+
+    await JudgeAssignment.insertMany(newAssignments, { ordered: false });
+
+    return {
+      assigned: newAssignments.length,
+      alreadyAssigned: alreadyAssignedSet.size,
+      hackathonId
+    };
   }
 
   async getJudgeAssignments(judgeId) {
@@ -126,6 +137,9 @@ class JudgingService {
       status: "Submitted"
     });
 
+    // Wire Automatic Updates
+    await aggregateScoresForSubmission(submissionId, hackathonId);
+
     return newScore;
   }
 
@@ -175,7 +189,12 @@ class JudgingService {
 
     score.status = "Updated";
     
-    return await judgingRepository.saveScore(score);
+    const savedScore = await judgingRepository.saveScore(score);
+
+    // Wire Automatic Updates
+    await aggregateScoresForSubmission(score.submissionId, score.hackathonId);
+
+    return savedScore;
   }
 }
 

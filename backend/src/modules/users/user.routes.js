@@ -11,6 +11,8 @@ import { validate, updateProfileValidation } from './user.validation.js'
 const router = Router()
 
 router.route("/me").get(verifyJWT, asyncHandler(userController.getProfile))
-router.route("/me").patch(verifyJWT, validate(updateProfileValidation), asyncHandler(userController.updateProfile))
+.patch(verifyJWT, validate(updateProfileValidation), asyncHandler(userController.updateProfile))
+
+router.route("/me/results").get(verifyJWT, asyncHandler(userController.getMyResults))
 
 export default router
