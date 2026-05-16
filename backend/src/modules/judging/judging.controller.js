@@ -7,6 +7,14 @@ import judgingService from "./judging.service.js";
 import ApiResponse from "../../libs/apiResponse.js";
 
 class JudgingController {
+  async getAllJudges(req, res) {
+    const judges = await judgingService.getAllJudges();
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, judges, "Judges fetched successfully"));
+  }
+
   async assignJudges(req, res) {
     const { hackathonId } = req.params;
     const { judgeIds } = req.body;

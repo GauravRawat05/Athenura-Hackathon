@@ -4,6 +4,11 @@
  */
 import TeamInvitation from "./invitation.model.js";
 
+/**
+ * Safe fields to expose for user objects in invitation contexts
+ */
+const USER_SAFE_FIELDS = "fullName email role";
+
 class InvitationRepository {
   async create(invitationData) {
     return await TeamInvitation.create(invitationData);
@@ -12,8 +17,8 @@ class InvitationRepository {
   async findByToken(token) {
     return await TeamInvitation.findOne({ token }).populate([
       { path: "teamId" },
-      { path: "invitedUserId" },
-      { path: "invitedBy" }
+      { path: "invitedUserId", select: USER_SAFE_FIELDS },
+      { path: "invitedBy", select: USER_SAFE_FIELDS }
     ]);
   }
 

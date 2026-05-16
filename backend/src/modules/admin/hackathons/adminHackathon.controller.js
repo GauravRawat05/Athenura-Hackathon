@@ -64,7 +64,13 @@ class AdminHackathonController {
     }
 
     try {
-      const hackathon = await updateHackathonRuleService(hackathonId, req.body);
+      const { rules } = req.body;
+
+      if (rules === undefined) {
+        throw new ApiError(400, 'Rules field is required in request body.');
+      }
+
+      const hackathon = await updateHackathonRuleService(hackathonId, rules);
       if (!hackathon) {
         throw new ApiError(404, 'Hackathon not found');
       }

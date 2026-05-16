@@ -14,7 +14,7 @@ router.get('/', verifyJWT, verifyAdmin, asyncHandler(adminResultController.listR
 router.get('/:resultId', verifyJWT, verifyAdmin, validate(resultIdValidation, 'params'), asyncHandler(adminResultController.getResultById))
 router.post('/', verifyJWT, verifyAdmin, validate(createResultValidation), asyncHandler(adminResultController.createResult))
 router.patch('/:resultId', verifyJWT, verifyAdmin, validate(resultIdValidation, 'params'), validate(updateResultValidation), asyncHandler(adminResultController.updateResult))
-router.post('/publish/:hackathonId', verifyJWT, verifyAdmin, validate(publishResultsValidation), asyncHandler(adminResultController.publishResults))
-router.get('/hackathon/:hackathonId', verifyJWT, verifyAdmin, asyncHandler(adminResultController.getHackathonResults))
+router.post('/publish/:hackathonId', verifyJWT, verifyAdmin, validate(publishResultsValidation, 'params'), asyncHandler(adminResultController.publishResults))
+router.get('/hackathon/:hackathonId', verifyJWT, verifyAdmin, validate(publishResultsValidation, 'params'), asyncHandler(adminResultController.getHackathonResults))
 
 export default router

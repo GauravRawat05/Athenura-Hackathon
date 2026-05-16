@@ -4,6 +4,11 @@
  */
 import Team from "./team.model.js";
 
+/**
+ * Safe fields to expose for user objects in team contexts
+ */
+const USER_SAFE_FIELDS = "fullName email phone collegeOrUniversity graduationYear skills resumeLink gender role";
+
 class TeamRepository {
    /**
     * Get team size (count of accepted members only)
@@ -35,7 +40,12 @@ class TeamRepository {
   async findById(teamId, populateFields = []) {
     let query = Team.findById(teamId);
     populateFields.forEach(field => {
-      query = query.populate(field);
+      // Apply safe field selection for user-related populations
+      if (field === "leader" || field === "members.userId") {
+        query = query.populate(field, USER_SAFE_FIELDS);
+      } else {
+        query = query.populate(field);
+      }
     });
     return await query;
   }
@@ -61,11 +71,11 @@ class TeamRepository {
   /**
    * Update team
    */
-  async update(teamId, updateData) {
+  async update(teamId, updateData, options = {}) {
     return await Team.findByIdAndUpdate(
       teamId,
       updateData,
-      { new: true, runValidators: true }
+      { new: true, runValidators: true, ...options }
     );
   }
 

@@ -7,6 +7,7 @@
    import User from "../users/user.model.js";
    import ApiError from "../../libs/apiError.js";
    import invitationToken from "./invitation.token.js";
+   //import registrationRepository from "../registrations/registration.repository.js";
    import { INVITATION_EXPIRY_MS, invitationStatus, teamRoles } from "./team.constants.js";
    import { sendEmail, EMAIL_TYPES } from "../notifications/notification.mailer.js";
    import mongoose from "mongoose";
@@ -32,6 +33,11 @@ class InvitationService {
     const invitedUser = await User.findOne({ email: email.toLowerCase() });
     if (!invitedUser) {
       throw new ApiError(404, "User with this email is not registered");
+    }
+
+    // Verify user role - only standard Users can be invited to teams
+    if (invitedUser.role !== "User") {
+      throw new ApiError(400, "Cannot send invitation to this user");
     }
 
     // Check if user is already in the team
@@ -67,19 +73,16 @@ class InvitationService {
       status: invitationStatus.PENDING,
       expiresAt
     });
+    console.log(unhashedToken);
+    
 
     // Get team leader info for email
     const leader = await User.findById(invitedById).select("fullName");
 
     // Get hackathon title if needed
     let hackathonTitle = "Hackathon";
-    try {
-      const { default: Hackathon } = await import("../admin/hackathons/hackathon.model.js");
-      const hackathon = await Hackathon.findById(team.hackathonId).select("title");
-      hackathonTitle = hackathon?.title || "Hackathon";
-    } catch (e) {
-      console.error("Could not fetch hackathon title:", e.message);
-    }
+    const hackathonDetails = await this.getHackathonDetails(team.hackathonId, "title");
+    hackathonTitle = hackathonDetails?.title || "Hackathon";
 
     // Send invitation email
     try {
@@ -94,8 +97,12 @@ class InvitationService {
       console.error("Failed to send team invitation email:", emailError.message);
     }
 
+    // Remove sensitive hashed token from response
+    const invitationData = invitation.toObject();
+    delete invitationData.token;
+
     return {
-      invitation,
+      invitation: invitationData,
       inviteLink: `/team-invitations/${unhashedToken}/accept`
     };
   }
@@ -109,7 +116,11 @@ class InvitationService {
     const invitation = await invitationRepository.findByToken(hashedToken);
 
     if (!invitation) {
-      throw new ApiError(404, "Invitation not found");
+      throw new ApiError(404, "Invitation not found. If you are testing, ensure you use the plain token from the inviteLink, not the hashed one from the database.");
+    }
+
+    if (!invitation.teamId) {
+      throw new ApiError(404, "The team associated with this invitation no longer exists");
     }
 
     if (invitation.status !== invitationStatus.PENDING) {
@@ -122,19 +133,30 @@ class InvitationService {
     }
 
     // Verify accepting user matches invited user
-    if (invitation.invitedUserId._id.toString() !== userId.toString()) {
+    if (!invitation.invitedUserId || invitation.invitedUserId._id.toString() !== userId.toString()) {
       throw new ApiError(403, "This invitation is for a different user");
     }
 
+    const team = invitation.teamId;
+
+    // Check if user is already in a team for this hackathon
+    const existingTeam = await teamRepository.findByHackathonAndMember(
+      team.hackathonId,
+      userId
+    );
+    if (existingTeam) {
+      throw new ApiError(400, "You are already a member of a team for this hackathon");
+    }
+
     // Check team size limit
-    const team = await teamRepository.findById(invitation.teamId._id);
-    const hackathon = await this.getHackathonMaxTeamSize(team.hackathonId);
-    if (hackathon && team.members.length >= hackathon.maxTeamSize) {
+    const hackathon = await this.getHackathonDetails(team.hackathonId, "maxTeamSize");
+    const acceptedMemberCount = teamRepository.getAcceptedMemberCount(team);
+    if (hackathon && acceptedMemberCount >= hackathon.maxTeamSize) {
       throw new ApiError(400, "Team has reached maximum member limit");
     }
 
     // Add user to team
-    await teamRepository.addMember(invitation.teamId._id, {
+    await teamRepository.addMember(team._id, {
       userId,
       role: teamRoles.MEMBER,
       joinedAt: new Date()
@@ -145,12 +167,13 @@ class InvitationService {
 
     // Notify team leader about acceptance
     try {
-      const leader = await User.findById(invitation.invitedBy).select("email fullName");
-      const newMember = await User.findById(userId).select("fullName");
-      if (leader && team) {
+      const leader = invitation.invitedBy;
+      const newMember = invitation.invitedUserId;
+
+      if (leader?.email) {
         await sendEmail(leader.email, EMAIL_TYPES.INVITATION_ACCEPTED, {
           teamName: team.teamName,
-          memberName: newMember?.fullName
+          memberName: newMember?.fullName || "A participant"
         });
       }
     } catch (emailError) {
@@ -184,16 +207,16 @@ class InvitationService {
     await invitationRepository.updateStatus(invitation._id, invitationStatus.DECLINED);
 
     // Get team info for the notification
-    const team = await teamRepository.findById(invitation.teamId._id);
+    const team = invitation.teamId;
 
     // Notify team leader about decline
     try {
-      const leader = await User.findById(invitation.invitedBy).select("email fullName");
-      const decliner = await User.findById(userId).select("fullName");
-      if (leader) {
+      const leader = invitation.invitedBy;
+      const decliner = invitation.invitedUserId;
+      if (leader?.email) {
         await sendEmail(leader.email, EMAIL_TYPES.INVITATION_DECLINED, {
           teamName: team?.teamName,
-          memberName: decliner?.fullName
+          memberName: decliner?.fullName || "A participant"
         });
       }
     } catch (emailError) {
@@ -204,12 +227,12 @@ class InvitationService {
   }
 
   /**
-   * Helper to get hackathon max team size
+   * Helper to get hackathon details dynamically
    */
-  async getHackathonMaxTeamSize(hackathonId) {
+  async getHackathonDetails(hackathonId, selectFields = "") {
     // Import dynamically to avoid circular dependency
-    const { default: Hackathon } = await import("../hackathons/hackathon.model.js");
-    return await Hackathon.findById(hackathonId).select("maxTeamSize");
+    const { default: Hackathon } = await import("../admin/hackathons/hackathon.model.js");
+    return await Hackathon.findById(hackathonId).select(selectFields);
   }
 }
 

@@ -73,8 +73,8 @@ class AuthRepository {
    */
   async findUserByResetToken(hashedToken) {
     return await User.findOne({
-      resetPasswordToken: hashedToken,
-      resetPasswordTokenExpiry: { $gt: Date.now() }
+      passwordResetToken: hashedToken,
+      passwordResetTokenExpiry: { $gt: Date.now() }
     })
   }
 }

@@ -44,19 +44,18 @@ const emailTemplates = {
     `
   }),
 
-  [EMAIL_TYPES.RESET_PASSWORD]: ({ token, fullName }) => ({
+  [EMAIL_TYPES.RESET_PASSWORD]: ({ otp, fullName }) => ({
     subject: 'Reset Your Password - Hackathon Platform',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">Hello ${fullName || 'there'},</h2>
-        <p>You requested a password reset. Click the button below to set a new password:</p>
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${envConfig.clientUrl || 'http://localhost:5173'}/reset-password?token=${token}" 
-             style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">
-            Reset Password
-          </a>
+        <p>You requested a password reset. Please use the following code to set a new password:</p>
+        <div style="background-color: #f4f4f4; padding: 20px; text-align: center; margin: 20px 0;">
+          <h1 style="color: #007bff; margin: 0; font-size: 32px;">${otp}</h1>
+          <p style="margin: 10px 0 0 0; color: #666;">Your reset code (valid for 15 minutes)</p>
         </div>
-        <p>This link will expire in 1 hour. If you didn't request this, please ignore this email.</p>
+        <p>Enter this code on the reset password page.</p>
+        <p style="color: #999; font-size: 12px;">If you didn't request this, please ignore this email.</p>
       </div>
     `
   }),
@@ -226,11 +225,11 @@ async function sendVerificationEmail(email, otp, fullName) {
  * Sends a password reset email.
  * 
  * @param {string} email - Recipient email
- * @param {string} token - Reset token
+ * @param {string} otp - Reset OTP
  * @param {string} fullName - User's full name
  */
-async function sendPasswordResetEmail(email, token, fullName) {
-  return sendEmail(email, EMAIL_TYPES.RESET_PASSWORD, { token, fullName })
+async function sendPasswordResetEmail(email, otp, fullName) {
+  return sendEmail(email, EMAIL_TYPES.RESET_PASSWORD, { otp, fullName })
 }
 
 export {

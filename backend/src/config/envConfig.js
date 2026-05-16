@@ -17,7 +17,7 @@
      cloudinaryCloudName : String(process.env.CLOUDINARY_CLOUD_NAME ),
      cloudinaryApiKey : String(process.env.CLOUDINARY_API_KEY ),
      cloudinaryApiSecret : String(process.env.CLOUDINARY_API_SECRET ),
-     brevoApiKey : String(process.env.BREVO_API_KEY || process.env.BREVO_API ),
+     brevoApiKey : (process.env.BREVO_API_KEY || process.env.BREVO_API)?.trim(),
      brevoSenderEmail : String(process.env.BREVO_SENDER_EMAIL || process.env.BREVO_SENDER ),
      judgeSecretKey : String(process.env.JUDGE_SECRET_KEY ), 
      universitySecretKey : String(process.env.UNIVERSITY_SECRET_KEY ),

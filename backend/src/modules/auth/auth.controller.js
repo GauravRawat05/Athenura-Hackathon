@@ -98,9 +98,9 @@ class AuthController {
   }
 
   async resetPassword(req, res) {
-    const { token, newPassword } = req.body
+    const { email, otp, newPassword } = req.body
 
-    const result = await authService.resetPasswordService(token, newPassword)
+    const result = await authService.resetPasswordService(email, otp, newPassword)
 
     return res.status(200).json(new ApiResponse(200, {}, result.message))
   }

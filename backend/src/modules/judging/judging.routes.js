@@ -17,6 +17,12 @@ import {
 const router = Router();
 
 // Admin Routes
+router.route("/admin/judges").get(
+  verifyJWT,
+  restrictTo("Admin", "SuperAdmin"),
+  asyncHandler(judgingController.getAllJudges)
+);
+
 router.route("/admin/hackathons/:hackathonId/judges/assign").post(
   verifyJWT,
   restrictTo("Admin", "SuperAdmin"),

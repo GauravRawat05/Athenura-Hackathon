@@ -49,7 +49,7 @@ router.use('/university', universityRoute);
 // router.use('/certificates', certificateRoute);
 router.use('/teams', teamRoute);
 // Public winners endpoint (JWT required, non-admin)
-router.use('/hackathons', publicWinnersRoute);
+router.use('/winners', publicWinnersRoute);
 
 router.use('/hackathons', hackathonRoute);
 router.use('/registrations', registrationRoute);

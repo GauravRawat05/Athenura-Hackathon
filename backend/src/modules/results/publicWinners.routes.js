@@ -11,9 +11,9 @@ import { validate } from "../registrations/registration.validation.js";
 
 const router = Router();
 
-// GET /api/v1/hackathons/:hackathonId/winners
+// GET /api/winners/:hackathonId
 router.get(
-  "/:hackathonId/winners",
+  "/:hackathonId",
   verifyJWT,
   validate(hackathonIdParamValidation, "params"),
   asyncHandler(publicWinnersController.getWinners)

@@ -13,6 +13,10 @@ import ApiError from "../../libs/apiError.js";
 import { aggregateScoresForSubmission } from '../results/aggregation.service.js';
 
 class JudgingService {
+  async getAllJudges() {
+    return await User.find({ role: "Judge" }).select("fullName email _id");
+  }
+
   async assignJudges(hackathonId, judgeIds, adminId) {
     const hackathon = await Hackathon.findById(hackathonId);
     if (!hackathon) {
@@ -73,17 +77,23 @@ class JudgingService {
       .populate("userId", "fullName email")
       .populate("teamId", "teamName");
 
-    // Check which ones are already scored by this judge
+    // Optimize: Fetch all scores for this judge and hackathon in one go
+    const judgeScores = await judgingRepository.findScoresByJudgeAndHackathon(judgeId, hackathonId);
+    const scoredSubmissionMap = new Map();
+    judgeScores.forEach(score => {
+      scoredSubmissionMap.set(score.submissionId.toString(), score);
+    });
+
+    // Map submissions and mark if scored
     const scoredSubmissions = [];
     for (const sub of submissions) {
-      const score = await judgingRepository.findScoreByJudgeAndSubmission(judgeId, sub._id);
+      const score = scoredSubmissionMap.get(sub._id.toString());
       scoredSubmissions.push({
         ...sub.toObject(),
         scored: !!score,
         scoreId: score ? score._id : null
       });
     }
-
     return scoredSubmissions;
   }
 

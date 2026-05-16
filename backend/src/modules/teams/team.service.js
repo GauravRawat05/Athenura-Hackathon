@@ -3,6 +3,7 @@
   Contains the core business rules for team.
  */
 import teamRepository from "./team.repository.js";
+import mongoose from "mongoose";
 import { teamRoles } from "./team.constants.js";
 import ApiError from "../../libs/apiError.js";
 
@@ -72,34 +73,35 @@ class TeamService {
       throw new ApiError(403, "Only team leader can update team details");
     }
 
+    const updateObj = { $set: updateData };
+    const options = { new: true, runValidators: true };
+
     // If updating leader, validate new leader is a team member
     if (updateData.leader) {
+      const newLeaderId = updateData.leader.toString();
       const isMember = team.members.some(
-        (m) => m.userId._id.toString() === updateData.leader.toString()
+        (m) => m.userId._id.toString() === newLeaderId
       );
       if (!isMember) {
-        throw new ApiError(
-          400,
-          "New leader must be an existing team member"
-        );
+        throw new ApiError(400, "New leader must be an existing team member");
       }
 
-      // Update the leader's role in members array
-      await teamRepository.update(teamId, {
-        $set: {
-          "members.$[oldLeader].role": teamRoles.MEMBER,
-          "members.$[newLeader].role": teamRoles.LEADER
-        }
-      }, {
-        arrayFilters: [
+      // Update roles in the members array only if the leader is actually changing
+      if (team.leader._id.toString() !== newLeaderId) {
+        updateObj.$set["members.$[oldLeader].role"] = teamRoles.MEMBER;
+        updateObj.$set["members.$[newLeader].role"] = teamRoles.LEADER;
+        options.arrayFilters = [
           { "oldLeader.userId": team.leader._id },
-          { "newLeader.userId": updateData.leader }
-        ]
-      });
+          { "newLeader.userId": new mongoose.Types.ObjectId(newLeaderId) }
+        ];
+      }
     }
 
-    const updatedTeam = await teamRepository.update(teamId, updateData);
-    return updatedTeam;
+    // Perform the metadata and role update in one atomic call
+    await teamRepository.update(teamId, updateObj, options);
+
+    // Return the fresh, fully populated team object to maintain consistency
+    return await this.getTeamById(teamId);
   }
 
   /**
@@ -117,8 +119,13 @@ class TeamService {
     if (memberIdToRemove.toString() === team.leader._id.toString()) {
       throw new ApiError(
         400,
-        "Cannot remove team leader. Transfer leadership first."
+        "Cannot remove team leader. To leave the team, you must first transfer leadership to another member."
       );
+    }
+
+    // Check if hackathon has already started
+    if (team.hackathonId && team.hackathonId.startDate && new Date(team.hackathonId.startDate) <= new Date()) {
+      throw new ApiError(400, "Cannot remove members after the hackathon has started.");
     }
 
     // Check if user is actually a member

@@ -37,6 +37,10 @@ class AdminResultService {
     const hackathon = await Hackathon.findById(hackathonId);
     if (!hackathon) throw new ApiError(404, 'Hackathon not found');
     if (hackathon.resultsPublished) throw new ApiError(400, 'Results already published');
+    
+    if (hackathon.endDate && new Date(hackathon.endDate) > new Date()) {
+      throw new ApiError(400, 'Cannot publish results before the hackathon has ended');
+    }
 
     const aggregatedScores = await aggregateScoresForHackathon(hackathonId);
     

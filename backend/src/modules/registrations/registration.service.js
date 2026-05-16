@@ -3,6 +3,7 @@
     Contains the core business rules for registration.
     */
     import Registration from "./registration.model.js";
+import mongoose from "mongoose";
 import registrationRepository from "./registration.repository.js";
     import teamRepository from "../teams/team.repository.js";
 
@@ -20,6 +21,10 @@ class RegistrationService {
    * @returns {Promise<Object>} Registration summary object
    */
   async registerForHackathon({ hackathonId, mode, userId, teamId, notes }, callerId) {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
     // Validate caller exists and is verified
     const caller = await User.findById(callerId).select("isEmailVerified fullName email");
     if (!caller) {
@@ -42,7 +47,7 @@ class RegistrationService {
     }
 
     // Mode allowed? (handles "both" as wildcard)
-    const allowed = hackathon.allowedModes || hackathon.mode || [];
+    const allowed = [].concat(hackathon.allowedModes || hackathon.mode || []);
     const allowedLower = allowed.map(m => (typeof m === 'string' ? m.toLowerCase() : m));
     const modeLower = mode?.toLowerCase();
     const isAllowed = allowedLower.includes(modeLower) || allowedLower.includes('both');
@@ -52,11 +57,21 @@ class RegistrationService {
 
     // Dispatch to mode-specific flow
     if (modeLower === "solo") {
-      return this.registerSolo({ hackathon, userId: userId || callerId, notes, callerId });
+      const result = await this.registerSolo({ hackathon, userId: userId || callerId, notes, caller: caller }, { session });
+      await session.commitTransaction();
+      return result;
     } else if (modeLower === "team") {
-      return this.registerTeam({ hackathon, teamId, callerId, notes });
+      const result = await this.registerTeam({ hackathon, teamId, callerId, notes }, { session });
+      await session.commitTransaction();
+      return result;
     } else {
       throw new ApiError(400, "Invalid registration mode. Use 'solo' or 'team'");
+    }
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
     }
   }
 
@@ -64,16 +79,10 @@ class RegistrationService {
    * Solo registration flow
    * @private
    */
-  async registerSolo({ hackathon, userId, notes, callerId }) {
+  async registerSolo({ hackathon, userId, notes, caller }, options = {}) {
     // Only self-registration
-    if (userId.toString() !== callerId.toString()) {
+    if (userId.toString() !== caller._id.toString()) {
       throw new ApiError(403, "You can only register yourself for solo mode");
-    }
-
-    // Verify user is verified
-    const user = await User.findById(userId).select("isEmailVerified");
-    if (!user?.isEmailVerified) {
-      throw new ApiError(403, "Email verification required");
     }
 
     // Build registration data
@@ -98,7 +107,7 @@ class RegistrationService {
     // Create with duplicate protection
     let registration;
     try {
-      registration = await this.registrationRepo.create(regData);
+      registration = await this.registrationRepo.create(regData, options);
     } catch (error) {
       if (error.code === 11000) {
         throw new ApiError(409, "You are already registered for this hackathon");
@@ -109,11 +118,11 @@ class RegistrationService {
     // Send confirmation email if registration is confirmed (free hackathon)
     if (registration.status === "confirmed") {
       try {
-        await sendEmail(user.email, EMAIL_TYPES.REGISTRATION_CONFIRMATION, {
+        await sendEmail(caller.email, EMAIL_TYPES.REGISTRATION_CONFIRMATION, {
           hackathonTitle: hackathon.title,
           startDate: hackathon.startDate,
           endDate: hackathon.endDate,
-          fullName: user.fullName
+          fullName: caller.fullName
         });
       } catch (emailError) {
         console.error("Failed to send registration confirmation email:", emailError.message);
@@ -138,7 +147,7 @@ class RegistrationService {
    * Team registration flow (existing team only)
    * @private
    */
-  async registerTeam({ hackathon, teamId, callerId, notes }) {
+  async registerTeam({ hackathon, teamId, callerId, notes }, options = {}) {
     if (!teamId) {
       throw new ApiError(400, "teamId is required for team registration");
     }
@@ -213,7 +222,7 @@ class RegistrationService {
     // Create with duplicate key protection (atomic via unique indexes)
     let registration;
     try {
-      registration = await this.registrationRepo.create(regData);
+      registration = await this.registrationRepo.create(regData, options);
     } catch (error) {
       if (error.code === 11000) {
         const keyPattern = error.keyPattern || {};

@@ -55,7 +55,6 @@ export const registerUserValidation = Joi.object({
   skills: Joi.array().items(Joi.string().trim().min(1)).messages({
     "array.base": "Skills must be an array of strings"
   }),
-  secretKey: Joi.string().allow("").optional(),
 
   gender: Joi.string().valid("Male", "Female", "Other").required().messages({
     "any.only": "Gender must be Male, Female, or Other"
@@ -99,8 +98,11 @@ export const forgotPasswordValidation = Joi.object({
 
 // Reset password validation
 export const resetPasswordValidation = Joi.object({
-  token: Joi.string().required().messages({
-    "any.required": "Reset token is required"
+  email: emailSchema,
+  otp: Joi.string().length(6).pattern(/^[0-9]+$/).required().messages({
+    "string.length": "OTP must be exactly 6 digits",
+    "string.pattern.base": "OTP must contain only numbers",
+    "any.required": "OTP is required"
   }),
   newPassword: passwordSchema
 })

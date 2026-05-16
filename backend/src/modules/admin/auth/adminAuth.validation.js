@@ -56,18 +56,24 @@ export const loginAdminValidation = Joi.object({
 // Validate middleware
 export const validate = (schema) => {
   return (req, res, next) => {
-    const { error } = schema.validate(req.body, { abortEarly: false })
+    const { error, value } = schema.validate(req.body, { 
+      abortEarly: false,
+      stripUnknown: true 
+    })
 
     if (error) {
-      const errorMessages = error.details.map((detail) => detail.message)
+      const errorMessages = error.details
+        .map((detail) => detail.message)
+        .join(", ")
+
       return res.status(400).json({
-        statusCode: 400,
         success: false,
-        message: "Validation failed",
+        message: "Validation error",
         errors: errorMessages
       })
     }
 
+    req.body = value
     next()
   }
 }

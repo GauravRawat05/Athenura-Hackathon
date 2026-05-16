@@ -303,47 +303,57 @@ class AuthService {
     if (email) {
       user = await authRepository.findUserByEmail(email)
     } else if (phone) {
-      user = await authRepository.userExistsByPhone(phone)
+      // Find user by phone specifically, assuming repository has this or use a generic filter
+      user = await authRepository.findUserByEmailOrPhone(null, phone)
     }
 
     if (!user) {
-      throw new Error("User not found")
+      // Return generic success to prevent email enumeration
+      return { message: "If an account exists, a reset code has been sent to the registered email" }
     }
 
-    // Generate reset token
-    const resetToken = userUtils.generateResetToken()
-    const hashedResetToken = await userUtils.hashToken(resetToken)
+    // Generate reset OTP
+    const resetOTP = userUtils.generateOTP()
+    const hashedOTP = await userUtils.hashOTP(resetOTP)
+    console.log("Reset OTP:", resetOTP); // Log for debugging
 
-    user.resetPasswordToken = hashedResetToken
-    user.resetPasswordTokenExpiry = userUtils.getResetTokenExpiryTime()
+    user.resetPasswordToken = hashedOTP
+    user.resetPasswordTokenExpiry = userUtils.getOTPExpiryTime() // Using 10m OTP expiry
 
     await authRepository.saveUser(user, { validateBeforeSave: false })
 
     // Send password reset email via Brevo
     try {
-      await sendPasswordResetEmail(user.email, resetToken, user.fullName)
+      await sendPasswordResetEmail(user.email, resetOTP, user.fullName)
     } catch (emailError) {
       console.error("Failed to send password reset email:", emailError.message)
     }
 
-    return { message: "Password reset link sent to your email" }
+    return { message: "Password reset code sent to your email" }
   }
 
   /**
-   * Reset password service
-   */
-  async resetPasswordService(token, newPassword) {
-    const hashedToken = await userUtils.hashToken(token)
+  * Reset password service using OTP
+  */
+  async resetPasswordService(email, otp, newPassword) {
+    const user = await authRepository.findUserByEmail(email)
 
-    const user = await authRepository.findUserByResetToken(hashedToken)
+    if (!user) {
+      throw new Error("Invalid request")
+    }
 
-    if (!user || user.passwordResetTokenExpiry < Date.now()) {
-      throw new Error("Invalid or expired reset token")
+    if (!user.resetPasswordTokenExpiry || user.resetPasswordTokenExpiry < Date.now()) {
+      throw new Error("Reset code has expired")
+    }
+
+    const isOTPValid = await userUtils.compareOTP(otp, user.resetPasswordToken)
+    if (!isOTPValid) {
+      throw new Error("Invalid reset code")
     }
 
     user.password = newPassword
-    user.passwordResetToken = undefined
-    user.passwordResetTokenExpiry = undefined
+    user.resetPasswordToken = undefined
+    user.resetPasswordTokenExpiry = undefined
 
     await authRepository.saveUser(user)
 
