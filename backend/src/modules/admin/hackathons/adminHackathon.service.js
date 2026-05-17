@@ -64,7 +64,7 @@ const createHackathon = async (hackathonData) => {
       }
       return modeLower; // 'solo' -> 'solo'
     }).flat();
-    
+
     // Deduplicate allowedModes to prevent duplicates
     hackathonData.allowedModes = [...new Set(mappedModes)];
   }

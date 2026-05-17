@@ -10,10 +10,14 @@ import envConfig from "../config/envConfig.js"
 import asyncHandler from '../libs/asyncHandler.js';
 
 export const verifyJWT = asyncHandler(async (req, res, next) => {
+
+  console.log(req.cookies);
+
+
   const authHeader = req.header("Authorization")
   const token =
     req.cookies?.accessToken ||
-    (authHeader?.startsWith("Bearer") ? authHeader.substring(7).trim() : null)
+    (authHeader?.startsWith("Bearer") ? authHeader.substring(6).trim() : null)
 
   if (!token) {
     throw new ApiError(401, "Unauthorized request")

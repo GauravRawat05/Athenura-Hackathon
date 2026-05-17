@@ -101,6 +101,16 @@ class AdminHackathonController {
   }
 
   /**
+   * Get all hackathons
+   */
+  async getAllHackathons(req, res) {
+    const hackathons = await Hackathon.find();
+    if (!hackathons) {
+      throw new ApiError(404, 'Hackathons not found');
+    }
+    return res.json(new ApiResponse(200, hackathons, 'Hackathons fetched successfully'));
+  }
+  /**
    * Get a single hackathon by ID
    */
   async getHackathon(req, res) {

@@ -9,6 +9,9 @@ import morgan from "morgan";
 import helmet from "helmet";
 import errorHandler from "./middleware/errorHandler.js";
 import router from "./routes/api.js";
+import cookieParser from 'cookie-parser'
+
+
 
 const app = express();
 
@@ -17,6 +20,7 @@ app.use(helmet()); // Security headers
 app.use(morgan("dev")); // Logging
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+app.use(cookieParser())
 
 //Allow all origins, methods, and headers
 app.use(

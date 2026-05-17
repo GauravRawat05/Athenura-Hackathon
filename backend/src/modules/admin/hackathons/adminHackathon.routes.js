@@ -21,6 +21,14 @@ router.post(
   asyncHandler(adminHackathonController.createHackathon)
 );
 
+// Get all hackathons
+router.get(
+  "/hackathons",
+  verifyJWT,
+  verifyAdmin,
+  asyncHandler(adminHackathonController.getAllHackathons)
+);
+
 // Get a single hackathon by ID
 router.get(
   "/:hackathonId",
