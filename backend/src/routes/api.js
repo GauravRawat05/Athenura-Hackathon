@@ -22,6 +22,7 @@ import judgingRoute from '../modules/judging/judging.routes.js';
 import publicWinnersRoute from '../modules/results/publicWinners.routes.js';
 import hackathonRoute from '../modules/hackathons/hackathon.routes.js';
 import publicRoute from '../modules/public/public.routes.js';
+import paymentRoute from '../modules/payments/payment.routes.js';
 // import resultRoute from '../modules/results/result.routes.js';
 
 // Import controllers/validations for inline routes
@@ -51,6 +52,7 @@ router.use('/submissions', submissionRoute);
 
 // router.use('/results', resultRoute);
 router.use('/judge', judgingRoute);
+router.use('/payments', paymentRoute);
 
 // Health check endpoint
 router.get('/health', (req, res) => {
