@@ -417,3 +417,83 @@ Response (200):
   "success": true
 }
 ```
+
+# Results APIs Documentation
+
+## API #15: Compute Scores & Ranks (Admin)
+
+POST http://localhost:5000/api/v1/admin/hackathons/:hackathonId/results/compute
+
+Headers:
+Authorization: Bearer <access_token>
+
+Response (200):
+```json
+{
+  "statusCode": 200,
+  "data": null,
+  "message": "Scores and ranks computed successfully",
+  "success": true
+}
+```
+
+## API #16: Override Ranks/Awards (Admin)
+
+PATCH http://localhost:5000/api/v1/admin/hackathons/:hackathonId/results/override
+
+Headers:
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+Payload:
+```json
+{
+  "submissionId": "string (optional)",
+  "newRank": "number (optional)",
+  "award": "string (optional)"
+}
+```
+
+Response (200):
+```json
+{
+  "statusCode": 200,
+  "data": null,
+  "message": "Ranks and awards overridden successfully",
+  "success": true
+}
+```
+
+## API #17: Public Winners Cards
+
+GET http://localhost:5000/api/v1/hackathons/:hackathonId/winners
+
+Headers:
+None needed
+
+Response (200):
+```json
+{
+  "statusCode": 200,
+  "data": null,
+  "message": "Winners fetched successfully",
+  "success": true
+}
+```
+
+## API #18: Authenticated Result View
+
+GET http://localhost:5000/api/v1/hackathons/:hackathonId/results
+
+Headers:
+Authorization: Bearer <access_token>
+
+Response (200):
+```json
+{
+  "statusCode": 200,
+  "data": null,
+  "message": "Results fetched successfully",
+  "success": true
+}
+```

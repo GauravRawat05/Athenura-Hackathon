@@ -14,6 +14,7 @@ import {
   listRegistrations as listRegistrationsService
 } from './adminHackathon.service.js';
 import Hackathon from './hackathon.model.js';
+import adminResultService from '../results/adminResult.service.js';
 
 class AdminHackathonController {
   /**
@@ -172,9 +173,10 @@ class AdminHackathonController {
       throw new ApiError(400, 'Invalid hackathonId format');
     }
 
-    // Call service to compute scores & ranks
+    const result = await adminResultService.computeAndSaveDraftResults(hackathonId);
+    
     return res.json(
-      new ApiResponse(200, null, 'Scores and ranks computed successfully')
+      new ApiResponse(200, result, 'Scores and ranks computed successfully')
     );
   }
 
@@ -188,9 +190,10 @@ class AdminHackathonController {
       throw new ApiError(400, 'Invalid hackathonId format');
     }
 
-    // Call service to override ranks & awards
+    const result = await adminResultService.overrideResult(hackathonId, req.body);
+    
     return res.json(
-      new ApiResponse(200, null, 'Ranks and awards overridden successfully')
+      new ApiResponse(200, result, 'Ranks and awards overridden successfully')
     );
   }
 }

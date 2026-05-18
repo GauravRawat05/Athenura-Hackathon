@@ -2,9 +2,12 @@
   hackathon.controller.js
   Handles HTTP request/response flow for hackathon.
  */
-  import hackathonService from './hackathon.service.js';
+import hackathonService from './hackathon.service.js';
 import ApiResponse from '../../libs/apiResponse.js';
 import ApiError from '../../libs/apiError.js';
+import publicWinnersService from '../results/publicWinners.service.js';
+import resultService from '../results/result.service.js';
+
 class Hackathoncontroller {
   // Get all hackathons
   async getAllHackathons(req, res) {
@@ -28,13 +31,15 @@ class Hackathoncontroller {
   // Get public winners cards
   async getWinners(req, res) {
     const { hackathonId } = req.params;
-    res.json(new ApiResponse(200, null, 'Winners fetched successfully'));
+    const winnersData = await publicWinnersService.getWinners(hackathonId);
+    res.json(new ApiResponse(200, winnersData, 'Winners fetched successfully'));
   }
 
   // Get authenticated result view
   async getResults(req, res) {
     const { hackathonId } = req.params;
-    res.json(new ApiResponse(200, null, 'Results fetched successfully'));
+    const resultsData = await resultService.getPublishedResults(hackathonId);
+    res.json(new ApiResponse(200, resultsData, 'Results fetched successfully'));
   }
 };
 
