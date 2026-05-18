@@ -438,8 +438,8 @@ const syncHackathonStatuses = async () => {
   // 1. upcoming -> ongoing: Find hackathons starting now
   const hackathonsToStart = await Hackathon.find({
     status: 'upcoming',
-    startDate: { $lte: now },
-    endDate: { $gt: now }
+    startDate: { $type: 'date', $lte: now },
+    endDate: { $type: 'date', $gt: now }
   });
 
   let transitionedToOngoing = 0;
@@ -456,7 +456,7 @@ const syncHackathonStatuses = async () => {
       Registration.find({
         hackathonId: hackathon._id,
         status: 'confirmed'
-      }).lean(),
+      }).populate('participantIds', 'fullName email').lean(),
 
       Team.find({
         hackathonId: hackathon._id,
@@ -547,7 +547,7 @@ const syncHackathonStatuses = async () => {
   const endedResult = await Hackathon.updateMany(
     {
       status: { $in: ['upcoming', 'ongoing'] },
-      endDate: { $lte: now }
+      endDate: { $type: 'date', $lte: now }
     },
     { $set: { status: 'past' } }
   );
