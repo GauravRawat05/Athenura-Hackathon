@@ -1,26 +1,16 @@
 import { useState, useEffect, useRef } from "react";
 
-/* ── palette ── */
-const C = {
-    navy: "#03045E",
-    ocean: "#0077B6",
-    cyan: "#00B4D8",
-    sky: "#90E0EF",
-    mist: "#CAF0F8",
-};
+const NAVY = "#03045E";
+const WHITE = "#ffffff";
+const OFF = "#f0f2ff";
+const ACCENT = "#2962FF";
+const NAVY_10 = "rgba(3,4,94,0.07)";
+const NAVY_15 = "rgba(3,4,94,0.13)";
+const NAVY_50 = "rgba(3,4,94,0.5)";
+const NAVY_65 = "rgba(3,4,94,0.65)";
 
-/* ── tiny SVG icon ── */
-function Icon({ children, size = 20, color = C.cyan, stroke = 1.8 }) {
-    return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
-            stroke={color} strokeWidth={stroke} strokeLinecap="round" strokeLinejoin="round">
-            {children}
-        </svg>
-    );
-}
-
-/* ── intersection observer ── */
-function useInView(threshold = 0.12) {
+/* ── InView hook ── */
+function useInView(threshold = 0.1) {
     const ref = useRef(null);
     const [vis, setVis] = useState(false);
     useEffect(() => {
@@ -40,46 +30,73 @@ function Fade({ children, delay = 0, y = 28, style = {}, className = "" }) {
         <div ref={ref} className={className} style={{
             opacity: vis ? 1 : 0,
             transform: vis ? "none" : `translateY(${y}px)`,
-            transition: `opacity .72s cubic-bezier(.22,1,.36,1) ${delay}s, transform .72s cubic-bezier(.22,1,.36,1) ${delay}s`,
+            transition: `opacity .75s cubic-bezier(.22,1,.36,1) ${delay}s, transform .75s cubic-bezier(.22,1,.36,1) ${delay}s`,
             ...style,
-        }}>
-            {children}
-        </div>
+        }}>{children}</div>
     );
 }
 
-/* ── contact info cards ── */
-const infos = [
-    {
-        icon: <Icon size={22}><path d="M3 8l9 6 9-6" /><rect x="2" y="6" width="20" height="14" rx="2" /></Icon>,
-        label: "Email Us",
-        value: "support@hackforge.dev",
-        sub: "We reply within 24 hours",
-        href: "mailto:support@hackforge.dev",
-    },
-    {
-        icon: <Icon size={22}><path d="M22 16.92v3a2 2 0 0 1-2.18 2c-3.56-.35-6.97-1.73-9.68-3.96a19.77 19.77 0 0 1-3.96-9.68A2 2 0 0 1 8.11 6h3a2 2 0 0 1 2 1.72c.13 1.01.37 2 .7 2.94a2 2 0 0 1-.46 2.12L12 14a16.02 16.02 0 0 0 5.62 5.62l1.27-1.27a2 2 0 0 1 2.11-.45c.94.34 1.94.57 2.96.7A2 2 0 0 1 22 16.92z" /></Icon>,
-        label: "Call Us",
-        value: "+91 98765 43210",
-        sub: "Mon–Fri, 10am – 6pm IST",
-        href: "tel:+919876543210",
-    },
-    {
-        icon: <Icon size={22}><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></Icon>,
-        label: "Headquarters",
-        value: "New Delhi, India",
-        sub: "DTU Tech Incubator",
-        href: "https://maps.google.com",
-    },
-    {
-        icon: <Icon size={22}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></Icon>,
-        label: "Live Chat",
-        value: "Available in-app",
-        sub: "Socket.IO powered support",
-        href: "#",
-    },
-];
+/* ── SVG Icons ── */
+const MailIcon = () => (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="4" width="20" height="16" rx="2" />
+        <path d="M2 7l10 7 10-7" />
+    </svg>
+);
+const PhoneIcon = () => (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6.6 10.8a15.1 15.1 0 006.6 6.6l2.2-2.2a1 1 0 011.05-.25 11.5 11.5 0 003.6.72 1 1 0 011 1V21a1 1 0 01-1 1A17 17 0 013 5a1 1 0 011-1h3.5a1 1 0 011 1c0 1.25.2 2.45.57 3.57a1 1 0 01-.25 1.03L6.6 10.8z" />
+    </svg>
+);
+const ArrowIcon = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M5 12h14M12 5l7 7-7 7" />
+    </svg>
+);
+const ChevronIcon = ({ open }) => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={NAVY} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+        style={{ transition: "transform .32s", transform: open ? "rotate(180deg)" : "none", flexShrink: 0 }}>
+        <path d="M6 9l6 6 6-6" />
+    </svg>
+);
+const ClockIcon = () => (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
+    </svg>
+);
+const CheckIcon = () => (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="20 6 9 17 4 12" />
+    </svg>
+);
+const SpinnerIcon = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"
+        style={{ animation: "spin .8s linear infinite" }}>
+        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4" />
+    </svg>
+);
+const TwitterSVG = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={NAVY} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M23 3a10.9 10.9 0 01-3.14 1.53A4.48 4.48 0 0016.11 0c-2.5 0-4.52 2.02-4.52 4.52 0 .35.04.7.11 1.04C7.69 5.38 4.07 3.6 1.64.9a4.52 4.52 0 00-.61 2.27c0 1.57.8 2.96 2.01 3.77a4.48 4.48 0 01-2.05-.57v.06c0 2.19 1.56 4.02 3.63 4.43-.38.1-.78.16-1.19.16-.29 0-.57-.03-.85-.08.57 1.79 2.24 3.09 4.21 3.12A9.05 9.05 0 010 19.54a12.77 12.77 0 006.92 2.03c8.3 0 12.85-6.88 12.85-12.85 0-.2 0-.39-.01-.58A9.17 9.17 0 0023 3z" />
+    </svg>
+);
+const LinkedInSVG = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={NAVY} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z" /><rect x="2" y="9" width="4" height="12" /><circle cx="4" cy="4" r="2" />
+    </svg>
+);
+const GithubSVG = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={NAVY} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22" />
+    </svg>
+);
+const DiscordSVG = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill={NAVY}>
+        <path d="M20.32 4.37A19.79 19.79 0 0015.43 2.86a.07.07 0 00-.08.04c-.21.37-.44.86-.61 1.25a18.27 18.27 0 00-5.49 0 12.64 12.64 0 00-.62-1.25.08.08 0 00-.08-.04A19.74 19.74 0 003.68 4.37a.07.07 0 00-.03.03C.53 9.05-.32 13.58.1 18.06a.08.08 0 00.03.06 19.9 19.9 0 005.99 3.03.08.08 0 00.08-.03c.46-.63.87-1.3 1.23-1.99a.08.08 0 00-.04-.11 13.1 13.1 0 01-1.87-.89.08.08 0 010-.13c.13-.09.25-.19.37-.29a.07.07 0 01.08-.01c3.93 1.79 8.18 1.79 12.06 0a.07.07 0 01.08.01c.12.1.25.2.37.29a.08.08 0 010 .13c-.6.35-1.23.65-1.87.89a.08.08 0 00-.04.11c.36.7.77 1.36 1.23 1.99a.07.07 0 00.08.03 19.84 19.84 0 006-3.03.08.08 0 00.03-.05c.5-5.18-.84-9.67-3.55-13.66a.06.06 0 00-.03-.03zM8.02 15.33c-1.18 0-2.16-1.08-2.16-2.41s.96-2.41 2.16-2.41c1.21 0 2.18 1.09 2.16 2.41 0 1.33-.96 2.41-2.16 2.41zm7.97 0c-1.18 0-2.16-1.08-2.16-2.41s.96-2.41 2.16-2.41c1.21 0 2.18 1.09 2.16 2.41 0 1.33-.95 2.41-2.16 2.41z" />
+    </svg>
+);
 
+/* ── DATA ── */
 const roles = [
     { value: "participant", label: "Participant / Developer" },
     { value: "admin", label: "Event Organizer / Admin" },
@@ -87,6 +104,27 @@ const roles = [
     { value: "judge", label: "Judge / Evaluator" },
     { value: "sponsor", label: "Sponsor / Partner" },
     { value: "other", label: "Other" },
+];
+
+const routeMap = [
+    { role: "Participant / Developer", dept: "Participant Support", color: "#22c55e" },
+    { role: "University Representative", dept: "Institutional Onboarding", color: ACCENT },
+    { role: "Event Organizer / Admin", dept: "Platform Configuration", color: "#f59e0b" },
+    { role: "Judge / Evaluator", dept: "Judge Assignment Team", color: "#8b5cf6" },
+    { role: "Sponsor / Partner", dept: "Partnerships & Growth", color: "#ef4444" },
+];
+
+const responseTimes = [
+    { label: "General Queries", time: "< 24 hrs" },
+    { label: "Technical Issues", time: "< 6 hrs" },
+    { label: "Institutional Setup", time: "< 48 hrs" },
+];
+
+const socials = [
+    { label: "Twitter / X", Svg: TwitterSVG },
+    { label: "LinkedIn", Svg: LinkedInSVG },
+    { label: "GitHub", Svg: GithubSVG },
+    { label: "Discord", Svg: DiscordSVG },
 ];
 
 const faqs = [
@@ -97,23 +135,173 @@ const faqs = [
     { q: "How does the judging system work?", a: "Admins configure custom rubrics (e.g. innovation, complexity, presentation). Judges score via their dashboard; scores are aggregated using weighted averages." },
 ];
 
+/* ── Hero image collage ── */
+function HeroImageCollage() {
+    return (
+        <div style={{ position: "relative", width: "100%", minHeight: 480 }}>
+            <div style={{ borderRadius: 24, overflow: "hidden", boxShadow: "0 32px 80px rgba(3,4,94,0.45)", position: "relative", transition: "transform .4s" }}
+                onMouseEnter={e => e.currentTarget.style.transform = "scale(1.02)"}
+                onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}>
+                <img src="https://images.unsplash.com/photo-1521737852567-6949f3f9f2b5?w=800&q=80" alt="Team collaborating"
+                    style={{ width: "100%", height: 360, objectFit: "cover", display: "block" }} />
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(3,4,94,0.55) 0%, rgba(41,98,255,0.3) 100%)" }} />
+                <div style={{ position: "absolute", top: 20, left: 20, background: "rgba(255,255,255,0.12)", backdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 12, padding: "10px 16px" }}>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: "white", letterSpacing: ".06em" }}>💬 Support Response</div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", marginTop: 3 }}>Average reply in &lt; 6 hrs</div>
+                </div>
+                <div style={{ position: "absolute", bottom: 20, right: 20, display: "flex", alignItems: "center", gap: 8, background: "rgba(0,0,0,0.4)", backdropFilter: "blur(8px)", padding: "8px 14px", borderRadius: 50 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e", boxShadow: "0 0 8px #22c55e" }} />
+                    <span style={{ fontSize: 11, color: "white", fontWeight: 700 }}>Team Online</span>
+                </div>
+            </div>
+            <div style={{ position: "absolute", bottom: -20, left: -20, background: NAVY, borderRadius: 18, padding: "16px 22px", border: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 16px 48px rgba(3,4,94,0.5)", transition: "transform .3s" }}
+                onMouseEnter={e => e.currentTarget.style.transform = "translateY(-4px)"}
+                onMouseLeave={e => e.currentTarget.style.transform = "none"}>
+                <div style={{ fontSize: 26, fontWeight: 800, color: "white", fontFamily: "'Poppins',sans-serif", lineHeight: 1 }}>50+</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: ".1em", fontWeight: 700, marginTop: 4 }}>Partner Universities</div>
+            </div>
+            <div style={{ position: "absolute", top: -20, right: -20, background: ACCENT, borderRadius: 18, padding: "16px 22px", boxShadow: "0 16px 48px rgba(41,98,255,0.55)", transition: "transform .3s" }}
+                onMouseEnter={e => e.currentTarget.style.transform = "translateY(-4px)"}
+                onMouseLeave={e => e.currentTarget.style.transform = "none"}>
+                <div style={{ fontSize: 26, fontWeight: 800, color: "white", fontFamily: "'Poppins',sans-serif", lineHeight: 1 }}>10K+</div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.75)", textTransform: "uppercase", letterSpacing: ".1em", fontWeight: 700, marginTop: 4 }}>Happy Developers</div>
+            </div>
+        </div>
+    );
+}
+
+/* ── Bento card — Email ── */
+function BentoEmail() {
+    const [hov, setHov] = useState(false);
+    return (
+        <a href="mailto:support@hackforge.dev" className="bento-cell" style={{ gridColumn: "span 7", background: NAVY, color: "white", padding: 40, display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: 260, transform: hov ? "translateY(-6px)" : "none", boxShadow: hov ? "0 24px 60px rgba(3,4,94,0.14)" : "none" }}
+            onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
+            <div style={{ width: 42, height: 42, borderRadius: "50%", background: "rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(255,255,255,0.15)" }}>
+                <MailIcon />
+            </div>
+            <div>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 10, fontWeight: 800, letterSpacing: ".14em", textTransform: "uppercase", color: "rgba(255,255,255,0.55)", marginBottom: 18 }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10" /><path d="M12 8v4l2 2" /></svg>
+                    Reply within 24 hours
+                </div>
+                <div style={{ fontSize: 26, fontWeight: 800, fontFamily: "'Poppins',sans-serif", color: "white", lineHeight: 1.2 }}>support@hackforge.dev</div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", marginTop: 6 }}>Drop us a line for any query — participant support, partnerships, technical issues</div>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: hov ? 10 : 6, fontSize: 12, fontWeight: 800, letterSpacing: ".06em", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", marginTop: 20, transition: "gap .2s, opacity .2s", opacity: hov ? 1 : 0.45 }}>
+                    Write to us <ArrowIcon />
+                </div>
+            </div>
+        </a>
+    );
+}
+
+/* ── Bento card — Phone ── */
+function BentoPhone() {
+    const [hov, setHov] = useState(false);
+    return (
+        <a href="tel:+919876543210" className="bento-cell" style={{ gridColumn: "span 5", background: ACCENT, color: "white", padding: 36, minHeight: 260, display: "flex", flexDirection: "column", justifyContent: "space-between", transform: hov ? "translateY(-6px)" : "none", boxShadow: hov ? "0 24px 60px rgba(41,98,255,0.35)" : "none" }}
+            onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
+            <div>
+                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: ".14em", textTransform: "uppercase", color: "rgba(255,255,255,0.7)", marginBottom: 18, display: "flex", alignItems: "center", gap: 7 }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
+                    Mon–Fri · 10am–6pm IST
+                </div>
+                <div style={{ fontSize: 22, fontWeight: 800, fontFamily: "'Poppins',sans-serif", color: "white", lineHeight: 1.2 }}>+91 98765 43210</div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", marginTop: 6 }}>Speak directly with our support team</div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 24 }}>
+                <div style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,0.18)", border: "1px solid rgba(255,255,255,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <PhoneIcon />
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: hov ? 10 : 6, fontSize: 12, fontWeight: 800, letterSpacing: ".06em", textTransform: "uppercase", color: "rgba(255,255,255,0.55)", transition: "gap .2s, opacity .2s", opacity: hov ? 1 : 0.55 }}>
+                    Call now <ArrowIcon />
+                </div>
+            </div>
+        </a>
+    );
+}
+
+/* ── Bento card — HQ ── */
+function BentoHQ() {
+    const [hov, setHov] = useState(false);
+    return (
+        <a href="https://maps.google.com" target="_blank" rel="noreferrer" className="bento-cell" style={{ gridColumn: "span 5", minHeight: 220, overflow: "hidden", position: "relative", borderRadius: 22, transform: hov ? "translateY(-6px)" : "none", boxShadow: hov ? "0 24px 60px rgba(3,4,94,0.14)" : "none" }}
+            onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
+            <img src="https://images.unsplash.com/photo-1587474260584-136574528ed5?w=700&q=80" alt="New Delhi"
+                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform .5s", transform: hov ? "scale(1.06)" : "scale(1)" }} />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(3,4,94,0.88) 0%, rgba(3,4,94,0.3) 60%, transparent 100%)" }} />
+            <div style={{ position: "absolute", inset: 0, padding: 28, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: ".14em", textTransform: "uppercase", color: "rgba(255,255,255,0.65)", marginBottom: 10, display: "flex", alignItems: "center", gap: 7 }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" /><circle cx="12" cy="9" r="2.5" /></svg>
+                    Headquarters
+                </div>
+                <div style={{ fontSize: 20, fontWeight: 800, fontFamily: "'Poppins',sans-serif", color: "white", lineHeight: 1.2 }}>New Delhi, India</div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", marginTop: 6 }}>DTU Tech Incubator</div>
+                <div style={{ display: "flex", alignItems: "center", gap: hov ? 10 : 6, fontSize: 12, fontWeight: 800, letterSpacing: ".06em", textTransform: "uppercase", color: "rgba(255,255,255,0.55)", marginTop: 14, transition: "gap .2s, opacity .2s", opacity: hov ? 1 : 0.55 }}>
+                    Get directions <ArrowIcon />
+                </div>
+            </div>
+        </a>
+    );
+}
+
+/* ── Bento card — Live Chat ── */
+function BentoChat() {
+    const [hov, setHov] = useState(false);
+    return (
+        <a href="#" className="bento-cell" style={{ gridColumn: "span 7", background: OFF, border: `1.5px solid rgba(3,4,94,0.1)`, padding: 36, minHeight: 220, display: "flex", flexDirection: "column", justifyContent: "space-between", transform: hov ? "translateY(-6px)" : "none", boxShadow: hov ? "0 24px 60px rgba(3,4,94,0.1)" : "none" }}
+            onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
+            <div>
+                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: ".14em", textTransform: "uppercase", color: NAVY_50, marginBottom: 10, display: "flex", alignItems: "center", gap: 7 }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>
+                    Socket.IO powered
+                </div>
+                <div style={{ fontSize: 22, fontWeight: 800, fontFamily: "'Poppins',sans-serif", color: NAVY, lineHeight: 1.2 }}>Live Chat Support</div>
+                <div style={{ fontSize: 13, color: NAVY_65, marginTop: 6 }}>Get real-time help from inside the HackForge app</div>
+            </div>
+            <div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    <div style={{ padding: "10px 16px", borderRadius: "4px 16px 16px 16px", background: "rgba(3,4,94,0.08)", color: NAVY, fontSize: 13, fontWeight: 600, fontFamily: "'Nunito',sans-serif", maxWidth: "80%", alignSelf: "flex-start" }}>
+                        Hi! I need help setting up my university dashboard 🎓
+                    </div>
+                    <div style={{ padding: "10px 16px", borderRadius: "16px 4px 16px 16px", background: NAVY, color: "white", fontSize: 13, fontWeight: 600, fontFamily: "'Nunito',sans-serif", maxWidth: "80%", alignSelf: "flex-end" }}>
+                        Sure! I'll walk you through it right now ✓
+                    </div>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 14 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, fontWeight: 700, color: "#22c55e", fontFamily: "'Nunito',sans-serif" }}>
+                        <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e", display: "inline-block" }} />
+                        Support agent online
+                    </div>
+                    <div style={{ display: "inline-flex", alignItems: "center", gap: hov ? 10 : 6, fontSize: 12, fontWeight: 800, letterSpacing: ".06em", textTransform: "uppercase", color: NAVY_50, transition: "gap .2s, opacity .2s", opacity: hov ? 1 : 0.5 }}>
+                        Open chat <ArrowIcon />
+                    </div>
+                </div>
+            </div>
+        </a>
+    );
+}
+
 /* ══════════════════════════════════════════
-   MAIN PAGE
+   MAIN
 ══════════════════════════════════════════ */
 export default function ContactPage() {
     const [form, setForm] = useState({ name: "", email: "", role: "", subject: "", message: "" });
-    const [status, setStatus] = useState("idle"); // idle | sending | sent | error
+    const [status, setStatus] = useState("idle");
     const [openFaq, setOpenFaq] = useState(null);
-    const [scrolled, setScrolled] = useState(false);
+    const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
+    const heroRef = useRef(null);
 
     useEffect(() => {
-        const fn = () => setScrolled(window.scrollY > 40);
-        window.addEventListener("scroll", fn, { passive: true });
-        return () => window.removeEventListener("scroll", fn);
+        const handle = e => {
+            if (!heroRef.current) return;
+            const { left, top, width, height } = heroRef.current.getBoundingClientRect();
+            setMousePos({ x: ((e.clientX - left) / width) * 100, y: ((e.clientY - top) / height) * 100 });
+        };
+        window.addEventListener("mousemove", handle);
+        return () => window.removeEventListener("mousemove", handle);
     }, []);
 
     const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
-
     const handleSubmit = () => {
         if (!form.name || !form.email || !form.message) return;
         setStatus("sending");
@@ -121,509 +309,485 @@ export default function ContactPage() {
     };
 
     return (
-        <div style={{ fontFamily: "'DM Sans','Outfit',sans-serif", background: C.mist, color: C.navy, overflowX: "hidden", minHeight: "100vh" }}>
-
+        <div style={{ fontFamily: "'Nunito','Poppins',sans-serif", background: OFF, color: NAVY, overflowX: "hidden", minHeight: "100vh" }}>
             <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
-
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Poppins:wght@400;500;600;700;800&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
         body { -webkit-font-smoothing: antialiased; }
-        ::selection { background: ${C.cyan}44; }
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: ${C.mist}; }
-        ::-webkit-scrollbar-thumb { background: ${C.ocean}; border-radius: 4px; }
+        ::selection { background: rgba(41,98,255,0.18); }
+        ::-webkit-scrollbar { width:5px; }
+        ::-webkit-scrollbar-track { background:#f0f2ff; }
+        ::-webkit-scrollbar-thumb { background:${NAVY}; border-radius:4px; }
+        h1,h2,h3,h4 { font-family:'Poppins',sans-serif; }
 
-        h1,h2,h3,h4 { font-family: 'Outfit', sans-serif; }
-
-        /* nav */
-        .nav {
-          position:fixed; top:0; left:0; right:0; z-index:200;
-          display:flex; align-items:center; justify-content:space-between;
-          padding:0 5%; height:66px;
-          transition: background .4s, box-shadow .4s;
+        .spotlight {
+          position:absolute; inset:0; pointer-events:none; z-index:0;
+          background: radial-gradient(circle 520px at var(--mx) var(--my), rgba(41,98,255,0.14) 0%, transparent 70%);
         }
-        .nav.scrolled {
-          background: rgba(3,4,94,.86);
-          backdrop-filter: blur(22px);
-          box-shadow: 0 1px 32px rgba(0,0,0,.22);
+        .sec-label {
+          display:inline-block; font-size:10.5px; font-weight:800; letter-spacing:.18em;
+          text-transform:uppercase; color:${ACCENT}; margin-bottom:14px;
+          padding:5px 14px; border-radius:50px;
+          background:rgba(41,98,255,0.08); border:1px solid rgba(41,98,255,0.2);
+          font-family:'Nunito',sans-serif;
         }
-        .nav-links { display:flex; gap:32px; }
-        .nav-links a {
-          font-size:12px; font-weight:600; letter-spacing:.07em;
-          text-transform:uppercase; color:${C.sky}; text-decoration:none;
-          opacity:.72; transition:opacity .2s,color .2s;
-        }
-        .nav-links a:hover { opacity:1; color:${C.cyan}; }
-
-        /* buttons */
-        .btn-primary {
-          background: linear-gradient(135deg, ${C.ocean}, ${C.cyan});
-          color:${C.navy}; font-weight:700; font-size:14px; font-family:'Outfit',sans-serif;
-          border:none; border-radius:50px; padding:14px 40px; cursor:pointer;
-          letter-spacing:.04em; box-shadow:0 6px 36px ${C.cyan}44;
-          transition:transform .2s, box-shadow .2s, filter .2s;
-          display:inline-flex; align-items:center; gap:8px;
-        }
-        .btn-primary:hover { transform:translateY(-2px) scale(1.03); filter:brightness(1.08); box-shadow:0 12px 48px ${C.cyan}55; }
-        .btn-primary:disabled { opacity:.6; cursor:default; transform:none; }
-
-        .btn-ghost {
-          background:transparent; color:${C.sky};
-          border:1.5px solid ${C.ocean}88; border-radius:50px;
-          padding:13px 32px; font-size:14px; font-weight:600; font-family:'Outfit',sans-serif;
-          cursor:pointer; transition:background .2s, border-color .2s, color .2s;
-        }
-        .btn-ghost:hover { background:rgba(0,180,216,.12); border-color:${C.cyan}; color:${C.mist}; }
-
-        /* glass */
-        .glass {
-          background:rgba(255,255,255,.52);
-          backdrop-filter:blur(20px);
-          border:1px solid rgba(0,119,182,.14);
-        }
-        .glass-dark {
-          background:rgba(3,4,94,.38);
-          backdrop-filter:blur(20px);
-          border:1px solid rgba(144,224,239,.16);
-        }
-
-        /* noise overlay */
-        .noise { position:relative; }
-        .noise::after {
-          content:""; position:absolute; inset:0; pointer-events:none;
-          background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-          opacity:.28; mix-blend-mode:overlay;
-        }
-
-        /* info card */
-        .icard {
-          border-radius:22px; padding:30px 26px;
-          border:1px solid rgba(0,180,216,.12);
-          background:rgba(255,255,255,.48);
-          backdrop-filter:blur(16px);
-          transition:transform .28s, box-shadow .28s, border-color .28s;
-          position:relative; overflow:hidden; cursor:pointer; text-decoration:none;
-          display:block;
-        }
-        .icard::before {
-          content:""; position:absolute; top:0; left:0; right:0; height:3px;
-          background:linear-gradient(90deg, ${C.ocean}, ${C.cyan});
-          transform:scaleX(0); transform-origin:left; transition:transform .32s;
-        }
-        .icard:hover { transform:translateY(-7px); box-shadow:0 22px 56px rgba(0,119,182,.14); border-color:${C.cyan}55; }
-        .icard:hover::before { transform:scaleX(1); }
-
-        /* form fields */
-        .field-wrap { position:relative; }
-        .field-label {
-          display:block; font-size:11px; font-weight:700; letter-spacing:.1em;
-          text-transform:uppercase; color:${C.ocean}; margin-bottom:8px;
-        }
-        .field {
-          width:100%; background:rgba(255,255,255,.6);
-          border:1.5px solid rgba(0,119,182,.2); border-radius:14px;
-          padding:14px 18px; font-size:14px; color:${C.navy};
-          font-family:'DM Sans',sans-serif; font-weight:400;
-          transition:border-color .2s, box-shadow .2s, background .2s;
-          outline:none; resize:none;
-        }
-        .field:focus {
-          border-color:${C.cyan}; background:rgba(255,255,255,.85);
-          box-shadow:0 0 0 4px ${C.cyan}22;
-        }
-        .field::placeholder { color:${C.ocean}88; }
-        select.field { appearance:none; cursor:pointer; }
-
-        /* char counter */
-        .char { font-size:11px; color:${C.ocean}66; text-align:right; margin-top:5px; font-family:'DM Mono',monospace; }
-
-        /* FAQ item */
-        .faq-item {
-          border-radius:16px; overflow:hidden;
-          border:1px solid rgba(0,180,216,.14);
-          background:rgba(255,255,255,.5);
-          backdrop-filter:blur(12px);
-          transition:border-color .25s, box-shadow .25s;
-          margin-bottom:10px;
-        }
-        .faq-item:hover { border-color:${C.cyan}44; box-shadow:0 8px 32px rgba(0,119,182,.08); }
-        .faq-q {
-          width:100%; background:transparent; border:none; cursor:pointer;
-          display:flex; align-items:center; justify-content:space-between;
-          padding:20px 24px; text-align:left; font-family:'Outfit',sans-serif;
-          font-size:15px; font-weight:600; color:${C.navy};
-          transition:color .2s;
-        }
-        .faq-q:hover { color:${C.ocean}; }
-        .faq-a {
-          max-height:0; overflow:hidden;
-          transition:max-height .42s cubic-bezier(.22,1,.36,1), padding .3s;
-          font-size:14px; color:${C.ocean}; line-height:1.75; font-weight:300;
-          padding:0 24px;
-        }
-        .faq-a.open { max-height:200px; padding:0 24px 20px; }
-
-        /* chevron */
-        .chev { transition:transform .32s; flex-shrink:0; }
-        .chev.open { transform:rotate(180deg); }
-
-        /* social icon */
-        .social {
-          width:44px; height:44px; border-radius:12px;
-          border:1.5px solid rgba(0,119,182,.22);
-          display:flex; align-items:center; justify-content:center;
-          transition:background .2s, border-color .2s, transform .2s;
-          cursor:pointer; text-decoration:none;
-          background:rgba(255,255,255,.4);
-        }
-        .social:hover { background:rgba(0,180,216,.14); border-color:${C.cyan}; transform:translateY(-3px); }
-
-        /* divider */
-        .div { height:1px; background:linear-gradient(90deg,transparent,${C.ocean}22,transparent); }
-
-        /* section label */
-        .slabel {
-          font-size:11px; font-weight:700; letter-spacing:.16em;
-          text-transform:uppercase; color:${C.ocean}; display:block; margin-bottom:14px;
-        }
-
-        /* floating blobs */
         @keyframes float1 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(24px,-18px) scale(1.05)} }
         @keyframes float2 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-18px,22px) scale(1.04)} }
         .blob1 { animation:float1 10s ease-in-out infinite; }
-        .blob2 { animation:float2 13s ease-in-out infinite; }
+        .blob2 { animation:float2 14s ease-in-out infinite; }
+        @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0.6)} 50%{box-shadow:0 0 0 8px transparent} }
+        .pulse { animation:pulse 2.2s ease-in-out infinite; }
 
-        /* pulse dot */
-        @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 ${C.cyan}66} 50%{box-shadow:0 0 0 8px transparent} }
-        .pulse { animation:pulse 2s ease-in-out infinite; }
-
-        /* success animation */
-        @keyframes pop { 0%{transform:scale(.8);opacity:0} 60%{transform:scale(1.08)} 100%{transform:scale(1);opacity:1} }
-        .pop { animation:pop .55s cubic-bezier(.22,1,.36,1) forwards; }
-
-        /* sending spinner */
-        @keyframes spin { to{transform:rotate(360deg)} }
-        .spin { animation:spin .8s linear infinite; }
-
-        @media(max-width:768px) {
-          .contact-grid { grid-template-columns:1fr !important; }
-          .info-grid { grid-template-columns:1fr 1fr !important; }
-          .nav-links { display:none; }
+        /* Bento grid */
+        .bento-grid {
+          display:grid;
+          grid-template-columns:repeat(12,1fr);
+          gap:16px;
+          max-width:1100px;
+          margin:0 auto;
         }
-        @media(max-width:480px) {
-          .info-grid { grid-template-columns:1fr !important; }
+        .bento-cell {
+          border-radius:22px;
+          overflow:hidden;
+          position:relative;
+          transition:transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s;
+          cursor:pointer;
+          text-decoration:none;
+          display:block;
+        }
+
+        /* btn primary */
+        .btn-primary {
+          background:${NAVY}; color:white; font-weight:800; font-size:14px;
+          font-family:'Nunito',sans-serif; border:none; border-radius:50px;
+          padding:14px 38px; cursor:pointer; letter-spacing:.04em;
+          box-shadow:0 6px 28px rgba(3,4,94,0.28);
+          transition:transform .22s, box-shadow .22s, background .22s;
+          display:inline-flex; align-items:center; gap:8px;
+        }
+        .btn-primary:hover { transform:translateY(-3px); box-shadow:0 14px 40px rgba(3,4,94,0.36); background:#040672; }
+        .btn-primary:disabled { opacity:.65; cursor:default; transform:none; }
+        .btn-ghost-white {
+          background:transparent; color:white; border:2px solid rgba(255,255,255,0.35);
+          border-radius:50px; padding:12px 32px; font-size:14px; font-weight:700;
+          font-family:'Nunito',sans-serif; cursor:pointer;
+          transition:background .2s,border-color .2s;
+          display:inline-flex; align-items:center; gap:8px;
+        }
+        .btn-ghost-white:hover { background:rgba(255,255,255,0.1); border-color:rgba(255,255,255,0.65); }
+
+        /* form fields */
+        .field-label {
+          display:block; font-size:11px; font-weight:800; letter-spacing:.12em;
+          text-transform:uppercase; color:${NAVY}; opacity:.5; margin-bottom:8px;
+          font-family:'Nunito',sans-serif;
+        }
+        .field {
+          width:100%; background:${OFF}; border:1.5px solid rgba(3,4,94,0.1);
+          border-radius:14px; padding:13px 17px; font-size:14px; color:${NAVY};
+          font-family:'Nunito',sans-serif; font-weight:600;
+          transition:border-color .22s, box-shadow .22s, background .22s; outline:none; resize:none;
+        }
+        .field:focus { border-color:${ACCENT}; box-shadow:0 0 0 4px rgba(41,98,255,0.1); background:white; }
+        .field::placeholder { color:rgba(3,4,94,0.28); font-weight:400; }
+        select.field { appearance:none; cursor:pointer; }
+        .char { font-size:11px; color:rgba(3,4,94,0.3); text-align:right; margin-top:5px; }
+
+        /* faq */
+        .faq-item {
+          border-radius:18px; overflow:hidden;
+          border:1.5px solid rgba(3,4,94,0.08);
+          background:white; transition:border-color .25s, box-shadow .25s, transform .25s;
+          margin-bottom:10px;
+        }
+        .faq-item:hover { border-color:rgba(41,98,255,0.25); box-shadow:0 8px 32px rgba(3,4,94,0.08); transform:translateX(4px); }
+        .faq-q {
+          width:100%; background:transparent; border:none; cursor:pointer;
+          display:flex; align-items:center; justify-content:space-between;
+          padding:20px 24px; text-align:left; font-family:'Nunito',sans-serif;
+          font-size:15px; font-weight:800; color:${NAVY}; gap:16px;
+        }
+        .faq-a {
+          max-height:0; overflow:hidden;
+          transition:max-height .45s cubic-bezier(.22,1,.36,1), padding .3s;
+          font-size:14px; color:${NAVY_65}; line-height:1.8; font-weight:400;
+          padding:0 24px; font-family:'Nunito',sans-serif;
+        }
+        .faq-a.open { max-height:200px; padding:0 24px 22px; }
+
+        /* social */
+        .social {
+          width:46px; height:46px; border-radius:14px;
+          border:1.5px solid rgba(3,4,94,0.14);
+          display:flex; align-items:center; justify-content:center;
+          transition:background .22s, border-color .22s, transform .22s, box-shadow .22s;
+          cursor:pointer; text-decoration:none; background:white;
+        }
+        .social:hover { background:rgba(3,4,94,0.05); border-color:${NAVY}; transform:translateY(-4px); box-shadow:0 8px 20px rgba(3,4,94,0.12); }
+
+        /* route row */
+        .rrow {
+          display:flex; align-items:center; gap:14px; padding:11px 14px;
+          border-radius:12px; background:rgba(3,4,94,0.04);
+          border:1px solid rgba(3,4,94,0.06); margin-bottom:8px;
+          transition:background .2s, transform .22s;
+          cursor:default;
+        }
+        .rrow:last-child { margin-bottom:0; }
+        .rrow:hover { background:rgba(3,4,94,0.08); transform:translateX(5px); }
+
+        .divider { height:1px; background:linear-gradient(90deg,transparent,rgba(3,4,94,0.12),transparent); }
+        .dot-bg {
+          background-image: radial-gradient(circle, rgba(3,4,94,0.07) 1px, transparent 1px);
+          background-size: 26px 26px;
+        }
+
+        /* context panel */
+        .context-panel {
+          border-radius:22px; padding:26px;
+          background:${OFF}; border:1.5px solid rgba(3,4,94,0.1);
+          transition: transform .3s, box-shadow .3s;
+        }
+        .context-panel:hover { transform:translateY(-4px); box-shadow:0 14px 44px rgba(3,4,94,0.09); }
+
+        @keyframes pop { 0%{transform:scale(.8);opacity:0} 60%{transform:scale(1.06)} 100%{transform:scale(1);opacity:1} }
+        .pop { animation:pop .5s cubic-bezier(.22,1,.36,1) forwards; }
+        @keyframes spin { to{transform:rotate(360deg)} }
+
+        .img-card {
+          border-radius:20px; overflow:hidden; position:relative;
+          box-shadow:0 20px 60px rgba(3,4,94,0.22);
+          transition: transform .4s, box-shadow .4s;
+        }
+        .img-card:hover { transform:scale(1.02); box-shadow:0 28px 80px rgba(3,4,94,0.3); }
+
+        @media(max-width:900px) {
+          .hero-grid { flex-direction:column !important; }
+          .contact-grid { grid-template-columns:1fr !important; }
+          .bento-grid { grid-template-columns:1fr !important; }
+          .bento-cell { grid-column:span 1 !important; }
+        }
+        @media(max-width:600px) {
+          .form-row { grid-template-columns:1fr !important; }
         }
       `}</style>
 
-            {/* ══ NAV ══ */}
-            <nav className={`nav ${scrolled ? "scrolled" : ""}`}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 36, height: 36, borderRadius: "50%", background: `linear-gradient(135deg,${C.ocean},${C.cyan})`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <Icon size={16} color={C.navy} stroke={2.8}><path d="M13 2L4 14h7l-1 8 10-14h-7l1-6z" /></Icon>
-                    </div>
-                    <span style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 800, fontSize: 18, color: C.mist, letterSpacing: "-.01em" }}>
-                        Hack<span style={{ color: C.cyan }}>Forge</span>
-                    </span>
-                </div>
-                <div className="nav-links">
-                    {["Features", "Stack", "Roles", "Journey", "Contact"].map(l => (
-                        <a key={l} href="#">{l}</a>
-                    ))}
-                </div>
-                <button className="btn-ghost" style={{ padding: "9px 22px", fontSize: 12 }}>Login</button>
-            </nav>
-
-            {/* ══ HERO HEADER ══ */}
-            <section className="noise" style={{
-                minHeight: "52vh", display: "flex", flexDirection: "column",
-                alignItems: "center", justifyContent: "center",
-                padding: "130px 5% 80px", textAlign: "center", position: "relative", overflow: "hidden",
-                background: `linear-gradient(155deg, ${C.navy} 0%, #021c6b 55%, #023a8a 100%)`,
-            }}>
-                {/* blobs */}
-                <div className="blob1" style={{ position: "absolute", top: "-60px", right: "-100px", width: 420, height: 420, borderRadius: "50%", background: `radial-gradient(circle,${C.cyan}1e 0%,transparent 68%)`, pointerEvents: "none" }} />
-                <div className="blob2" style={{ position: "absolute", bottom: "-80px", left: "-60px", width: 340, height: 340, borderRadius: "50%", background: `radial-gradient(circle,${C.ocean}22 0%,transparent 68%)`, pointerEvents: "none" }} />
-                {/* grid */}
-                <div style={{ position: "absolute", inset: 0, backgroundImage: `linear-gradient(rgba(0,180,216,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,180,216,.04) 1px,transparent 1px)`, backgroundSize: "52px 52px", pointerEvents: "none" }} />
-
-                {/* diagonal accent */}
-                <div style={{ position: "absolute", bottom: "-2px", left: 0, right: 0, height: "80px", background: `linear-gradient(170deg,transparent 49%,${C.mist} 50%)`, pointerEvents: "none" }} />
-
-                <div style={{ position: "relative", zIndex: 1 }}>
-                    <Fade>
-                        <div className="glass-dark" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "7px 20px", borderRadius: 50, marginBottom: 28, fontSize: 12, fontWeight: 700, color: C.sky, letterSpacing: ".1em", textTransform: "uppercase" }}>
-                            <span className="pulse" style={{ width: 7, height: 7, borderRadius: "50%", background: C.cyan, display: "inline-block" }} />
-                            We're here to help
-                        </div>
-                    </Fade>
-                    <Fade delay={.1}>
-                        <h1 style={{ fontSize: "clamp(40px,6.5vw,82px)", fontWeight: 800, lineHeight: 1.05, letterSpacing: "-.03em", color: C.mist, maxWidth: 800, margin: "0 auto 20px" }}>
-                            Get in <span style={{ background: `linear-gradient(135deg,${C.cyan},${C.sky})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Touch</span>
-                        </h1>
-                    </Fade>
-                    <Fade delay={.2}>
-                        <p style={{ fontSize: "clamp(15px,2vw,18px)", color: `${C.sky}cc`, maxWidth: 540, lineHeight: 1.8, margin: "0 auto", fontWeight: 300 }}>
-                            Whether you're a participant, university rep, event organiser, or sponsor — our team is ready to assist you across every stage of your hackathon journey.
-                        </p>
-                    </Fade>
-                </div>
-            </section>
-
-            {/* ══ INFO CARDS ══ */}
-            <section style={{ padding: "0 5% 80px", background: C.mist, position: "relative", zIndex: 1 }}>
-                <div className="info-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, maxWidth: 1100, margin: "0 auto" }}>
-                    {infos.map((info, i) => (
-                        <Fade key={info.label} delay={i * .08}>
-                            <a className="icard" href={info.href} target={info.href.startsWith("http") ? "_blank" : undefined} rel="noreferrer">
-                                <div style={{ width: 48, height: 48, borderRadius: 14, background: `${C.ocean}18`, border: `1px solid ${C.ocean}28`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18 }}>
-                                    {info.icon}
-                                </div>
-                                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: C.ocean, marginBottom: 8 }}>{info.label}</div>
-                                <div style={{ fontSize: 15, fontWeight: 700, color: C.navy, marginBottom: 6 }}>{info.value}</div>
-                                <div style={{ fontSize: 12, color: C.ocean, fontWeight: 300, opacity: .8 }}>{info.sub}</div>
-                                <div style={{ position: "absolute", bottom: 20, right: 22 }}>
-                                    <Icon size={16} color={`${C.ocean}66`}><path d="M5 12h14M12 5l7 7-7 7" /></Icon>
-                                </div>
-                            </a>
+            {/* ══ HERO ══ */}
+            <section ref={heroRef} style={{ minHeight: "100vh", background: NAVY, position: "relative", overflow: "hidden", display: "flex", alignItems: "center", padding: "110px 5% 130px" }}>
+                <div className="spotlight" style={{ "--mx": `${mousePos.x}%`, "--my": `${mousePos.y}%` }} />
+                <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px)", backgroundSize: "52px 52px", pointerEvents: "none" }} />
+                <div className="blob1" style={{ position: "absolute", top: "-80px", right: "-80px", width: 440, height: 440, borderRadius: "50%", background: "radial-gradient(circle,rgba(41,98,255,0.18) 0%,transparent 65%)", pointerEvents: "none" }} />
+                <div className="blob2" style={{ position: "absolute", bottom: "-80px", left: "-60px", width: 360, height: 360, borderRadius: "50%", background: "radial-gradient(circle,rgba(41,98,255,0.1) 0%,transparent 65%)", pointerEvents: "none" }} />
+                <div className="hero-grid" style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", gap: 64, maxWidth: 1200, margin: "0 auto", width: "100%" }}>
+                    <div style={{ flex: 1, minWidth: 280 }}>
+                        <Fade>
+                            <div style={{ display: "inline-flex", alignItems: "center", gap: 9, padding: "7px 20px", borderRadius: 50, marginBottom: 30, fontSize: 11.5, fontWeight: 800, color: "rgba(255,255,255,0.65)", letterSpacing: ".12em", textTransform: "uppercase", border: "1px solid rgba(255,255,255,0.14)", background: "rgba(255,255,255,0.07)", fontFamily: "'Nunito',sans-serif" }}>
+                                <span className="pulse" style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e", display: "inline-block" }} />
+                                We're here to help
+                            </div>
                         </Fade>
-                    ))}
-                </div>
-            </section>
-
-            <div className="div" />
-
-            {/* ══ MAIN CONTACT SECTION ══ */}
-            <section style={{ padding: "90px 5%", background: C.sky }}>
-                <div className="contact-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, maxWidth: 1100, margin: "0 auto", alignItems: "start" }}>
-
-                    {/* ── LEFT: form ── */}
-                    <Fade delay={.05}>
-                        <div>
-                            <span className="slabel">Send a Message</span>
-                            <h2 style={{ fontSize: "clamp(26px,3.5vw,44px)", fontWeight: 800, color: C.navy, letterSpacing: "-.025em", lineHeight: 1.1, marginBottom: 10 }}>
-                                How Can We <span style={{ color: C.ocean }}>Help?</span>
-                            </h2>
-                            <p style={{ fontSize: 14, color: C.ocean, lineHeight: 1.7, fontWeight: 300, marginBottom: 36, maxWidth: 420 }}>
-                                Fill in the form and our team will route your query to the right department — participant support, institutional onboarding, judge assignments, or partnerships.
+                        <Fade delay={.1}>
+                            <h1 style={{ fontSize: "clamp(40px,6vw,76px)", fontWeight: 800, lineHeight: 1.05, letterSpacing: "-.03em", color: "white", marginBottom: 10 }}>Get in Touch</h1>
+                            <h1 style={{ fontSize: "clamp(40px,6vw,76px)", fontWeight: 800, lineHeight: 1.05, letterSpacing: "-.03em", color: ACCENT, marginBottom: 28 }}>With HackForge.</h1>
+                        </Fade>
+                        <Fade delay={.18}>
+                            <p style={{ fontSize: "clamp(14px,1.8vw,17px)", color: "rgba(255,255,255,0.58)", lineHeight: 1.9, maxWidth: 500, marginBottom: 36, fontWeight: 400 }}>
+                                Whether you're a participant, university rep, event organiser, or sponsor — our team is ready to assist across every stage of your journey with HackForge.
                             </p>
-
-                            {status === "sent" ? (
-                                <div className="pop glass" style={{ borderRadius: 24, padding: "48px 36px", textAlign: "center" }}>
-                                    <div style={{ width: 64, height: 64, borderRadius: "50%", background: `linear-gradient(135deg,${C.ocean},${C.cyan})`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 22px", fontSize: 28 }}>✓</div>
-                                    <h3 style={{ fontSize: 22, fontWeight: 800, color: C.navy, marginBottom: 10 }}>Message Sent!</h3>
-                                    <p style={{ fontSize: 14, color: C.ocean, lineHeight: 1.7, fontWeight: 300 }}>
-                                        Thanks for reaching out. We'll reply to <strong>{form.email}</strong> within 24 hours.
-                                    </p>
-                                    <button className="btn-primary" style={{ marginTop: 28 }} onClick={() => { setStatus("idle"); setForm({ name: "", email: "", role: "", subject: "", message: "" }); }}>
-                                        Send Another
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="glass" style={{ borderRadius: 24, padding: "36px 32px" }}>
-                                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
-                                        {/* name */}
-                                        <div className="field-wrap">
-                                            <label className="field-label">Full Name *</label>
-                                            <input className="field" name="name" placeholder="Arjun Sharma" value={form.name} onChange={handleChange} />
-                                        </div>
-                                        {/* email */}
-                                        <div className="field-wrap">
-                                            <label className="field-label">Email Address *</label>
-                                            <input className="field" name="email" type="email" placeholder="you@university.edu" value={form.email} onChange={handleChange} />
+                        </Fade>
+                        <Fade delay={.24}>
+                            <div style={{ display: "flex", gap: 28, marginBottom: 42, flexWrap: "wrap" }}>
+                                {[
+                                    { icon: <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><rect x="2" y="4" width="16" height="13" rx="2" stroke="white" strokeWidth="1.5" /><path d="M2 7l8 5 8-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" /></svg>, val: "< 6h", label: "Reply Time" },
+                                    { icon: <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><path d="M10 2a6 6 0 100 12A6 6 0 0010 2zM2 18c0-2 3.134-4 8-4s8 2 8 4" stroke="white" strokeWidth="1.5" strokeLinecap="round" /></svg>, val: "50+", label: "Universities" },
+                                    { icon: <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><circle cx="10" cy="10" r="8" stroke="white" strokeWidth="1.5" /><path d="M10 6v4l3 2" stroke="white" strokeWidth="1.5" strokeLinecap="round" /></svg>, val: "24/7", label: "Live Support" },
+                                ].map(s => (
+                                    <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                        <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>{s.icon}</div>
+                                        <div>
+                                            <div style={{ fontSize: 18, fontWeight: 800, color: "white", lineHeight: 1, fontFamily: "'Poppins',sans-serif" }}>{s.val}</div>
+                                            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.42)", letterSpacing: ".08em", textTransform: "uppercase", fontWeight: 700 }}>{s.label}</div>
                                         </div>
                                     </div>
+                                ))}
+                            </div>
+                        </Fade>
+                        <Fade delay={.3}>
+                            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                                <button className="btn-primary" style={{ background: "white", color: NAVY }}>Send a Message</button>
+                                <button className="btn-ghost-white">Browse Docs <svg viewBox="0 0 16 16" width="14" height="14" fill="none"><path d="M8 3l5 5-5 5M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg></button>
+                            </div>
+                        </Fade>
+                    </div>
+                    <Fade delay={.15} style={{ flex: 1, minWidth: 280 }}>
+                        <HeroImageCollage />
+                    </Fade>
+                </div>
+            </section>
 
-                                    {/* role */}
-                                    <div className="field-wrap" style={{ marginBottom: 16 }}>
-                                        <label className="field-label">I am a…</label>
-                                        <div style={{ position: "relative" }}>
-                                            <select className="field" name="role" value={form.role} onChange={handleChange}>
-                                                <option value="">Select your role</option>
-                                                {roles.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
-                                            </select>
-                                            <div style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
-                                                <Icon size={16} color={C.ocean}><path d="M6 9l6 6 6-6" /></Icon>
+            {/* ══ REACH US — BENTO GRID ══ */}
+            <section style={{ padding: "100px 5%", background: WHITE, position: "relative", overflow: "hidden" }}>
+                <div className="dot-bg" style={{ position: "absolute", inset: 0, opacity: 0.5, pointerEvents: "none" }} />
+                <div style={{ position: "relative", zIndex: 1 }}>
+                    <Fade>
+                        <div style={{ textAlign: "center", marginBottom: 56 }}>
+                            <span className="sec-label">Contact Channels</span>
+                            <h2 style={{ fontSize: "clamp(24px,3.5vw,42px)", fontWeight: 700, color: NAVY, letterSpacing: "-.025em", marginTop: 6 }}>
+                                Reach Us <span style={{ color: ACCENT }}>Anywhere</span>
+                            </h2>
+                            <p style={{ fontSize: 14.5, color: NAVY_65, marginTop: 12, maxWidth: 420, margin: "12px auto 0", fontFamily: "'Nunito',sans-serif" }}>
+                                Four ways to connect — pick what works for you
+                            </p>
+                        </div>
+                    </Fade>
+
+                    <div className="bento-grid">
+                        <Fade delay={0} style={{ gridColumn: "span 7" }}><BentoEmail /></Fade>
+                        <Fade delay={.08} style={{ gridColumn: "span 5" }}><BentoPhone /></Fade>
+                        <Fade delay={.14} style={{ gridColumn: "span 5" }}><BentoHQ /></Fade>
+                        <Fade delay={.2} style={{ gridColumn: "span 7" }}><BentoChat /></Fade>
+                    </div>
+                </div>
+            </section>
+
+            <div className="divider" />
+
+            {/* ══ CONTACT FORM ══ */}
+            <section style={{ padding: "100px 5%", background: OFF, position: "relative", overflow: "hidden" }}>
+                <div style={{ position: "relative", zIndex: 1 }}>
+                    <Fade>
+                        <div style={{ textAlign: "center", marginBottom: 62 }}>
+                            <span className="sec-label">Send a Message</span>
+                            <h2 style={{ fontSize: "clamp(26px,4vw,48px)", fontWeight: 700, color: NAVY, letterSpacing: "-.025em", marginTop: 6 }}>
+                                How Can We <span style={{ color: ACCENT }}>Help You?</span>
+                            </h2>
+                            <p style={{ fontSize: 15, color: NAVY_65, marginTop: 12, maxWidth: 480, margin: "12px auto 0", fontWeight: 400, fontFamily: "'Nunito',sans-serif", lineHeight: 1.7 }}>
+                                Fill in the form and we'll route your query to the right team — participant support, university onboarding, judge assignments, or partnerships.
+                            </p>
+                        </div>
+                    </Fade>
+
+                    {/*
+                      ── LAYOUT ──
+                      LEFT column  : form card  +  Response Times card (below form)
+                      RIGHT column : image banner  +  query routing  +  socials  (unchanged)
+                    */}
+                    <div className="contact-grid" style={{ display: "grid", gridTemplateColumns: "1.15fr 1fr", gap: 44, maxWidth: 1100, margin: "0 auto", alignItems: "start" }}>
+
+                        {/* ── LEFT: form + response times stacked ── */}
+                        <Fade delay={.06}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+
+                                {/* FORM */}
+                                {status === "sent" ? (
+                                    <div className="pop" style={{ borderRadius: 24, padding: "56px 40px", textAlign: "center", background: WHITE, border: `1.5px solid ${NAVY_15}` }}>
+                                        <div style={{ width: 68, height: 68, borderRadius: "50%", background: NAVY, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}>
+                                            <CheckIcon />
+                                        </div>
+                                        <h3 style={{ fontSize: 24, fontWeight: 700, color: NAVY, marginBottom: 12 }}>Message Sent!</h3>
+                                        <p style={{ fontSize: 14.5, color: NAVY_65, lineHeight: 1.75, fontFamily: "'Nunito',sans-serif" }}>
+                                            Thanks for reaching out. We'll reply to <strong>{form.email}</strong> within 24 hours.
+                                        </p>
+                                        <button className="btn-primary" style={{ marginTop: 30 }} onClick={() => { setStatus("idle"); setForm({ name: "", email: "", role: "", subject: "", message: "" }); }}>
+                                            Send Another
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div style={{ borderRadius: 24, padding: "40px 36px", background: WHITE, border: `1.5px solid rgba(3,4,94,0.1)` }}>
+                                        <div className="form-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+                                            <div>
+                                                <label className="field-label">Full Name *</label>
+                                                <input className="field" name="name" placeholder="Arjun Sharma" value={form.name} onChange={handleChange} />
+                                            </div>
+                                            <div>
+                                                <label className="field-label">Email Address *</label>
+                                                <input className="field" name="email" type="email" placeholder="you@university.edu" value={form.email} onChange={handleChange} />
                                             </div>
                                         </div>
+                                        <div style={{ marginBottom: 16 }}>
+                                            <label className="field-label">I am a…</label>
+                                            <div style={{ position: "relative" }}>
+                                                <select className="field" name="role" value={form.role} onChange={handleChange}>
+                                                    <option value="">Select your role</option>
+                                                    {roles.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                                                </select>
+                                                <div style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+                                                    <ChevronIcon open={false} />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style={{ marginBottom: 16 }}>
+                                            <label className="field-label">Subject</label>
+                                            <input className="field" name="subject" placeholder="e.g. University dashboard setup, Judge assignment…" value={form.subject} onChange={handleChange} />
+                                        </div>
+                                        <div style={{ marginBottom: 26 }}>
+                                            <label className="field-label">Message *</label>
+                                            <textarea className="field" name="message" rows={5} placeholder="Describe your query in detail — the more context, the faster we can help." value={form.message} onChange={handleChange} style={{ minHeight: 130 }} />
+                                            <div className="char">{form.message.length} / 1000</div>
+                                        </div>
+                                        <button className="btn-primary" style={{ width: "100%", justifyContent: "center", fontSize: 15, padding: "16px 38px" }} disabled={status === "sending"} onClick={handleSubmit}>
+                                            {status === "sending" ? <><SpinnerIcon /> Sending…</> : <>Send Message <ArrowIcon /></>}
+                                        </button>
                                     </div>
+                                )}
 
-                                    {/* subject */}
-                                    <div className="field-wrap" style={{ marginBottom: 16 }}>
-                                        <label className="field-label">Subject</label>
-                                        <input className="field" name="subject" placeholder="e.g. University dashboard setup, Judge assignment…" value={form.subject} onChange={handleChange} />
-                                    </div>
-
-                                    {/* message */}
-                                    <div className="field-wrap" style={{ marginBottom: 24 }}>
-                                        <label className="field-label">Message *</label>
-                                        <textarea className="field" name="message" rows={5} placeholder="Describe your query in detail — the more context you give, the faster we can help." value={form.message} onChange={handleChange} style={{ minHeight: 120 }} />
-                                        <div className="char">{form.message.length} / 1000</div>
-                                    </div>
-
-                                    <button className="btn-primary" style={{ width: "100%", justifyContent: "center" }} disabled={status === "sending"} onClick={handleSubmit}>
-                                        {status === "sending" ? (
-                                            <>
-                                                <svg className="spin" width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={C.navy} strokeWidth={2.5}><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4" /></svg>
-                                                Sending…
-                                            </>
-                                        ) : "Send Message →"}
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    </Fade>
-
-                    {/* ── RIGHT: context + socials ── */}
-                    <Fade delay={.15}>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-
-                            {/* department routing card */}
-                            <div className="glass" style={{ borderRadius: 22, padding: "30px 28px" }}>
-                                <span className="slabel">Query Routing</span>
-                                <h3 style={{ fontSize: 18, fontWeight: 800, color: C.navy, marginBottom: 20, letterSpacing: "-.01em" }}>We'll Route You Right</h3>
-                                {[
-                                    { role: "Participant / Developer", dept: "Participant Support", color: C.cyan },
-                                    { role: "University Representative", dept: "Institutional Onboarding", color: C.ocean },
-                                    { role: "Event Organizer / Admin", dept: "Platform Configuration", color: `${C.navy}` },
-                                    { role: "Judge / Evaluator", dept: "Judge Assignment Team", color: C.ocean },
-                                    { role: "Sponsor / Partner", dept: "Partnerships & Growth", color: C.cyan },
-                                ].map(r => (
-                                    <div key={r.role} style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 12, padding: "12px 14px", borderRadius: 12, background: `rgba(0,119,182,.05)`, border: `1px solid rgba(0,180,216,.1)` }}>
-                                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: r.color, flexShrink: 0 }} />
+                                {/* RESPONSE TIMES — directly below the form */}
+                                <div style={{ borderRadius: 22, padding: "26px", background: NAVY, transition: "transform .3s, box-shadow .3s" }}
+                                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 16px 48px rgba(3,4,94,0.45)"; }}
+                                    onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
+                                        <div style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                            <ClockIcon />
+                                        </div>
                                         <div>
-                                            <div style={{ fontSize: 12, fontWeight: 700, color: C.navy }}>{r.role}</div>
-                                            <div style={{ fontSize: 11, color: C.ocean, marginTop: 2 }}>→ {r.dept}</div>
+                                            <div style={{ fontSize: 15, fontWeight: 800, color: "white", fontFamily: "'Poppins',sans-serif" }}>Response Times</div>
+                                            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", fontFamily: "'Nunito',sans-serif" }}>Average reply speed</div>
                                         </div>
                                     </div>
-                                ))}
-                            </div>
-
-                            {/* response time */}
-                            <div className="glass" style={{ borderRadius: 22, padding: "28px", background: `linear-gradient(135deg,${C.ocean}12,${C.cyan}08)` }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
-                                    <div style={{ width: 42, height: 42, borderRadius: "50%", background: `linear-gradient(135deg,${C.ocean},${C.cyan})`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                        <Icon size={18} color={C.navy}><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></Icon>
-                                    </div>
-                                    <div>
-                                        <div style={{ fontSize: 13, fontWeight: 700, color: C.navy }}>Response Time</div>
-                                        <div style={{ fontSize: 12, color: C.ocean, fontWeight: 300 }}>Average reply speed</div>
-                                    </div>
-                                </div>
-                                {[
-                                    { label: "General Queries", time: "< 24 hrs" },
-                                    { label: "Technical Issues", time: "< 6 hrs" },
-                                    { label: "Institutional Setup", time: "< 48 hrs" },
-                                ].map(rt => (
-                                    <div key={rt.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: `1px solid rgba(0,119,182,.1)` }}>
-                                        <span style={{ fontSize: 13, color: C.ocean, fontWeight: 400 }}>{rt.label}</span>
-                                        <span style={{ fontSize: 12, fontFamily: "'DM Mono',monospace", color: C.navy, fontWeight: 600, background: `${C.cyan}22`, padding: "3px 10px", borderRadius: 20 }}>{rt.time}</span>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* socials */}
-                            <div className="glass" style={{ borderRadius: 22, padding: "26px 28px" }}>
-                                <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: C.ocean, marginBottom: 16 }}>Follow HackForge</div>
-                                <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                                    {[
-                                        { label: "Twitter / X", icon: <Icon size={18}><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53A4.48 4.48 0 0 0 22.43.36a9 9 0 0 1-2.88 1.1A4.52 4.52 0 0 0 16.11 0c-2.5 0-4.52 2.02-4.52 4.52 0 .35.04.7.11 1.04C7.69 5.38 4.07 3.6 1.64.9a4.52 4.52 0 0 0-.61 2.27c0 1.57.8 2.96 2.01 3.77a4.48 4.48 0 0 1-2.05-.57v.06c0 2.19 1.56 4.02 3.63 4.43-.38.1-.78.16-1.19.16-.29 0-.57-.03-.85-.08.57 1.79 2.24 3.09 4.21 3.12A9.05 9.05 0 0 1 0 19.54a12.77 12.77 0 0 0 6.92 2.03c8.3 0 12.85-6.88 12.85-12.85 0-.2 0-.39-.01-.58A9.17 9.17 0 0 0 23 3z" /></Icon> },
-                                        { label: "LinkedIn", icon: <Icon size={18}><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" /><rect x="2" y="9" width="4" height="12" /><circle cx="4" cy="4" r="2" /></Icon> },
-                                        { label: "GitHub", icon: <Icon size={18}><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" /></Icon> },
-                                        { label: "Discord", icon: <Icon size={18}><path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z" /></Icon> },
-                                    ].map(s => (
-                                        <a key={s.label} className="social" href="#" title={s.label}>{s.icon}</a>
+                                    {responseTimes.map((rt, i) => (
+                                        <div key={rt.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "11px 0", borderBottom: i < responseTimes.length - 1 ? "1px solid rgba(255,255,255,0.08)" : "none" }}>
+                                            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.58)", fontFamily: "'Nunito',sans-serif", fontWeight: 600 }}>{rt.label}</span>
+                                            <span style={{ fontSize: 12, fontFamily: "'Poppins',monospace", color: "white", fontWeight: 700, background: "rgba(255,255,255,0.12)", padding: "3px 14px", borderRadius: 20 }}>{rt.time}</span>
+                                        </div>
                                     ))}
                                 </div>
-                            </div>
-                        </div>
-                    </Fade>
-                </div>
-            </section>
 
-            <div className="div" />
-
-            {/* ══ FAQ ══ */}
-            <section style={{ padding: "90px 5%", background: C.mist }}>
-                <Fade>
-                    <div style={{ textAlign: "center", marginBottom: 60 }}>
-                        <span className="slabel">FAQ</span>
-                        <h2 style={{ fontSize: "clamp(28px,4vw,48px)", fontWeight: 800, color: C.navy, letterSpacing: "-.025em", lineHeight: 1.1 }}>
-                            Frequently Asked <span style={{ color: C.ocean }}>Questions</span>
-                        </h2>
-                        <p style={{ fontSize: 14, color: C.ocean, marginTop: 14, fontWeight: 300, maxWidth: 480, margin: "14px auto 0" }}>
-                            Quick answers to the most common queries from participants, universities, and organizers.
-                        </p>
-                    </div>
-                </Fade>
-
-                <div style={{ maxWidth: 760, margin: "0 auto" }}>
-                    {faqs.map((faq, i) => (
-                        <Fade key={faq.q} delay={i * .07}>
-                            <div className="faq-item">
-                                <button className="faq-q" onClick={() => setOpenFaq(openFaq === i ? null : i)}>
-                                    <span>{faq.q}</span>
-                                    <span className={`chev ${openFaq === i ? "open" : ""}`}>
-                                        <Icon size={18} color={C.ocean}><path d="M6 9l6 6 6-6" /></Icon>
-                                    </span>
-                                </button>
-                                <div className={`faq-a ${openFaq === i ? "open" : ""}`}>{faq.a}</div>
                             </div>
                         </Fade>
-                    ))}
-                </div>
 
-                <Fade delay={.3}>
-                    <div style={{ textAlign: "center", marginTop: 44 }}>
-                        <p style={{ fontSize: 14, color: C.ocean, marginBottom: 18, fontWeight: 300 }}>Didn't find what you were looking for?</p>
-                        <button className="btn-primary">Browse Documentation</button>
+                        {/* ── RIGHT: image + query routing + socials — exactly as before ── */}
+                        <Fade delay={.16}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                                {/* image banner */}
+                                <div className="img-card" style={{ borderRadius: 20 }}>
+                                    <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=700&q=80" alt="Support team"
+                                        style={{ width: "100%", height: 180, objectFit: "cover", display: "block" }} />
+                                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(3,4,94,0.72) 0%, rgba(41,98,255,0.4) 100%)" }} />
+                                    <div style={{ position: "absolute", inset: 0, padding: "22px 24px", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+                                        <div style={{ fontSize: 16, fontWeight: 700, color: "white", marginBottom: 5 }}>Dedicated Support Team</div>
+                                        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.6 }}>Real humans, not bots — here to guide you at every step of your HackForge journey.</div>
+                                    </div>
+                                </div>
+
+                                {/* query routing */}
+                                <div className="context-panel">
+                                    <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: ".14em", textTransform: "uppercase", color: NAVY, opacity: .4, marginBottom: 14, fontFamily: "'Nunito',sans-serif" }}>Query Routing</div>
+                                    <h3 style={{ fontSize: 17, fontWeight: 700, color: NAVY, marginBottom: 16, letterSpacing: "-.01em" }}>We'll Route You Right</h3>
+                                    {routeMap.map(r => (
+                                        <div key={r.role} className="rrow">
+                                            <div style={{ width: 10, height: 10, borderRadius: "50%", background: r.color, flexShrink: 0, boxShadow: `0 0 6px ${r.color}` }} />
+                                            <div>
+                                                <div style={{ fontSize: 12.5, fontWeight: 800, color: NAVY, fontFamily: "'Nunito',sans-serif" }}>{r.role}</div>
+                                                <div style={{ fontSize: 11.5, color: NAVY_65, marginTop: 2, fontFamily: "'Nunito',sans-serif" }}>→ {r.dept}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* socials */}
+                                <div className="context-panel">
+                                    <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: ".14em", textTransform: "uppercase", color: NAVY, opacity: .4, marginBottom: 16, fontFamily: "'Nunito',sans-serif" }}>Follow HackForge</div>
+                                    <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                                        {socials.map(({ label, Svg }) => (
+                                            <a key={label} className="social" href="#" title={label}><Svg /></a>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </Fade>
+
                     </div>
-                </Fade>
+                </div>
             </section>
 
-            <div className="div" />
+            <div className="divider" />
 
-            {/* ══ CTA BANNER ══ */}
-            <section className="noise" style={{
-                padding: "90px 5%", textAlign: "center", position: "relative", overflow: "hidden",
-                background: `linear-gradient(155deg, ${C.navy} 0%, #021c6b 50%, ${C.ocean} 100%)`,
-            }}>
-                <div style={{ position: "absolute", inset: 0, backgroundImage: `radial-gradient(circle at 25% 50%,${C.cyan}18 0%,transparent 50%),radial-gradient(circle at 75% 50%,${C.ocean}22 0%,transparent 50%)`, pointerEvents: "none" }} />
+            {/* ══ FAQ ══ */}
+            <section style={{ padding: "100px 5%", background: WHITE, position: "relative", overflow: "hidden" }}>
                 <div style={{ position: "relative", zIndex: 1 }}>
                     <Fade>
-                        <span className="slabel" style={{ color: C.sky }}>Join the Community</span>
-                        <h2 style={{ fontSize: "clamp(30px,4.5vw,58px)", fontWeight: 800, color: C.mist, letterSpacing: "-.03em", lineHeight: 1.1, marginBottom: 18 }}>
-                            Ready to Run Your Next{" "}
-                            <span style={{ background: `linear-gradient(135deg,${C.cyan},${C.sky})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                                Hackathon?
-                            </span>
+                        <div style={{ textAlign: "center", marginBottom: 62 }}>
+                            <span className="sec-label">FAQ</span>
+                            <h2 style={{ fontSize: "clamp(28px,4vw,50px)", fontWeight: 700, color: NAVY, letterSpacing: "-.025em", lineHeight: 1.1, marginTop: 6 }}>
+                                Frequently Asked <span style={{ color: ACCENT }}>Questions</span>
+                            </h2>
+                            <p style={{ fontSize: 14.5, color: NAVY_65, marginTop: 14, maxWidth: 460, margin: "14px auto 0", fontFamily: "'Nunito',sans-serif", fontWeight: 400 }}>
+                                Quick answers to the most common queries from participants, universities, and organizers.
+                            </p>
+                        </div>
+                    </Fade>
+
+                    <div style={{ display: "flex", gap: 56, maxWidth: 1100, margin: "0 auto", alignItems: "flex-start", flexWrap: "wrap" }}>
+                        <div style={{ flex: 1.4, minWidth: 280 }}>
+                            {faqs.map((faq, i) => (
+                                <Fade key={faq.q} delay={i * .07}>
+                                    <div className="faq-item">
+                                        <button className="faq-q" onClick={() => setOpenFaq(openFaq === i ? null : i)}>
+                                            <span>{faq.q}</span>
+                                            <ChevronIcon open={openFaq === i} />
+                                        </button>
+                                        <div className={`faq-a ${openFaq === i ? "open" : ""}`}>{faq.a}</div>
+                                    </div>
+                                </Fade>
+                            ))}
+                            <Fade delay={.35}>
+                                <div style={{ marginTop: 28 }}>
+                                    <p style={{ fontSize: 14, color: NAVY_65, marginBottom: 16, fontFamily: "'Nunito',sans-serif" }}>Didn't find what you were looking for?</p>
+                                    <button className="btn-primary">Browse Documentation</button>
+                                </div>
+                            </Fade>
+                        </div>
+
+                        <Fade delay={.1} style={{ flex: 1, minWidth: 260 }}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+                                <div className="img-card" style={{ borderRadius: 20 }}>
+                                    <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&q=80" alt="Team working together"
+                                        style={{ width: "100%", height: 200, objectFit: "cover", display: "block" }} />
+                                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(3,4,94,0.6) 0%, transparent 60%)" }} />
+                                    <div style={{ position: "absolute", bottom: 18, left: 20 }}>
+                                        <div style={{ fontSize: 15, fontWeight: 700, color: "white" }}>Community Driven</div>
+                                        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.65)", marginTop: 3 }}>Built with feedback from 10K+ developers</div>
+                                    </div>
+                                </div>
+                                <div className="img-card" style={{ borderRadius: 20 }}>
+                                    <img src="https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=600&q=80" alt="Meeting and collaboration"
+                                        style={{ width: "100%", height: 160, objectFit: "cover", display: "block" }} />
+                                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(41,98,255,0.65) 0%, rgba(3,4,94,0.5) 100%)" }} />
+                                    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                        <div style={{ textAlign: "center" }}>
+                                            <div style={{ fontSize: 28, fontWeight: 800, color: "white", fontFamily: "'Poppins',sans-serif" }}>500+</div>
+                                            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", textTransform: "uppercase", letterSpacing: ".12em", fontWeight: 700 }}>Hackathons Hosted</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </Fade>
+                    </div>
+                </div>
+            </section>
+
+            <div className="divider" />
+
+            {/* ══ CTA ══ */}
+            <section style={{ padding: "110px 5%", textAlign: "center", background: NAVY, position: "relative", overflow: "hidden" }}>
+                <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle at 25% 50%,rgba(255,255,255,0.04) 0%,transparent 50%),radial-gradient(circle at 75% 50%,rgba(255,255,255,0.03) 0%,transparent 50%)", pointerEvents: "none" }} />
+                <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px)", backgroundSize: "52px 52px", pointerEvents: "none" }} />
+                <div style={{ position: "relative", zIndex: 1 }}>
+                    <Fade>
+                        <span className="sec-label" style={{ color: "rgba(255,255,255,0.38)", background: "rgba(255,255,255,0.06)", borderColor: "rgba(255,255,255,0.15)" }}>Join the Community</span>
+                        <h2 style={{ fontSize: "clamp(32px,5vw,62px)", fontWeight: 800, color: "white", letterSpacing: "-.03em", lineHeight: 1.08, margin: "16px auto 18px", maxWidth: 700 }}>
+                            Ready to Run Your Next <span style={{ color: ACCENT }}>Hackathon?</span>
                         </h2>
-                        <p style={{ fontSize: 15, color: `${C.sky}bb`, marginBottom: 40, fontWeight: 300, maxWidth: 480, margin: "0 auto 40px" }}>
+                        <p style={{ fontSize: 16, color: "rgba(255,255,255,0.5)", maxWidth: 460, margin: "0 auto 44px", fontFamily: "'Nunito',sans-serif", fontWeight: 400, lineHeight: 1.8 }}>
                             Create your account today and access all platform features — from team formation to automated certification.
                         </p>
                         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-                            <button className="btn-primary">Get Started Free</button>
-                            <button className="btn-ghost">Schedule a Demo</button>
+                            <button className="btn-primary" style={{ background: "white", color: NAVY }}>Get Started Free</button>
+                            <button className="btn-ghost-white">Schedule a Demo</button>
                         </div>
                     </Fade>
                 </div>
             </section>
-
-            {/* ══ FOOTER ══ */}
-            <footer style={{ background: C.navy, padding: "28px 5%", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: "50%", background: `linear-gradient(135deg,${C.ocean},${C.cyan})`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <Icon size={13} color={C.navy} stroke={2.8}><path d="M13 2L4 14h7l-1 8 10-14h-7l1-6z" /></Icon>
-                    </div>
-                    <span style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 800, fontSize: 15, color: C.mist }}>HackForge</span>
-                </div>
-                <span style={{ fontSize: 11, color: `${C.sky}77`, letterSpacing: ".06em", fontFamily: "'DM Mono',monospace" }}>© 2026 HackForge · support@hackforge.dev</span>
-                <div style={{ display: "flex", gap: 20 }}>
-                    {["Privacy", "Terms", "Docs", "API"].map(l => (
-                        <a key={l} href="#" style={{ fontSize: 11, color: `${C.sky}66`, textDecoration: "none", fontWeight: 600, letterSpacing: ".06em", transition: "color .2s" }}
-                            onMouseEnter={e => e.target.style.color = C.cyan} onMouseLeave={e => e.target.style.color = `${C.sky}66`}>{l}</a>
-                    ))}
-                </div>
-            </footer>
         </div>
     );
 }
