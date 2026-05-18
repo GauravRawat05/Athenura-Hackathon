@@ -34,7 +34,7 @@ class AuthService {
   async generateAccessAndRefreshTokens(user) {
     try {
       if (!user || !user.generateAccessToken || !user.generateRefreshToken) {
-        throw new Error("Invalid user object or missing token generation methods")
+        throw new ApiError(500, "Invalid user object or missing token generation methods");
       }
 
       const accessToken = user.generateAccessToken()
@@ -45,7 +45,7 @@ class AuthService {
 
       return { accessToken, refreshToken }
     } catch (error) {
-      throw new Error(`Token generation failed: ${error.message}`)
+      throw new ApiError(500, `Token generation failed: ${error.message}`);
     }
   }
 
@@ -373,13 +373,13 @@ class AuthService {
       const user = await authRepository.findUserById(decodedToken._id)
 
       if (!user) {
-        throw new Error("User not found")
+        throw new ApiError(404, "User not found");
       }
 
       // Check if the incoming token matches the stored refresh token
       // This prevents reuse of old/rotated tokens
       if (user.refreshToken !== incomingRefreshToken) {
-        throw new Error("Invalid refresh token")
+        throw new ApiError(401, "Invalid refresh token");
       }
 
       // Generate new tokens (rotation)
@@ -393,7 +393,7 @@ class AuthService {
       return { accessToken, refreshToken }
     } catch (error) {
       if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
-        throw new Error("Invalid or expired refresh token")
+        throw new ApiError(401, "Invalid or expired refresh token");
       }
       throw error
     }

@@ -23,7 +23,7 @@ router.route("/admin/judges").get(
   asyncHandler(judgingController.getAllJudges)
 );
 
-router.route("/admin/hackathons/:hackathonId/judges/assign").post(
+router.route("/admin/hackathons/:hackathonId/assign").post(
   verifyJWT,
   restrictTo("Admin", "SuperAdmin"),
   validateParams(hackathonIdParamValidation),

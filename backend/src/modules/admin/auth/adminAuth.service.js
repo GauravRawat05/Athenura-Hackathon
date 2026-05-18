@@ -44,7 +44,7 @@ class AdminAuthService {
       if (!adminSecretKey) {
         throw new ApiError(400, "adminSecretKey is required when role is Admin")
       }
-      if (adminSecretKey !== envConfig.admineSecretKey) {
+      if (adminSecretKey !== envConfig.adminSecretKey) {
         throw new ApiError(403, "Invalid admin secret key")
       }
     }

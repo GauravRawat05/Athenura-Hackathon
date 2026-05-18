@@ -43,6 +43,11 @@ const createHackathon = async (hackathonData) => {
     throw new Error('Hackathon data must be a valid object.');
   }
 
+  // Handle "free" registration fee by converting it to 0
+  if (hackathonData.registrationFee === 'free') {
+    hackathonData.registrationFee = 0;
+  }
+
   // Normalize allowedModes if provided directly to handle case-sensitivity
   if (hackathonData.allowedModes && Array.isArray(hackathonData.allowedModes)) {
     hackathonData.allowedModes = hackathonData.allowedModes.map(m => typeof m === 'string' ? m.toLowerCase().trim() : m);
@@ -144,6 +149,11 @@ const updateHackathon = async (hackathonId, updateData) => {
   // Validate input
   if (!updateData || typeof updateData !== 'object') {
     throw new Error('Update data must be a valid object.');
+  }
+
+  // Handle "free" registration fee by converting it to 0
+  if (updateData.registrationFee === 'free') {
+    updateData.registrationFee = 0;
   }
 
   // Check if the hackathon exists
@@ -435,11 +445,12 @@ const listRegistrations = async (hackathonId, filters = {}) => {
 const syncHackathonStatuses = async () => {
   const now = new Date();
 
-  // 1. upcoming -> ongoing: Find hackathons starting now
+  // 1. upcoming -> ongoing: Find hackathons starting now.
+  // Removed $type: 'date' to ensure compatibility with standard Mongoose date casting.
   const hackathonsToStart = await Hackathon.find({
     status: 'upcoming',
-    startDate: { $type: 'date', $lte: now },
-    endDate: { $type: 'date', $gt: now }
+    startDate: { $lte: now },
+    endDate: { $gt: now }
   });
 
   let transitionedToOngoing = 0;
@@ -497,18 +508,22 @@ const syncHackathonStatuses = async () => {
 
       for (const participant of participantUserIds) {
         if (participant?.email && !notifiedEmails.has(participant.email)) {
-          await sendEmail(participant.email, 'HACKATHON_DETAILS', {
-            fullName: participant.fullName || 'Participant',
-            hackathonTitle: hackathon.title,
-            problemStatement: hackathon.problemStatement,
-            startDate: hackathon.startDate,
-            endDate: hackathon.endDate,
-            submissionDeadline: hackathon.submissionDeadline,
-            rules: hackathon.rules || [],
-            judgingCriteria: hackathon.judgingCriteria || [],
-            hackathonLink: `/hackathons/${hackathon.slug}`
-          });
-          notifiedEmails.add(participant.email);
+          try {
+            await sendEmail(participant.email, 'HACKATHON_DETAILS', {
+              fullName: participant.fullName || 'Participant',
+              hackathonTitle: hackathon.title,
+              problemStatement: hackathon.problemStatement,
+              startDate: hackathon.startDate,
+              endDate: hackathon.endDate,
+              submissionDeadline: hackathon.submissionDeadline,
+              rules: hackathon.rules || [],
+              judgingCriteria: hackathon.judgingCriteria || [],
+              hackathonLink: `/hackathons/${hackathon.slug}`
+            });
+            notifiedEmails.add(participant.email);
+          } catch (emailError) {
+            console.error(`[Sync] Failed to notify participant ${participant.email}:`, emailError.message);
+          }
         }
       }
 
@@ -543,11 +558,11 @@ const syncHackathonStatuses = async () => {
     console.log(`[Sync] Hackathon "${hackathon.title}" started. ${notifiedEmails.size} participants notified.`);
   }
 
-  // 2. upcoming/ongoing -> past: Bulk transition when end date has passed
+  // 2. upcoming/ongoing -> past: Bulk transition when end date has passed.
   const endedResult = await Hackathon.updateMany(
     {
       status: { $in: ['upcoming', 'ongoing'] },
-      endDate: { $type: 'date', $lte: now }
+      endDate: { $lte: now }
     },
     { $set: { status: 'past' } }
   );

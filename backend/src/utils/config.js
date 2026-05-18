@@ -20,7 +20,7 @@ const brevoApiKey = String(process.env.BREVO_API_KEY || process.env.BREVO_API)
 const brevoSenderEmail = String(process.env.BREVO_SENDER_EMAIL || process.env.BREVO_SENDER)
 const judgeSecretKey = String(process.env.JUDGE_SECRET_KEY)
 const universitySecretKey = String(process.env.UNIVERSITY_SECRET_KEY)
-const admineSecretKey = String(process.env.ADMIN_SECRET_KEY)
+const adminSecretKey = String(process.env.ADMIN_SECRET_KEY)
 
 
 
@@ -29,7 +29,7 @@ export {
   portNumber,
   mongoUrl,
   appName,
-  admineSecretKey,
+  adminSecretKey,
   judgeSecretKey,
   universitySecretKey,
   accessTokenExpiry,

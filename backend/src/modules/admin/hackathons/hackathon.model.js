@@ -52,7 +52,8 @@ const hackathonSchema = new mongoose.Schema({
   },
   registrationFee:{
     type:Number,
-    required:true
+    required:true,
+    min: 0
   },
   currency:{
     type:String,
