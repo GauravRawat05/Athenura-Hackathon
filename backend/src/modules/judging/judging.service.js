@@ -11,10 +11,11 @@ import User from "../users/user.model.js";
 import Submission from "../submissions/submission.model.js";
 import ApiError from "../../libs/apiError.js";
 import { aggregateScoresForSubmission } from '../results/aggregation.service.js';
+import { userRoles } from "../users/user.constants.js";
 
 class JudgingService {
   async getAllJudges() {
-    return await User.find({ role: "Judge" }).select("fullName email _id");
+    return await User.find({ role: userRoles.JUDGE }).select("fullName email _id");
   }
 
   async assignJudges(hackathonId, judgeIds, adminId) {
@@ -23,7 +24,7 @@ class JudgingService {
       throw new ApiError(404, "Hackathon not found");
     }
 
-    const judges = await User.find({ _id: { $in: judgeIds }, role: "Judge" });
+    const judges = await User.find({ _id: { $in: judgeIds }, role: userRoles.JUDGE });
     if (judges.length !== judgeIds.length) {
       throw new ApiError(400, "One or more invalid judge IDs, or user is not a Judge");
     }

@@ -1,13 +1,14 @@
 /**
-  auth.middleware.js
-  Global authentication guard that extracts the bearer token, verifies it, and attaches the authenticated user context to the request.
- */
+ *   auth.middleware.js
+ *   Global authentication guard that extracts the bearer token, verifies it, and attaches the authenticated user context to the request.
+ *  */
 //jwt is used to verify the token
 import User from "../modules/users/user.model.js"
 import ApiError from "../libs/apiError.js"
 import jwt from "jsonwebtoken"
 import envConfig from "../config/envConfig.js"
 import asyncHandler from '../libs/asyncHandler.js';
+import { userRoles } from "../modules/users/user.constants.js"
 
 export const verifyJWT = asyncHandler(async (req, res, next) => {
 
@@ -48,8 +49,21 @@ export const verifyAdmin = asyncHandler(async (req, res, next) => {
     throw new ApiError(401, "Authentication required");
   }
 
-  if (req.user.role !== "Admin") {
+  if (req.user.role !== userRoles.ADMIN) {
     throw new ApiError(403, "Only admin can perform this action");
+  }
+
+  next();
+});
+
+// Judge access guard — used by admin panel routes that should be readable by judges
+export const verifyJudge = asyncHandler(async (req, res, next) => {
+  if (!req.user) {
+    throw new ApiError(401, "Authentication required");
+  }
+
+  if (req.user.role !== userRoles.JUDGE) {
+    throw new ApiError(403, "Only judges can perform this action");
   }
 
   next();

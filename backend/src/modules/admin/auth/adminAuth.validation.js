@@ -1,8 +1,9 @@
 /**
-  adminAuth.validation.js
-  Joi validation schemas for admin and judge authentication.
-*/
+ *   adminAuth.validation.js
+ *   Joi validation schemas for admin and judge authentication.
+ */
 import Joi from "joi"
+import { userRoles } from "../../users/user.constants.js"
 
 const passwordSchema = Joi.string().min(8).max(128).required().messages({
   "string.min": "Password must be at least 8 characters",
@@ -31,13 +32,13 @@ export const registerAdminValidation = Joi.object({
   password: passwordSchema,
   confirmPassword: confirmPasswordSchema,
   phone: phoneSchema,
-  role: Joi.string().valid("Admin", "Judge").required().messages({
+  role: Joi.string().valid(userRoles.ADMIN, userRoles.JUDGE).required().messages({
     "any.only": "Role must be either 'Admin' or 'Judge'",
     "any.required": "Role is required"
   }),
-  adminSecretKey: Joi.string().when("role", { is: "Admin", then: Joi.required(), otherwise: Joi.optional() }),
-  judgeSecretKey: Joi.string().when("role", { is: "Judge", then: Joi.required(), otherwise: Joi.optional() }),
-  judgeId: Joi.string().min(3).max(50).when("role", { is: "Judge", then: Joi.required(), otherwise: Joi.optional() })
+  adminSecretKey: Joi.string().when("role", { is: userRoles.ADMIN, then: Joi.required(), otherwise: Joi.optional() }),
+  judgeSecretKey: Joi.string().when("role", { is: userRoles.JUDGE, then: Joi.required(), otherwise: Joi.optional() }),
+  judgeId: Joi.string().min(3).max(50).when("role", { is: userRoles.JUDGE, then: Joi.required(), otherwise: Joi.optional() })
 }).with("adminSecretKey", "role").with("judgeSecretKey", "judgeId").messages({
   "any.only": "Role must be 'Admin' or 'Judge'"
 })
