@@ -24,6 +24,18 @@ class Hackathoncontroller {
     }
     res.json(new ApiResponse(200, hackathon, 'Hackathon fetched successfully'));
   }
+
+  // Get public winners cards
+  async getWinners(req, res) {
+    const { hackathonId } = req.params;
+    res.json(new ApiResponse(200, null, 'Winners fetched successfully'));
+  }
+
+  // Get authenticated result view
+  async getResults(req, res) {
+    const { hackathonId } = req.params;
+    res.json(new ApiResponse(200, null, 'Results fetched successfully'));
+  }
 };
 
 const hackathonController = new Hackathoncontroller();

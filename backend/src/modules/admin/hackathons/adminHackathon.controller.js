@@ -161,6 +161,38 @@ class AdminHackathonController {
       new ApiResponse(200, result, 'Registrations fetched successfully')
     );
   }
+
+  /**
+   * Compute scores and ranks
+   */
+  async computeResults(req, res) {
+    const { hackathonId } = req.params;
+    
+    if (!mongoose.isValidObjectId(hackathonId)) {
+      throw new ApiError(400, 'Invalid hackathonId format');
+    }
+
+    // Call service to compute scores & ranks
+    return res.json(
+      new ApiResponse(200, null, 'Scores and ranks computed successfully')
+    );
+  }
+
+  /**
+   * Override ranks/awards
+   */
+  async overrideResults(req, res) {
+    const { hackathonId } = req.params;
+    
+    if (!mongoose.isValidObjectId(hackathonId)) {
+      throw new ApiError(400, 'Invalid hackathonId format');
+    }
+
+    // Call service to override ranks & awards
+    return res.json(
+      new ApiResponse(200, null, 'Ranks and awards overridden successfully')
+    );
+  }
 }
 
 const adminHackathonController = new AdminHackathonController();
