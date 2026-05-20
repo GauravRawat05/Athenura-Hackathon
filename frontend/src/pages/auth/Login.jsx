@@ -533,21 +533,47 @@ export default function Login() {
   };
 
   const handleSubmit = async () => {
-    const newErrors = { email: "", password: "" };
-    if (!email)    newErrors.email    = "Please enter your email";
-    if (!password) newErrors.password = "Please enter your password";
+  const newErrors = { email: "", password: "" };
+  if (!email)    newErrors.email    = "Please enter your email";
+  if (!password) newErrors.password = "Please enter your password";
 
-    if (newErrors.email || newErrors.password) {
-      setErrors(newErrors);
-      return;
+  if (newErrors.email || newErrors.password) {
+    setErrors(newErrors);
+    return;
+  }
+
+  setErrors({ email: "", password: "" });
+  setLoading(true);
+
+  // ── DEMO USERS ──
+  const demoUsers = [
+    { email: "admin@hack.com",      password: "admin123",  role: "admin" },
+    { email: "university@hack.com", password: "univ123",   role: "university" },
+    { email: "user@hack.com",       password: "user123",   role: "user" },
+  ];
+
+  setTimeout(() => {
+    const found = demoUsers.find(
+      (u) => u.email === email && u.password === password
+    );
+
+    if (found) {
+      setLoading(false);
+      setLeaving(true);
+      setTimeout(() => {
+        if (found.role === "admin")      navigate("/admin/dashboard");
+        else if (found.role === "university") navigate("/university/dashboard");
+        else navigate("/dashboard");
+      }, 420);
+    } else {
+      setLoading(false);
+     setErrors({ 
+  email: "Invalid email!", 
+  password: "Please check your password!" 
+});
     }
-
-    setErrors({ email: "", password: "" });
-    setLoading(true);
-    // TODO: replace with your actual API call
-    setTimeout(() => setLoading(false), 2000);
-  };
-
+  }, 1500);
+};
   return (
     <>
       <style>{styles}</style>
