@@ -554,7 +554,7 @@ export default function AboutPage() {
             <section style={{ padding: "110px 5%", background: WHITE_OFF }}>
                 <Fade>
                     <div style={{ textAlign: "center", marginBottom: 70 }}>
-                        <span className="sec-label">Why HackForge</span>
+                        {/* <span className="sec-label">Why HackForge</span> */}
                         <h2 style={{ fontSize: "clamp(28px,4vw,50px)", fontWeight: 700, color: NAVY, letterSpacing: "-.025em", marginTop: 4 }}>
                             Everything You Need, <span style={{ color: ACCENT }}>All in One Platform</span>
                         </h2>
@@ -581,85 +581,29 @@ export default function AboutPage() {
 
             <div className="divider" />
 
-            {/* ══════════════════════════════════════════
-          VISION / MISSION / ABOUT
+                 {/* ══════════════════════════════════════════
+          BOTTOM STATS STRIP
       ══════════════════════════════════════════ */}
-            <section style={{ padding: "110px 5%", background: "white", position: "relative", overflow: "hidden" }}>
-                <div className="dot-bg" style={{ position: "absolute", inset: 0, opacity: 0.5 }} />
-                <div style={{ position: "relative", zIndex: 1 }}>
-                    <Fade>
-                        <div style={{ textAlign: "center", marginBottom: 70 }}>
-                            <span className="sec-label">Who We Are</span>
-                            <h2 style={{ fontSize: "clamp(28px,4vw,50px)", fontWeight: 700, color: NAVY, letterSpacing: "-.025em", marginTop: 4 }}>
-                                Our Purpose & <span style={{ color: ACCENT }}>Story</span>
-                            </h2>
-                            <p style={{ fontSize: 15, color: NAVY_TEXT, marginTop: 14, maxWidth: 480, margin: "14px auto 0" }}>
-                                The beliefs and experiences that drive everything we build.
-                            </p>
+            <section style={{ background: NAVY, padding: "64px 5%" }}>
+                <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", maxWidth: 1000, margin: "0 auto", borderRadius: 20, overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)" }}>
+                    {[
+                        { icon: <svg viewBox="0 0 24 24" width="28" height="28" fill="none"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="white" strokeWidth="1.5" /><circle cx="9" cy="7" r="4" stroke="white" strokeWidth="1.5" /><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="white" strokeWidth="1.5" strokeLinecap="round" /></svg>, to: 10000, suffix: "+", label: "Happy Participants" },
+                        { icon: <svg viewBox="0 0 24 24" width="28" height="28" fill="none"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>, to: 50, suffix: "+", label: "Partner Universities" },
+                        { icon: <svg viewBox="0 0 24 24" width="28" height="28" fill="none"><path d="M12 2l3 6.5 7 1-5 5 1.2 7L12 18l-6.2 3.5L7 14.5 2 9.5l7-1L12 2z" stroke="white" strokeWidth="1.5" strokeLinejoin="round" /></svg>, to: 500, suffix: "+", label: "Hackathons Hosted" },
+                        { icon: <svg viewBox="0 0 24 24" width="28" height="28" fill="none"><path d="M8 6l-4 6 4 6M16 6l4 6-4 6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /><line x1="15" y1="4" x2="9" y2="20" stroke="white" strokeWidth="1.5" strokeLinecap="round" /></svg>, to: 1, suffix: "M+", label: "Lines of Code" },
+                    ].map((s, i, arr) => (
+                        <div key={s.label} className="stat-pill" style={{ borderRight: i < arr.length - 1 ? "1px solid rgba(255,255,255,0.1)" : "none" }}>
+                            <div style={{ marginBottom: 10, opacity: 0.7 }}>{s.icon}</div>
+                            <div style={{ fontSize: 32, fontWeight: 800, color: "white", fontFamily: "'Poppins',sans-serif", lineHeight: 1 }}>
+                                <Counter to={s.to} suffix={s.suffix} />
+                            </div>
+                            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: ".12em", fontWeight: 700, marginTop: 6 }}>{s.label}</div>
                         </div>
-                    </Fade>
-
-                    {/* Image + text row for "About Us" flavour */}
-                    <div style={{ display: "flex", gap: 56, alignItems: "center", maxWidth: 1100, margin: "0 auto 72px", flexWrap: "wrap" }}>
-                        <Fade delay={.05} style={{ flex: 1, minWidth: 280 }}>
-                            <div className="img-card" style={{ borderRadius: 24 }}>
-                                <img
-                                    src="https://images.unsplash.com/photo-1531482615713-2afd69097998?w=700&q=80"
-                                    alt="Team collaborating on laptops"
-                                    style={{ width: "100%", height: 340, objectFit: "cover", display: "block" }}
-                                />
-                                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(3,4,94,0.5) 0%, transparent 60%)" }} />
-                                <div style={{ position: "absolute", bottom: 20, left: 20, right: 20 }}>
-                                    <div style={{ fontSize: 18, fontWeight: 700, color: "white" }}>Born at a Hackathon</div>
-                                    <div style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", marginTop: 4 }}>Founded by developers who lived the problem</div>
-                                </div>
-                            </div>
-                        </Fade>
-                        <Fade delay={.12} style={{ flex: 1.3, minWidth: 280 }}>
-                            <div>
-                                <span className="sec-label">Our Story</span>
-                                <h3 style={{ fontSize: "clamp(22px,3vw,36px)", fontWeight: 700, color: NAVY, letterSpacing: "-.02em", margin: "12px 0 18px", lineHeight: 1.2 }}>
-                                    From Frustration <br />to Innovation
-                                </h3>
-                                <p style={{ fontSize: 15, color: NAVY_TEXT, lineHeight: 1.9, marginBottom: 16 }}>
-                                    HackForge was created during a 48-hour hackathon where our founding team experienced the chaos of spreadsheet-driven judging, misplaced certificates, and broken payment flows. We turned that frustration into a solution.
-                                </p>
-                                <p style={{ fontSize: 15, color: NAVY_TEXT, lineHeight: 1.9, marginBottom: 28 }}>
-                                    Today, HackForge powers hackathons across universities like MDU and DTU, serving 10,000+ participants with a platform that handles everything from team formation to certified winners — automatically.
-                                </p>
-                                <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-                                    {[{ val: "10K+", label: "Happy Participants" }, { val: "50+", label: "Partner Universities" }, { val: "500+", label: "Hackathons Hosted" }].map(s => (
-                                        <div key={s.label} style={{ textAlign: "center", padding: "14px 18px", borderRadius: 12, background: "rgba(41,98,255,0.05)", border: "1px solid rgba(41,98,255,0.15)" }}>
-                                            <div style={{ fontSize: 22, fontWeight: 800, color: ACCENT, fontFamily: "'Poppins',sans-serif" }}>{s.val}</div>
-                                            <div style={{ fontSize: 11, color: NAVY_TEXT, textTransform: "uppercase", letterSpacing: ".08em", fontWeight: 700, marginTop: 4 }}>{s.label}</div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </Fade>
-                    </div>
-
-                    {/* Pillar cards — Vision, Mission, About */}
-                    <div className="pillar-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 20, maxWidth: 1100, margin: "0 auto" }}>
-                        {pillars.map((p, i) => (
-                            <Fade key={p.tag} delay={i * .1}>
-                                <div className="pillar">
-                                    <div style={{ width: 58, height: 58, borderRadius: 16, background: "rgba(41,98,255,0.07)", border: "1.5px solid rgba(41,98,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 22 }}>
-                                        {p.icon}
-                                    </div>
-                                    <span style={{ fontSize: 10, fontWeight: 800, color: ACCENT, textTransform: "uppercase", letterSpacing: ".15em" }}>{p.tag}</span>
-                                    <h3 style={{ fontSize: 19, fontWeight: 700, color: NAVY, margin: "10px 0 14px", lineHeight: 1.25 }}>{p.title}</h3>
-                                    <p style={{ fontSize: 14, color: NAVY_TEXT, lineHeight: 1.8 }}>{p.desc}</p>
-                                </div>
-                            </Fade>
-                        ))}
-                    </div>
+                    ))}
                 </div>
             </section>
 
-            <div className="divider" />
-
-            {/* ══════════════════════════════════════════
+                {/* ══════════════════════════════════════════
           JOURNEY — From Vision to Impact (with img)
       ══════════════════════════════════════════ */}
             <section style={{ padding: "110px 5%", background: WHITE_OFF }}>
@@ -667,7 +611,7 @@ export default function AboutPage() {
                     {/* LEFT */}
                     <div style={{ flex: 1, minWidth: 280 }}>
                         <Fade>
-                            <span className="sec-label">Our Journey</span>
+                            {/* <span className="sec-label">Our Journey</span> */}
                             <h2 style={{ fontSize: "clamp(26px,3.5vw,44px)", fontWeight: 700, color: NAVY, letterSpacing: "-.025em", margin: "12px 0 16px", lineHeight: 1.15 }}>
                                 From Vision <br />to Impact
                             </h2>
@@ -722,6 +666,86 @@ export default function AboutPage() {
                 </div>
             </section>
 
+
+            {/* ══════════════════════════════════════════
+          VISION / MISSION / ABOUT
+      ══════════════════════════════════════════ */}
+            <section style={{ padding: "110px 5%", background: "white", position: "relative", overflow: "hidden" }}>
+                <div className="dot-bg" style={{ position: "absolute", inset: 0, opacity: 0.5 }} />
+                <div style={{ position: "relative", zIndex: 1 }}>
+                    <Fade>
+                        <div style={{ textAlign: "center", marginBottom: 70 }}>
+                            {/* <span className="sec-label">Who We Are</span> */}
+                            <h2 style={{ fontSize: "clamp(28px,4vw,50px)", fontWeight: 700, color: NAVY, letterSpacing: "-.025em", marginTop: 4 }}>
+                                Our Purpose & <span style={{ color: ACCENT }}>Story</span>
+                            </h2>
+                            <p style={{ fontSize: 15, color: NAVY_TEXT, marginTop: 14, maxWidth: 480, margin: "14px auto 0" }}>
+                                The beliefs and experiences that drive everything we build.
+                            </p>
+                        </div>
+                    </Fade>
+
+                    {/* Image + text row for "About Us" flavour */}
+                    <div style={{ display: "flex", gap: 56, alignItems: "center", maxWidth: 1100, margin: "0 auto 72px", flexWrap: "wrap" }}>
+                        <Fade delay={.05} style={{ flex: 1, minWidth: 280 }}>
+                            <div className="img-card" style={{ borderRadius: 24 }}>
+                                <img
+                                    src="https://images.unsplash.com/photo-1531482615713-2afd69097998?w=700&q=80"
+                                    alt="Team collaborating on laptops"
+                                    style={{ width: "100%", height: 340, objectFit: "cover", display: "block" }}
+                                />
+                                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(3,4,94,0.5) 0%, transparent 60%)" }} />
+                                <div style={{ position: "absolute", bottom: 20, left: 20, right: 20 }}>
+                                    <div style={{ fontSize: 18, fontWeight: 700, color: "white" }}>Born at a Hackathon</div>
+                                    <div style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", marginTop: 4 }}>Founded by developers who lived the problem</div>
+                                </div>
+                            </div>
+                        </Fade>
+                        <Fade delay={.12} style={{ flex: 1.3, minWidth: 280 }}>
+                            <div>
+                                {/* <span className="sec-label">Our Story</span> */}
+                                <h3 style={{ fontSize: "clamp(22px,3vw,36px)", fontWeight: 700, color: NAVY, letterSpacing: "-.02em", margin: "12px 0 18px", lineHeight: 1.2 }}>
+                                    From Frustration <br />to Innovation
+                                </h3>
+                                <p style={{ fontSize: 15, color: NAVY_TEXT, lineHeight: 1.9, marginBottom: 16 }}>
+                                    HackForge was created during a 48-hour hackathon where our founding team experienced the chaos of spreadsheet-driven judging, misplaced certificates, and broken payment flows. We turned that frustration into a solution.
+                                </p>
+                                <p style={{ fontSize: 15, color: NAVY_TEXT, lineHeight: 1.9, marginBottom: 28 }}>
+                                    Today, HackForge powers hackathons across universities like MDU and DTU, serving 10,000+ participants with a platform that handles everything from team formation to certified winners — automatically.
+                                </p>
+                                <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+                                    {[{ val: "10K+", label: "Happy Participants" }, { val: "50+", label: "Partner Universities" }, { val: "500+", label: "Hackathons Hosted" }].map(s => (
+                                        <div key={s.label} style={{ textAlign: "center", padding: "14px 18px", borderRadius: 12, background: "rgba(41,98,255,0.05)", border: "1px solid rgba(41,98,255,0.15)" }}>
+                                            <div style={{ fontSize: 22, fontWeight: 800, color: ACCENT, fontFamily: "'Poppins',sans-serif" }}>{s.val}</div>
+                                            <div style={{ fontSize: 11, color: NAVY_TEXT, textTransform: "uppercase", letterSpacing: ".08em", fontWeight: 700, marginTop: 4 }}>{s.label}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </Fade>
+                    </div>
+
+                    {/* Pillar cards — Vision, Mission, About */}
+                    <div className="pillar-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 20, maxWidth: 1100, margin: "0 auto" }}>
+                        {pillars.map((p, i) => (
+                            <Fade key={p.tag} delay={i * .1}>
+                                <div className="pillar">
+                                    <div style={{ width: 58, height: 58, borderRadius: 16, background: "rgba(41,98,255,0.07)", border: "1.5px solid rgba(41,98,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 22 }}>
+                                        {p.icon}
+                                    </div>
+                                    <span style={{ fontSize: 10, fontWeight: 800, color: ACCENT, textTransform: "uppercase", letterSpacing: ".15em" }}>{p.tag}</span>
+                                    <h3 style={{ fontSize: 19, fontWeight: 700, color: NAVY, margin: "10px 0 14px", lineHeight: 1.25 }}>{p.title}</h3>
+                                    <p style={{ fontSize: 14, color: NAVY_TEXT, lineHeight: 1.8 }}>{p.desc}</p>
+                                </div>
+                            </Fade>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            <div className="divider" />
+
+        
             <div className="divider" />
 
             {/* ══════════════════════════════════════════
@@ -754,27 +778,7 @@ export default function AboutPage() {
 
             <div className="divider" />
 
-            {/* ══════════════════════════════════════════
-          BOTTOM STATS STRIP
-      ══════════════════════════════════════════ */}
-            <section style={{ background: NAVY, padding: "64px 5%" }}>
-                <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", maxWidth: 1000, margin: "0 auto", borderRadius: 20, overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)" }}>
-                    {[
-                        { icon: <svg viewBox="0 0 24 24" width="28" height="28" fill="none"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="white" strokeWidth="1.5" /><circle cx="9" cy="7" r="4" stroke="white" strokeWidth="1.5" /><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="white" strokeWidth="1.5" strokeLinecap="round" /></svg>, to: 10000, suffix: "+", label: "Happy Participants" },
-                        { icon: <svg viewBox="0 0 24 24" width="28" height="28" fill="none"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>, to: 50, suffix: "+", label: "Partner Universities" },
-                        { icon: <svg viewBox="0 0 24 24" width="28" height="28" fill="none"><path d="M12 2l3 6.5 7 1-5 5 1.2 7L12 18l-6.2 3.5L7 14.5 2 9.5l7-1L12 2z" stroke="white" strokeWidth="1.5" strokeLinejoin="round" /></svg>, to: 500, suffix: "+", label: "Hackathons Hosted" },
-                        { icon: <svg viewBox="0 0 24 24" width="28" height="28" fill="none"><path d="M8 6l-4 6 4 6M16 6l4 6-4 6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /><line x1="15" y1="4" x2="9" y2="20" stroke="white" strokeWidth="1.5" strokeLinecap="round" /></svg>, to: 1, suffix: "M+", label: "Lines of Code" },
-                    ].map((s, i, arr) => (
-                        <div key={s.label} className="stat-pill" style={{ borderRight: i < arr.length - 1 ? "1px solid rgba(255,255,255,0.1)" : "none" }}>
-                            <div style={{ marginBottom: 10, opacity: 0.7 }}>{s.icon}</div>
-                            <div style={{ fontSize: 32, fontWeight: 800, color: "white", fontFamily: "'Poppins',sans-serif", lineHeight: 1 }}>
-                                <Counter to={s.to} suffix={s.suffix} />
-                            </div>
-                            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: ".12em", fontWeight: 700, marginTop: 6 }}>{s.label}</div>
-                        </div>
-                    ))}
-                </div>
-            </section>
+       
 
             {/* ══════════════════════════════════════════
           ROADMAP
@@ -782,7 +786,7 @@ export default function AboutPage() {
             <section style={{ padding: "110px 5%", background: WHITE_OFF }}>
                 <Fade>
                     <div style={{ textAlign: "center", marginBottom: 70 }}>
-                        <span className="sec-label">What's Next</span>
+                        {/* <span className="sec-label">What's Next</span> */}
                         <h2 style={{ fontSize: "clamp(28px,4vw,50px)", fontWeight: 700, color: NAVY, letterSpacing: "-.025em", marginTop: 4 }}>
                             Our Roadmap
                         </h2>

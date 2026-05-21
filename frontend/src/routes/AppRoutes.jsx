@@ -40,12 +40,14 @@ import UniversityReports from '../pages/university/UniversityReports'
 import VerifyCertificate from '../pages/public/VerifyCertificate'
 import PublicWinners from '../pages/public/PublicWinners'
 import NotFound from '../pages/public/NotFound'
+import About from '../pages/public/About'
+import Contact from '../pages/public/Contact'
+import Result from '../pages/public/Result' // ✅ NEW
 
 import Layout from '../components/common/Layout' // ✅ NEW
 import PublicLayout from '../components/common/PublicLayout' // ✅ NEW
 
-import About from '../pages/public/About'    //vaishnavi
-import Contact from '../pages/public/Contact'  //vaishnavi
+
 import PublicHackathonList from '../components/common/HackathonList'
 import HackathonJoin from '../pages/participant/HackathonJoin'
 import JoinWorkFlow from '../pages/participant/JoinWorkFlow'
@@ -57,6 +59,8 @@ export default function AppRoutes() {
     <Routes>
       {/* Public */}
       <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
+      <Route path="/about" element={<PublicLayout><About /></PublicLayout>} />
+      <Route path="/contact" element={<PublicLayout><Contact /></PublicLayout>} />
       <Route path="/hackathons" element={<PublicLayout><PublicHackathonList /></PublicLayout>} />
       <Route path="/hackathons/:id/join" element={<PublicLayout><HackathonJoin /></PublicLayout>} />
       <Route path="/join-workflow" element={<PublicLayout><JoinWorkFlow /></PublicLayout>} />
@@ -67,9 +71,7 @@ export default function AppRoutes() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/verify-certificate/:id" element={<PublicLayout><VerifyCertificate /></PublicLayout>} />
       <Route path="/winners/:hackathonId" element={<PublicLayout><PublicWinners /></PublicLayout>} />
-
-      <Route path="/about" element={<PublicLayout><About /></PublicLayout>} />  {/*vaishnavi*/}
-      <Route path="/contact" element={<PublicLayout><Contact /></PublicLayout>} />  {/*vaishnavi*/}
+      <Route path="/result" element={<PublicLayout><Result /></PublicLayout>} /> {/* ✅ NEW */}
 
       {/* Participant */}
       <Route path="/hackathon/:id" element={<PublicLayout><HackathonDetail /></PublicLayout>} />
