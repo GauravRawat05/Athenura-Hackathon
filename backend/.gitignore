@@ -3,7 +3,6 @@ node_modules
 .env.local
 scaffold.py
 *.log
-*.txt
 review.md
 .windsurf
 Hackathon_API_Postman_Collection.json

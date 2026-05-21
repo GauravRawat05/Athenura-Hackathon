@@ -14,6 +14,7 @@ import {
   listRegistrations as listRegistrationsService
 } from './adminHackathon.service.js';
 import Hackathon from './hackathon.model.js';
+import adminResultService from '../results/adminResult.service.js';
 
 class AdminHackathonController {
   /**
@@ -159,6 +160,40 @@ class AdminHackathonController {
 
     return res.json(
       new ApiResponse(200, result, 'Registrations fetched successfully')
+    );
+  }
+
+  /**
+   * Compute scores and ranks
+   */
+  async computeResults(req, res) {
+    const { hackathonId } = req.params;
+    
+    if (!mongoose.isValidObjectId(hackathonId)) {
+      throw new ApiError(400, 'Invalid hackathonId format');
+    }
+
+    const result = await adminResultService.computeAndSaveDraftResults(hackathonId);
+    
+    return res.json(
+      new ApiResponse(200, result, 'Scores and ranks computed successfully')
+    );
+  }
+
+  /**
+   * Override ranks/awards
+   */
+  async overrideResults(req, res) {
+    const { hackathonId } = req.params;
+    
+    if (!mongoose.isValidObjectId(hackathonId)) {
+      throw new ApiError(400, 'Invalid hackathonId format');
+    }
+
+    const result = await adminResultService.overrideResult(hackathonId, req.body);
+    
+    return res.json(
+      new ApiResponse(200, result, 'Ranks and awards overridden successfully')
     );
   }
 }

@@ -1,0 +1,11 @@
+* Notifications Module (src/modules/notifications):
+       * Status: Skeletal API Layer.
+       * Details: While notification.mailer.js has some logic for sending emails, the REST API for users to view their notifications is empty. The notification.controller.js and
+         notification.service.js are placeholders.
+       * Left to develop: Endpoints for GET /notifications (list user notifications), PATCH /notifications/:id/read (mark as read), and real-time socket integration in
+         notification.socket.js.
+   * Analytics Module (src/modules/admin/analytics):
+       * Status: Mocked/Hardcoded.
+       * Details: The controller exists, but the adminAnalytics.service.js currently returns static objects with 0 values and empty arrays (e.g., totalUsers: 0, recentActivity:
+         []).
+       * Left to develop: Actual MongoDB aggregation pipelines to fetch real-time stats for the admin dashboard.

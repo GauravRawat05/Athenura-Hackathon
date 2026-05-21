@@ -12,6 +12,7 @@ import Hackathon from "../admin/hackathons/hackathon.model.js";
 import Registration from "../registrations/registration.model.js";
 import ApiError from "../../libs/apiError.js";
 import { MAX_ASSETS_PER_SUBMISSION } from "./submission.constants.js";
+import { deleteFromCloudinary } from "../../config/cloudinary.js";
 
 class AssetService {
   async addAssets(submissionId, userId, req) {
@@ -50,26 +51,63 @@ class AssetService {
       throw new ApiError(400, "Submission deadline has passed, cannot add assets");
     }
 
-    // 3. Upload assets
+    // 5. Upload assets — done BEFORE committing the DB transaction so we can
+    //    clean them up safely here without leaving orphaned Cloudinary files.
     const newAssets = await uploadService.parseAndUpload(req);
 
-    // 4. Enforce max assets limit
+    // 6. Enforce max assets limit
     if (submission.assets.length + newAssets.length > MAX_ASSETS_PER_SUBMISSION) {
+      // Uploads succeeded but DB write will fail — clean up the orphaned files now
+      const uploadedPublicIds = newAssets
+        .filter(a => a?.publicId)
+        .map(a => a.publicId);
+
+      await Promise.all(
+        uploadedPublicIds.map(publicId =>
+          deleteFromCloudinary(publicId).catch(err =>
+            console.error(
+              "Failed to clean up orphaned asset from Cloudinary after limit breach:",
+              err
+            )
+          )
+        )
+      );
+
       throw new ApiError(400, `Cannot exceed maximum of ${MAX_ASSETS_PER_SUBMISSION} assets per submission`);
     }
 
-    // 5. Append assets
+    // 7. Append assets
     submission.assets.push(...newAssets);
 
     submission.status = "Submitted";
     submission.submittedAt = new Date();
 
-    // 6. Save updates
+    // 8. Save updates
     await submissionRepository.saveSubmission(submission, { validateBeforeSave: true, session });
 
     await session.commitTransaction();
     return submission;
     } catch (error) {
+      // If the error occurred AFTER the Cloudinary upload but BEFORE (or during)
+      // commitTransaction, the new assets are in Cloudinary with no DB reference.
+      // Attempt to delete every uploaded file to prevent orphan buildup.
+      if (newAssets?.length) {
+        const uploadedPublicIds = newAssets
+          .filter(a => a?.publicId)
+          .map(a => a.publicId);
+
+        await Promise.all(
+          uploadedPublicIds.map(publicId =>
+            deleteFromCloudinary(publicId).catch(cleanupErr =>
+              console.error(
+                "Failed to clean up orphaned asset from Cloudinary after DB error:",
+                cleanupErr
+              )
+            )
+          )
+        )
+      }
+
       await session.abortTransaction();
       throw error;
     } finally {

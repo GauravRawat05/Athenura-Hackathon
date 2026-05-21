@@ -103,6 +103,8 @@ registrationSchema.index({ userId: 1 });
 registrationSchema.index({ teamId: 1 });
 registrationSchema.index({ hackathonId: 1, status: 1 });
 registrationSchema.index({ paymentStatus: 1 });
+registrationSchema.index({ createdAt: 1 });
+registrationSchema.index({ hackathonId: 1, status: 1, createdAt: 1 });
 
 // Unique index to ensure a user can only have one active registration per hackathon (solo or team)
 // This enforces at the database level that a participant cannot be in multiple active registrations

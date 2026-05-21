@@ -1,4 +1,10 @@
-/**
-  payment.constants.js
-  Keeps enums, status values, event names, and fixed configuration used only by the payment module.
- */
+export const PAYMENT_STATUS = {
+  PENDING: "PENDING",
+  SUCCESS: "SUCCESS",
+  FAILED: "FAILED",
+  REFUNDED: "REFUNDED"
+};
+
+export const PAYMENT_CURRENCY = {
+  INR: "INR"
+};

@@ -10,7 +10,7 @@ import adminPaymentRouter from './payments/adminPayment.routes.js';
 import adminResultRouter from './results/adminResult.routes.js';
 import adminCertificateRouter from './certificates/adminCertificate.routes.js';
 import adminUniversityRouter from './universities/adminUniversity.routes.js';
-import adminAnalyticsRouter from './analytics/adminAnalytics.routes.js';
+import adminAnalyticsRouter from './analytics/analytics.routes.js';
 import adminReportRouter from './reports/adminReport.routes.js';
 import adminSettingRouter from './settings/adminSetting.routes.js';
 import adminAuthRouter from './auth/adminAuth.routes.js';
@@ -18,7 +18,7 @@ import adminAuthRouter from './auth/adminAuth.routes.js';
 const router = Router();
 
 // Mount all admin sub-routers under /admin
-router.use('/auth', adminAuthRouter); 
+router.use('/auth', adminAuthRouter);
 router.use('/users', adminUserRouter);
 router.use('/hackathons', adminHackathonRouter);
 router.use('/payments', adminPaymentRouter);

@@ -52,7 +52,8 @@ const hackathonSchema = new mongoose.Schema({
   },
   registrationFee:{
     type:Number,
-    required:true
+    required:true,
+    min: 0
   },
   currency:{
     type:String,
@@ -98,7 +99,7 @@ const hackathonSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["draft", "upcoming", "ongoing", "past"],
+    enum: ["draft", "upcoming", "ongoing", "judging", "past"],
     default: "draft",
     required: true
   },
@@ -119,7 +120,17 @@ const hackathonSchema = new mongoose.Schema({
   resultsPublished: {
     type: Boolean,
     default: false
+  },
+  publishStatus: {
+    type: String,
+    enum: ['not_started', 'db_committed', 'side_effects_complete'],
+    default: 'not_started'
+  },
+  isLocked: {
+    type: Boolean,
+    default: false
   }
+
 
 },{
   timestamps:true

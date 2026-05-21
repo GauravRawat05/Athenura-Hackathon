@@ -30,8 +30,9 @@ class UserController {
     }
 
     const updateData = req.body
+    const profilePhoto = req.files?.profilePhoto
 
-    const user = await userService.updateProfileService(userId, updateData)
+    const user = await userService.updateProfileService(userId, updateData, profilePhoto)
 
     return res.status(200).json(
       new ApiResponse(200, user, "Profile updated successfully")

@@ -2,31 +2,45 @@ import mongoose from 'mongoose';
 import Score from '../judging/score.model.js';
 import JudgeAssignment from '../judging/judgeAssignment.model.js';
 import Submission from '../submissions/submission.model.js';
+import { scoreStatusEnums } from '../judging/judging.constants.js';
 
+const AGGREGABLE_STATUSES = [scoreStatusEnums[2]]; // ["approved"]
+
+/**
+ * Computes per-submission average scores across all approvable judge submissions.
+ * Each returned entry serves as the input to the Ranking Engine.
+ */
 export const aggregateScoresForHackathon = async (hackathonId) => {
   const totalJudges = await JudgeAssignment.countDocuments({ hackathonId });
 
-  // Get all submissions for the hackathon
-  const submissions = await Submission.find({ hackathonId, status: "Submitted" }).lean();
-  
-  // Aggregate scores
-  const results = await Score.aggregate([
-    { $match: { hackathonId: new mongoose.Types.ObjectId(hackathonId), status: { $in: ["Submitted", "Updated"] } } },
+  const submissions = await Submission.find({ hackathonId }).lean();
+
+  const scoreGroups = await Score.aggregate([
+    {
+      $match: {
+        hackathonId: new mongoose.Types.ObjectId(hackathonId),
+        status: { $in: AGGREGABLE_STATUSES }
+      }
+    },
     {
       $group: {
-        _id: "$submissionId",
-        totalScoresSum: { $sum: "$totalScore" },
+        _id: '$submissionId',
+        totalScoresSum: { $sum: '$totalScore' },
         scoresCount: { $sum: 1 },
-        scores: { $push: "$$ROOT" }
+        rawScores: { $push: '$$ROOT' }
       }
     }
   ]);
 
-  const aggregatedResults = submissions.map(sub => {
-    const subScores = results.find(r => r._id.toString() === sub._id.toString());
-    const scoresCount = subScores ? subScores.scoresCount : 0;
-    const totalScoresSum = subScores ? subScores.totalScoresSum : 0;
-    
+  const scoreMap = new Map(
+    scoreGroups.map(g => [g._id.toString(), g])
+  );
+
+  return submissions.map(sub => {
+    const ag = scoreMap.get(sub._id.toString());
+    const scoresCount = ag ? ag.scoresCount : 0;
+    const totalScoresSum = ag ? ag.totalScoresSum : 0;
+
     return {
       submissionId: sub._id,
       title: sub.title,
@@ -35,38 +49,62 @@ export const aggregateScoresForHackathon = async (hackathonId) => {
       aggregatedScore: scoresCount > 0 ? totalScoresSum / scoresCount : 0,
       scoresCount,
       isComplete: scoresCount === totalJudges && totalJudges > 0,
-      rawScores: subScores ? subScores.scores : [],
+      rawScores: ag ? ag.rawScores : [],
       totalJudges
     };
   });
-
-  return aggregatedResults;
 };
 
+/**
+ * Re-aggregates a single submission after a score is submitted or updated.
+ */
 export const aggregateScoresForSubmission = async (submissionId, hackathonId) => {
   const totalJudges = await JudgeAssignment.countDocuments({ hackathonId });
 
+  const submission = await Submission.findById(submissionId).lean();
+  if (!submission) return null;
+
   const result = await Score.aggregate([
-    { $match: { submissionId: new mongoose.Types.ObjectId(submissionId), status: { $in: ["Submitted", "Updated"] } } },
+    {
+      $match: {
+        submissionId: new mongoose.Types.ObjectId(submissionId),
+        status: { $in: AGGREGABLE_STATUSES }
+      }
+    },
     {
       $group: {
-        _id: "$submissionId",
-        totalScoresSum: { $sum: "$totalScore" },
+        _id: '$submissionId',
+        totalScoresSum: { $sum: '$totalScore' },
         scoresCount: { $sum: 1 },
-        scores: { $push: "$$ROOT" }
+        rawScores: { $push: '$$ROOT' }
       }
     }
   ]);
 
-  if (result.length === 0) return null;
+  if (result.length === 0) {
+    return {
+      submissionId,
+      title: submission.title,
+      userId: submission.userId,
+      teamId: submission.teamId,
+      aggregatedScore: 0,
+      scoresCount: 0,
+      isComplete: false,
+      totalJudges,
+      rawScores: []
+    };
+  }
 
-  const subScores = result[0];
+  const ag = result[0];
   return {
     submissionId,
-    aggregatedScore: subScores.totalScoresSum / subScores.scoresCount,
-    scoresCount: subScores.scoresCount,
-    isComplete: subScores.scoresCount === totalJudges && totalJudges > 0,
-    rawScores: subScores.scores,
-    totalJudges
+    title: submission.title,
+    userId: submission.userId,
+    teamId: submission.teamId,
+    aggregatedScore: ag.totalScoresSum / ag.scoresCount,
+    scoresCount: ag.scoresCount,
+    isComplete: ag.scoresCount === totalJudges && totalJudges > 0,
+    totalJudges,
+    rawScores: ag.rawScores
   };
 };

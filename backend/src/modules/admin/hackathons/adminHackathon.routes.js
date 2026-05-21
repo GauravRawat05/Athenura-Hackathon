@@ -76,4 +76,20 @@ router.get(
   asyncHandler(adminHackathonController.listRegistrations)
 );
 
+// Compute scores & ranks
+router.post(
+  "/:hackathonId/results/compute",
+  verifyJWT,
+  verifyAdmin,
+  asyncHandler(adminHackathonController.computeResults)
+);
+
+// Override ranks/awards
+router.patch(
+  "/:hackathonId/results/override",
+  verifyJWT,
+  verifyAdmin,
+  asyncHandler(adminHackathonController.overrideResults)
+);
+
 export default router;

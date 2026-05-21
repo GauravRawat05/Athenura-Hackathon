@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { verifyJWT } from "../../middleware/auth.middleware.js";
+import { verifyJWT, verifyJudge } from "../../middleware/auth.middleware.js";
 import { restrictTo } from "../../middleware/role.middleware.js";
 import asyncHandler from "../../libs/asyncHandler.js";
 import judgingController from "./judging.controller.js";
@@ -23,7 +23,7 @@ router.route("/admin/judges").get(
   asyncHandler(judgingController.getAllJudges)
 );
 
-router.route("/admin/hackathons/:hackathonId/judges/assign").post(
+router.route("/admin/hackathons/:hackathonId/assign").post(
   verifyJWT,
   restrictTo("Admin", "SuperAdmin"),
   validateParams(hackathonIdParamValidation),
@@ -34,20 +34,20 @@ router.route("/admin/hackathons/:hackathonId/judges/assign").post(
 // Judge Routes
 router.route("/assignments").get(
   verifyJWT,
-  restrictTo("Judge"),
+  verifyJudge,
   asyncHandler(judgingController.getAssignments)
 );
 
 router.route("/hackathons/:hackathonId/submissions").get(
   verifyJWT,
-  restrictTo("Judge"),
+  verifyJudge,
   validateParams(hackathonIdParamValidation),
   asyncHandler(judgingController.getSubmissionsForJudge)
 );
 
 router.route("/submissions/:submissionId/scores").post(
   verifyJWT,
-  restrictTo("Judge"),
+  verifyJudge,
   validateParams(submissionIdParamValidation),
   validate(submitScoreValidation),
   asyncHandler(judgingController.submitScore)
@@ -55,7 +55,7 @@ router.route("/submissions/:submissionId/scores").post(
 
 router.route("/scores/:scoreId").patch(
   verifyJWT,
-  restrictTo("Judge"),
+  verifyJudge,
   validateParams(scoreIdParamValidation),
   validate(updateScoreValidation),
   asyncHandler(judgingController.updateScore)

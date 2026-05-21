@@ -10,7 +10,11 @@ class JudgingPolicy {
   }
 
   isAssignedJudge(assignment) {
-    return !!assignment;
+    // Guard against null — findAssignment() returns null when the record does not exist.
+    // Without the null check, accessing 'assignment.assigned' would throw a TypeError
+    // and bubble up as a 500 instead of returning a clean 403.
+    if (!assignment) return false;
+    return !!assignment.assigned;
   }
 }
 

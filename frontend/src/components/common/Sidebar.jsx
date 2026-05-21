@@ -16,7 +16,7 @@ const navItems = [
   },
   {
     label: "My Hackathons",
-    path: "/hackathons",
+    path: "/My-hackathons",
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
@@ -118,8 +118,8 @@ const ChevronIcon = ({ flipped }) => (
   </svg>
 );
 
-export default function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+export default function Sidebar({ collapsed, setCollapsed }) {
+  
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigate = useNavigate();
@@ -188,7 +188,7 @@ export default function Sidebar() {
           background: linear-gradient(175deg, #03045e 0%, #020344 55%, #010230 100%);
           border-right: 1px solid rgba(144,224,239,0.12);
           transition: width 0.35s cubic-bezier(.4,0,.2,1);
-          position: relative;
+          position: fixed;
           overflow: visible;
           font-family: 'Poppins', sans-serif;
           box-shadow: 6px 0 32px rgba(3,4,94,0.45);

@@ -1,12 +1,12 @@
 /**
- * publicWinners.service.js
- * Service to fetch winners for a hackathon (winners only).
+  publicWinners.service.js
+  Fetches winners for a hackathon from the immutable Result snapshot model.
+  Uses the service layer so filtering, population, and sort logic is shared.
  */
-import resultRepository from "./result.repository.js";
+import resultService from './result.service.js';
 
 class PublicWinnersService {
   async getWinners(hackathonId) {
-    // Fallback shape (until DB/query implementation is finalized)
     const fallback = {
       hackathonId,
       winners: [],
@@ -14,20 +14,16 @@ class PublicWinnersService {
     };
 
     try {
-      // Fetch only published results marked as winners
-      const allResults = await resultRepository.findByHackathonId(hackathonId);
-      
-      const winnersOnly = allResults.filter(
-        (r) => r.isPublished && (r.isWinner || r.rank <= 3)
-      );
+      // Use the service-layer method that returns only published snapshots,
+      // sorted by rank, with user/team already populated.
+      const winners = await resultService.getPublishedResults(hackathonId);
 
       return {
         hackathonId,
-        winners: winnersOnly,
-        summary: { winnersCount: winnersOnly.length },
+        winners,
+        summary: { winnersCount: winners.length },
       };
     } catch (err) {
-      // Ignore and return fallback; endpoint should still be functional.
       console.error(`Error fetching winners for hackathon ${hackathonId}:`, err);
     }
 

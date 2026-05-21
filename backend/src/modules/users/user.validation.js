@@ -39,11 +39,12 @@ export const updateProfileValidation = Joi.object({
   resumeLink: Joi.string().uri().messages({
     "string.uri": "Please provide a valid URL for resume"
   })
-}).min(1).messages({
-  "object.min": "At least one field must be provided for update"
 })
 
-// Validation middleware factory
+// Custom validation middleware factory
+// Accepts req.files (from formidable multipart parsing) so that a photo-only
+// upload — which has an empty req.body but a populated req.files.profilePhoto —
+// passes validation instead of failing on .min(1).
 export const validate = (schema) => {
   return (req, res, next) => {
     const { error, value } = schema.validate(req.body, {
@@ -59,6 +60,18 @@ export const validate = (schema) => {
         success: false,
         message: "Validation error",
         errors: errorMessage
+      })
+    }
+
+    // Guard: at least one body field OR a profile photo file must be present
+    const hasBodyFields = Object.keys(value).length > 0
+    const hasProfilePhoto = !!(req.files && req.files.profilePhoto)
+
+    if (!hasBodyFields && !hasProfilePhoto) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation error",
+        errors: "At least one field or a profile photo must be provided for update"
       })
     }
 

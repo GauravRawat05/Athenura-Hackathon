@@ -1,0 +1,224 @@
+{
+  "info": {
+    "_postman_id": "admin-analytics-collection-hackathon-athenura",
+    "name": "Admin Analytics — Hackathon Athenura",
+    "description": "Full analytics collection for /api/v1/admin/analytics. All 9 GET endpoints are listed below. Every request requires a valid Admin or Judge JWT Bearer token.\n\n🔒 Auth:\n  1. POST /api/v1/admin/auth/loginAdminOrJudge (body: email + password) → copy `accessToken` from response\n  2. Set collection variable `access_token` to that value\n\nBase URL: {{base_url}} (default: http://localhost:5000)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000"
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "hackathon_id",
+      "value": ""
+    },
+    {
+      "key": "from",
+      "value": ""
+    },
+    {
+      "key": "to",
+      "value": ""
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "🔐 Admin Login",
+      "event": [
+        { "listen": "test", "script": { "exec": [ "pm.test(\"Login OK\", () => { pm.expect(pm.response.code).to.be.oneOf([200,201]); const json = pm.response.json(); pm.environment.set('access_token', json.data.accessToken); });" ], "type": "text/javascript" } }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/admin/auth/loginAdminOrJudge",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "admin", "auth", "loginAdminOrJudge"]
+        },
+        "description": "Returns accessToken in the response body — copy it to the collection variable `access_token` so all analytics requests authenticate automatically.\n\nBody fields:\n  email       — Admin account email\n  password    — Admin account password"
+      },
+      "response": []
+    },
+    {
+      "name": "0. Overview",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/admin/analytics/overview",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "admin", "analytics", "overview"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "1. Registrations",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/admin/analytics/registrations",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "admin", "analytics", "registrations"],
+          "query": [
+            { "key": "groupBy", "value": "monthly", "description": "daily | weekly | monthly (default: monthly)" },
+            { "key": "hackathonId", "value": "{{hackathon_id}}", "description": "24-char hex MongoDB ObjectId — leave blank for all hackathons" },
+            { "key": "from", "value": "{{from}}", "description": "ISO 8601 e.g. 2025-01-01T00:00:00.000Z" },
+            { "key": "to", "value": "{{to}}", "description": "ISO 8601 — optional" }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "2. Revenue",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/admin/analytics/revenue",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "admin", "analytics", "revenue"],
+          "query": [
+            { "key": "groupBy", "value": "monthly", "description": "daily | weekly | monthly (default: monthly)" },
+            { "key": "hackathonId", "value": "{{hackathon_id}}", "description": "24-char hex ObjectId — optional" },
+            { "key": "from", "value": "{{from}}", "description": "ISO 8601 — optional" },
+            { "key": "to", "value": "{{to}}", "description": "ISO 8601 — optional" },
+            { "key": "currency", "value": "", "description": "INR | DOLLAR — optional" }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "3. Submissions",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/admin/analytics/submissions",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "admin", "analytics", "submissions"],
+          "query": [
+            { "key": "groupBy", "value": "monthly" },
+            { "key": "hackathonId", "value": "{{hackathon_id}}" },
+            { "key": "from", "value": "{{from}}" },
+            { "key": "to", "value": "{{to}}" }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "4. Results",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/admin/analytics/results",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "admin", "analytics", "results"],
+          "query": [
+            { "key": "groupBy", "value": "monthly" },
+            { "key": "hackathonId", "value": "{{hackathon_id}}" },
+            { "key": "from", "value": "{{from}}" },
+            { "key": "to", "value": "{{to}}" }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "5. Participation Trends",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/admin/analytics/participation-trends",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "admin", "analytics", "participation-trends"],
+          "query": [
+            { "key": "groupBy", "value": "monthly" },
+            { "key": "hackathonId", "value": "{{hackathon_id}}" },
+            { "key": "from", "value": "{{from}}" },
+            { "key": "to", "value": "{{to}}" }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "6. Universities",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/admin/analytics/universities",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "admin", "analytics", "universities"],
+          "query": [
+            { "key": "role", "value": "User", "description": "User | Participant | Judge (default: User)" },
+            { "key": "hackathonId", "value": "{{hackathon_id}}", "description": "24-char hex ObjectId — optional" }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "7. Judges",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/admin/analytics/judges",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "admin", "analytics", "judges"],
+          "query": [
+            { "key": "groupBy", "value": "monthly" },
+            { "key": "from", "value": "{{from}}" },
+            { "key": "to", "value": "{{to}}" }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "8. Certificates",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/admin/analytics/certificates",
+          "host": ["{{base_url}}"],
+          "path": ["api", "v1", "admin", "analytics", "certificates"],
+          "query": [
+            { "key": "hackathonId", "value": "{{hackathon_id}}", "description": "24-char hex ObjectId — leave blank for all hackathons" }
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

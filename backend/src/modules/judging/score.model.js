@@ -48,7 +48,7 @@ const scoreSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: scoreStatusEnums,
-      default: "Submitted"
+      default: scoreStatusEnums[0] // 'submitted'
     }
   },
   {

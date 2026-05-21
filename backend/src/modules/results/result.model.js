@@ -16,22 +16,28 @@ const resultSchema = new mongoose.Schema(
     date: { type: Date, default: Date.now },
     isPublished: { type: Boolean, default: false },
     certificateUrl: { type: String },
-    certificateStatus: { 
-      type: String, 
-      enum: ['pending', 'completed', 'failed'], 
-      default: 'pending' 
+    certificateStatus: {
+      type: String,
+      enum: ['pending', 'completed', 'failed'],
+      default: 'pending'
     },
-    notificationStatus: { 
-      type: String, 
-      enum: ['pending', 'sent', 'failed'], 
-      default: 'pending' 
+    notificationStatus: {
+      type: String,
+      enum: ['pending', 'sent', 'failed'],
+      default: 'pending'
     },
-    errorMessage: { type: String },
+    errorMessage: { type: String }
   },
   {
-    timestamps: true,
+    timestamps: true
   }
 );
+
+// Always stamp creation date so immutable snapshots carry a consistent timestamp.
+resultSchema.pre('save', function (next) {
+  if (!this.date) this.date = new Date();
+  next();
+});
 
 const Result = mongoose.model("Result", resultSchema);
 

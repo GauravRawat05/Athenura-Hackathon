@@ -10,7 +10,7 @@ class UserUtils {
   // Determine user role based on secret key
   
   determineUserRole(secretKey) {
-    if (secretKey === envConfig.admineSecretKey) {
+    if (secretKey === envConfig.adminSecretKey) {
       return userRoles.ADMIN
     } else if (secretKey === envConfig.judgeSecretKey) {
       return userRoles.JUDGE

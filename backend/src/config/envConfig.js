@@ -21,7 +21,7 @@
      brevoSenderEmail : String(process.env.BREVO_SENDER_EMAIL || process.env.BREVO_SENDER ),
      judgeSecretKey : String(process.env.JUDGE_SECRET_KEY ), 
      universitySecretKey : String(process.env.UNIVERSITY_SECRET_KEY ),
-     admineSecretKey : String(process.env.ADMIN_SECRET_KEY ),
+     adminSecretKey : String(process.env.ADMIN_SECRET_KEY ),
      clientUrl : String(process.env.CLIENT_URL )
 
    }

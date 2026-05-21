@@ -34,22 +34,22 @@ class AdminAuthService {
     const { email, password, phone, role, adminSecretKey, judgeSecretKey, judgeId, confirmPassword } = userInputData
 
     // ── At least one role must be stated explicitly ──
-    const validRoles = ["Admin", "Judge"]
+    const validRoles = [userRoles.ADMIN, userRoles.JUDGE]
     if (!validRoles.includes(role)) {
       throw new ApiError(400, "Role must be either 'Admin' or 'Judge'")
     }
 
     // ── Validate the matching secret key ──
-    if (role === "Admin") {
+    if (role === userRoles.ADMIN) {
       if (!adminSecretKey) {
         throw new ApiError(400, "adminSecretKey is required when role is Admin")
       }
-      if (adminSecretKey !== envConfig.admineSecretKey) {
+      if (adminSecretKey !== envConfig.adminSecretKey) {
         throw new ApiError(403, "Invalid admin secret key")
       }
     }
 
-    if (role === "Judge") {
+    if (role === userRoles.JUDGE) {
       if (!judgeSecretKey || !judgeId) {
         throw new ApiError(400, "judgeSecretKey and judgeId are required when role is Judge")
       }
@@ -69,7 +69,7 @@ class AdminAuthService {
       throw new ApiError(409, "User already exists with this email")
     }
 
-    if (role === "Judge") {
+    if (role === userRoles.JUDGE) {
       const existingUserByJudgeId = await authRepository.findByJudgeId(judgeId)
       if (existingUserByJudgeId) {
         throw new ApiError(409, "Judge ID is already registered")
@@ -78,11 +78,11 @@ class AdminAuthService {
 
     // ── Build user record — fields vary by role ──
     const userData = {
-      fullName: role === "Judge" ? "Judge" : "Admin",
+      fullName: role === userRoles.JUDGE ? "Judge" : "Admin",
       email,
       password,
       phone,
-      role: role === "Admin" ? userRoles.ADMIN : userRoles.JUDGE,
+      role: role === userRoles.ADMIN ? userRoles.ADMIN : userRoles.JUDGE,
       isEmailVerified: true,
       dateOfBirth: new Date(),
       collegeOrUniversity: "N/A",
@@ -91,7 +91,7 @@ class AdminAuthService {
     };
 
     // Only attach judgeId for judge accounts
-    if (role === "Judge") {
+    if (role === userRoles.JUDGE) {
       userData.judgeId = judgeId
     }
 

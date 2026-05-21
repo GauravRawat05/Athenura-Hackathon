@@ -4,9 +4,10 @@
  */
 
 export const scoreStatus = {
-  PENDING: "Pending",
-  SUBMITTED: "Submitted",
-  UPDATED: "Updated"
+  SUBMITTED: "submitted",
+  UNDER_REVIEW: "under_review",
+  APPROVED: "approved",
+  REJECTED: "rejected"
 };
 
 export const scoreStatusEnums = Object.values(scoreStatus);

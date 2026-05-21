@@ -15,4 +15,6 @@ model_capabilities.yaml
 .kilo
 .blackboxrules
 .vscode
+postman_collection.json
+*.md
 postman-collections
