@@ -4,13 +4,13 @@ import Navbar from "../../components/common/Navbar";
 import { hackathons } from "../../data/hackathons";
 
 const statusConfig = {
-  upcoming: { label: "Upcoming", color: "#0077B6", bg: "rgba(0,119,182,0.18)" },
+  upcoming: { label: "Upcoming", color: "#0077B6", bg: "rgba(0,119,182,0.12)" },
   ongoing: {
     label: "🔴 Live Now",
     color: "#00B4D8",
-    bg: "rgba(0,180,216,0.18)",
+    bg: "rgba(0,180,216,0.12)",
   },
-  past: { label: "Ended", color: "#90E0EF", bg: "rgba(144,224,239,0.12)" },
+  past: { label: "Ended", color: "#64748b", bg: "rgba(100,116,139,0.1)" },
 };
 
 const TAB_ICONS = {
@@ -27,7 +27,7 @@ export default function HackathonDetail() {
   const h = hackathons.find((hk) => String(hk.id) === String(id));
   if (!h)
     return (
-      <div style={{ color: "#CAF0F8", padding: 40 }}>Hackathon not found.</div>
+      <div style={{ color: "#0077B6", padding: 40 }}>Hackathon not found.</div>
     );
   const [activeTab, setActiveTab] = useState("overview");
   const s = statusConfig[h.status];
@@ -42,12 +42,10 @@ export default function HackathonDetail() {
       style={{
         minHeight: "100vh",
         background:
-          "linear-gradient(160deg, #0a1f6e 0%, #0e3a7a 50%, #0a2d6b 100%)",
+          "linear-gradient(160deg, #e8f4fd 0%, #f0f8ff 50%, #e0f2fe 100%)",
         fontFamily: "'Poppins', sans-serif",
       }}
     >
-      
-
       {/* ── HERO ── */}
       <div
         style={{
@@ -72,7 +70,7 @@ export default function HackathonDetail() {
             position: "absolute",
             inset: 0,
             background:
-              "linear-gradient(to bottom, rgba(10,31,110,0.05) 0%, rgba(10,31,110,0.55) 55%, rgba(10,31,110,0.95) 100%)",
+              "linear-gradient(to bottom, rgba(10,31,110,0.05) 0%, rgba(10,31,110,0.45) 55%, rgba(10,31,110,0.85) 100%)",
           }}
         />
 
@@ -87,10 +85,11 @@ export default function HackathonDetail() {
             gap: 6,
             padding: "7px 16px",
             borderRadius: 10,
-            background: "rgba(14, 100, 160, 0.85)",
+            background: "rgba(255,255,255,0.85)",
             border: "1px solid rgba(0,180,216,0.4)",
-            color: "#CAF0F8",
+            color: "#0077B6",
             fontSize: 13,
+            fontWeight: 600,
             cursor: "pointer",
             backdropFilter: "blur(10px)",
           }}
@@ -124,9 +123,9 @@ export default function HackathonDetail() {
               {h.domain}
             </Pill>
             <Pill
-              bg="rgba(202,240,248,0.08)"
-              border="rgba(202,240,248,0.2)"
-              color="#CAF0F8"
+              bg="rgba(255,255,255,0.15)"
+              border="rgba(255,255,255,0.35)"
+              color="#fff"
             >
               {h.mode === "solo"
                 ? "👤 Solo"
@@ -145,7 +144,7 @@ export default function HackathonDetail() {
           >
             {h.title}
           </h1>
-          <p style={{ margin: 0, color: "#90E0EF", fontSize: 15 }}>
+          <p style={{ margin: 0, color: "#e0f2fe", fontSize: 15 }}>
             {h.tagline}
           </p>
         </div>
@@ -171,8 +170,9 @@ export default function HackathonDetail() {
               marginBottom: 20,
               borderRadius: 16,
               overflow: "hidden",
-              background: "rgba(0,180,216,0.15)",
-              border: "1px solid rgba(0,180,216,0.35)",
+              background: "rgba(255,255,255,0.7)",
+              border: "1px solid rgba(0,180,216,0.25)",
+              boxShadow: "0 2px 12px rgba(0,119,182,0.08)",
             }}
           >
             {tabs.map((tab) => {
@@ -191,9 +191,9 @@ export default function HackathonDetail() {
                     background: active
                       ? "linear-gradient(135deg, #0077B6, #00B4D8)"
                       : "transparent",
-                    color: active ? "#fff" : "rgba(202,240,248,0.75)",
+                    color: active ? "#fff" : "#0077B6",
                     border: "none",
-                    borderRight: "1px solid rgba(0,180,216,0.15)",
+                    borderRight: "1px solid rgba(0,180,216,0.12)",
                     cursor: "pointer",
                     fontSize: 11,
                     fontWeight: 600,
@@ -213,11 +213,10 @@ export default function HackathonDetail() {
             style={{
               borderRadius: 24,
               padding: 32,
-              background:
-                "linear-gradient(145deg, rgba(0,150,210,0.22) 0%, rgba(10,40,110,0.5) 100%)",
+              background: "rgba(255,255,255,0.85)",
               backdropFilter: "blur(20px)",
-              border: "1px solid rgba(0,180,216,0.22)",
-              boxShadow: "0 8px 40px rgba(0,119,182,0.12)",
+              border: "1px solid rgba(0,180,216,0.18)",
+              boxShadow: "0 8px 40px rgba(0,119,182,0.08)",
             }}
           >
             {activeTab === "overview" && (
@@ -225,8 +224,7 @@ export default function HackathonDetail() {
                 <SectionHeading>About This Hackathon</SectionHeading>
                 <p
                   style={{
-                    color: "#CAF0F8",
-                    opacity: 0.92,
+                    color: "#1e3a5f",
                     fontSize: 14,
                     lineHeight: 1.75,
                     marginBottom: 28,
@@ -238,7 +236,7 @@ export default function HackathonDetail() {
                 <p
                   style={{
                     fontWeight: 700,
-                    color: "#fff",
+                    color: "#03045E",
                     fontSize: 14,
                     marginBottom: 12,
                     marginTop: 0,
@@ -255,9 +253,9 @@ export default function HackathonDetail() {
                         borderRadius: 10,
                         fontSize: 13,
                         fontWeight: 600,
-                        background: "rgba(0,180,216,0.12)",
-                        border: "1px solid rgba(0,180,216,0.3)",
-                        color: "#90E0EF",
+                        background: "rgba(0,180,216,0.08)",
+                        border: "1px solid rgba(0,180,216,0.25)",
+                        color: "#0077B6",
                       }}
                     >
                       {sp}
@@ -282,8 +280,8 @@ export default function HackathonDetail() {
                         alignItems: "flex-start",
                         padding: "14px 16px",
                         borderRadius: 16,
-                        background: "rgba(0,180,216,0.13)",
-                        border: "1px solid rgba(0,180,216,0.28)",
+                        background: "rgba(0,180,216,0.06)",
+                        border: "1px solid rgba(0,180,216,0.2)",
                       }}
                     >
                       <span
@@ -307,8 +305,7 @@ export default function HackathonDetail() {
                       <p
                         style={{
                           margin: 0,
-                          color: "#CAF0F8",
-                          opacity: 0.95,
+                          color: "#1e3a5f",
                           fontSize: 14,
                           lineHeight: 1.6,
                           paddingTop: 4,
@@ -334,7 +331,7 @@ export default function HackathonDetail() {
                       bottom: 6,
                       width: 2,
                       background:
-                        "linear-gradient(to bottom, #0077B6, #00B4D8, rgba(144,224,239,0.15))",
+                        "linear-gradient(to bottom, #0077B6, #00B4D8, rgba(0,180,216,0.15))",
                       borderRadius: 2,
                     }}
                   />
@@ -358,8 +355,8 @@ export default function HackathonDetail() {
                               height: 16,
                               borderRadius: "50%",
                               background: isPast ? "#0077B6" : "#00B4D8",
-                              border: `2px solid ${isPast ? "rgba(202,240,248,0.4)" : "#CAF0F8"}`,
-                              boxShadow: `0 0 10px ${isPast ? "rgba(0,119,182,0.5)" : "rgba(0,180,216,0.8)"}`,
+                              border: `2px solid ${isPast ? "rgba(0,119,182,0.3)" : "#0077B6"}`,
+                              boxShadow: `0 0 10px ${isPast ? "rgba(0,119,182,0.3)" : "rgba(0,180,216,0.5)"}`,
                             }}
                           />
                           <span
@@ -370,9 +367,9 @@ export default function HackathonDetail() {
                               fontSize: 11,
                               fontWeight: 600,
                               marginBottom: 4,
-                              background: "rgba(0,180,216,0.15)",
-                              color: "#00B4D8",
-                              border: "1px solid rgba(0,180,216,0.3)",
+                              background: "rgba(0,180,216,0.1)",
+                              color: "#0077B6",
+                              border: "1px solid rgba(0,180,216,0.25)",
                             }}
                           >
                             {item.date}
@@ -382,9 +379,7 @@ export default function HackathonDetail() {
                               fontFamily: "'Nunito', sans-serif",
                               fontWeight: 700,
                               fontSize: 15,
-                              color: isPast
-                                ? "rgba(202,240,248,0.5)"
-                                : "#CAF0F8",
+                              color: isPast ? "#64748b" : "#03045E",
                             }}
                           >
                             {item.event}
@@ -406,27 +401,27 @@ export default function HackathonDetail() {
                   {h.prizes.map((prize, i) => {
                     const c = [
                       {
-                        bg: "rgba(251,191,36,0.09)",
-                        border: "rgba(251,191,36,0.35)",
-                        accent: "#FBBF24",
+                        bg: "rgba(251,191,36,0.07)",
+                        border: "rgba(251,191,36,0.3)",
+                        accent: "#d97706",
                         icon: "🥇",
                       },
                       {
-                        bg: "rgba(202,240,248,0.06)",
-                        border: "rgba(202,240,248,0.22)",
-                        accent: "#CAF0F8",
+                        bg: "rgba(100,116,139,0.06)",
+                        border: "rgba(100,116,139,0.2)",
+                        accent: "#475569",
                         icon: "🥈",
                       },
                       {
-                        bg: "rgba(0,180,216,0.09)",
-                        border: "rgba(0,180,216,0.28)",
-                        accent: "#00B4D8",
+                        bg: "rgba(0,180,216,0.07)",
+                        border: "rgba(0,180,216,0.22)",
+                        accent: "#0077B6",
                         icon: "🥉",
                       },
                     ][i] || {
-                      bg: "rgba(0,180,216,0.09)",
-                      border: "rgba(0,180,216,0.28)",
-                      accent: "#00B4D8",
+                      bg: "rgba(0,180,216,0.07)",
+                      border: "rgba(0,180,216,0.22)",
+                      accent: "#0077B6",
                       icon: "🏅",
                     };
                     return (
@@ -457,7 +452,7 @@ export default function HackathonDetail() {
                           <div
                             style={{
                               fontSize: 12,
-                              color: "rgba(202,240,248,0.78)",
+                              color: "#64748b",
                             }}
                           >
                             {prize.place} Place
@@ -466,7 +461,7 @@ export default function HackathonDetail() {
                         <div
                           style={{
                             fontSize: 12,
-                            color: "rgba(202,240,248,0.82)",
+                            color: "#475569",
                             textAlign: "right",
                           }}
                         >
@@ -496,7 +491,7 @@ export default function HackathonDetail() {
                       >
                         <span
                           style={{
-                            color: "#CAF0F8",
+                            color: "#1e3a5f",
                             fontWeight: 600,
                             fontSize: 14,
                           }}
@@ -508,7 +503,7 @@ export default function HackathonDetail() {
                             fontFamily: "'Nunito', sans-serif",
                             fontWeight: 900,
                             fontSize: 14,
-                            color: "#7fdef1",
+                            color: "#0077B6",
                           }}
                         >
                           {j.weight}%
@@ -518,7 +513,7 @@ export default function HackathonDetail() {
                         style={{
                           height: 8,
                           borderRadius: 8,
-                          background: "rgba(202,240,248,0.14)",
+                          background: "rgba(0,119,182,0.1)",
                           overflow: "hidden",
                         }}
                       >
@@ -529,7 +524,7 @@ export default function HackathonDetail() {
                             width: `${j.weight}%`,
                             background:
                               "linear-gradient(90deg, #0077B6, #00B4D8)",
-                            boxShadow: "0 0 8px rgba(0,180,216,0.4)",
+                            boxShadow: "0 0 8px rgba(0,180,216,0.3)",
                             transition: "width 0.8s ease",
                           }}
                         />
@@ -549,11 +544,10 @@ export default function HackathonDetail() {
             style={{
               borderRadius: 24,
               padding: 24,
-              background:
-                "linear-gradient(145deg, rgba(0,150,210,0.32), rgba(10,40,110,0.65))",
+              background: "rgba(255,255,255,0.92)",
               backdropFilter: "blur(20px)",
-              border: "1px solid rgba(0,180,216,0.32)",
-              boxShadow: "0 8px 40px rgba(0,119,182,0.2)",
+              border: "1px solid rgba(0,180,216,0.25)",
+              boxShadow: "0 8px 40px rgba(0,119,182,0.12)",
             }}
           >
             <div style={{ textAlign: "center", marginBottom: 20 }}>
@@ -562,7 +556,7 @@ export default function HackathonDetail() {
                   fontFamily: "'Nunito', sans-serif",
                   fontWeight: 900,
                   fontSize: 38,
-                  color: "#00B4D8",
+                  color: "#0077B6",
                 }}
               >
                 ${h.prize.toLocaleString()}
@@ -570,7 +564,7 @@ export default function HackathonDetail() {
               <div
                 style={{
                   fontSize: 12,
-                  color: "rgba(202,240,248,0.75)",
+                  color: "#64748b",
                   marginTop: 2,
                 }}
               >
@@ -588,9 +582,7 @@ export default function HackathonDetail() {
                     marginBottom: 6,
                   }}
                 >
-                  <span
-                    style={{ fontSize: 12, color: "rgba(202,240,248,0.75)" }}
-                  >
+                  <span style={{ fontSize: 12, color: "#64748b" }}>
                     Registration closes in
                   </span>
                   <span
@@ -598,7 +590,7 @@ export default function HackathonDetail() {
                       fontFamily: "'Nunito', sans-serif",
                       fontWeight: 900,
                       fontSize: 14,
-                      color: daysLeft <= 3 ? "#F87171" : "#CAF0F8",
+                      color: daysLeft <= 3 ? "#ef4444" : "#03045E",
                     }}
                   >
                     {daysLeft}d
@@ -608,7 +600,7 @@ export default function HackathonDetail() {
                   style={{
                     height: 6,
                     borderRadius: 6,
-                    background: "rgba(202,240,248,0.14)",
+                    background: "rgba(0,119,182,0.1)",
                     marginBottom: 20,
                     overflow: "hidden",
                   }}
@@ -620,7 +612,7 @@ export default function HackathonDetail() {
                       width: `${Math.max(5, 100 - daysLeft * 3)}%`,
                       background:
                         daysLeft <= 3
-                          ? "#F87171"
+                          ? "#ef4444"
                           : "linear-gradient(90deg, #0077B6, #00B4D8)",
                     }}
                   />
@@ -651,12 +643,12 @@ export default function HackathonDetail() {
                 transition: "transform 0.15s",
                 background:
                   h.status === "past"
-                    ? "rgba(144,224,239,0.12)"
+                    ? "rgba(0,119,182,0.08)"
                     : "linear-gradient(135deg, #0077B6, #00B4D8)",
-                color: h.status === "past" ? "#90E0EF" : "#fff",
+                color: h.status === "past" ? "#0077B6" : "#fff",
                 boxShadow:
                   h.status !== "past"
-                    ? "0 8px 24px rgba(0,119,182,0.5)"
+                    ? "0 8px 24px rgba(0,119,182,0.35)"
                     : "none",
               }}
             >
@@ -672,12 +664,12 @@ export default function HackathonDetail() {
                 style={{
                   textAlign: "center",
                   fontSize: 12,
-                  color: "rgba(202,240,248,0.6)",
+                  color: "#64748b",
                   margin: "10px 0 0",
                 }}
               >
                 Registration fee:{" "}
-                <span style={{ color: "#FBBF24" }}>${h.fee}</span> per{" "}
+                <span style={{ color: "#d97706" }}>${h.fee}</span> per{" "}
                 {h.mode === "solo" ? "person" : "team"}
               </p>
             )}
@@ -688,9 +680,10 @@ export default function HackathonDetail() {
             style={{
               borderRadius: 24,
               padding: "8px 20px",
-              background: "rgba(0,150,210,0.16)",
+              background: "rgba(255,255,255,0.85)",
               backdropFilter: "blur(20px)",
               border: "1px solid rgba(0,180,216,0.18)",
+              boxShadow: "0 4px 20px rgba(0,119,182,0.07)",
             }}
           >
             {[
@@ -742,14 +735,14 @@ export default function HackathonDetail() {
                   <div
                     style={{
                       fontSize: 11,
-                      color: "rgba(202,240,248,0.65)",
+                      color: "#64748b",
                       marginBottom: 1,
                     }}
                   >
                     {item.label}
                   </div>
                   <div
-                    style={{ fontSize: 13, fontWeight: 600, color: "#CAF0F8" }}
+                    style={{ fontSize: 13, fontWeight: 600, color: "#03045E" }}
                   >
                     {item.value}
                   </div>
@@ -770,7 +763,7 @@ function SectionHeading({ children }) {
         fontFamily: "'Nunito', sans-serif",
         fontWeight: 900,
         fontSize: 22,
-        color: "#fff",
+        color: "#03045E",
         margin: "0 0 20px",
         letterSpacing: "-0.3px",
       }}

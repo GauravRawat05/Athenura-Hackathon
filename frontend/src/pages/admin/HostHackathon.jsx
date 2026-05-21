@@ -55,7 +55,7 @@ function StepDot({ index, current, label }) {
           alignItems: "center",
           justifyContent: "center",
           color: done || active ? "#CAF0F8" : "rgba(3,4,94,0.35)",
-          fontFamily: "'Syne',sans-serif",
+          fontFamily: "'Nunito',sans-serif",
           fontWeight: 800,
           fontSize: 13,
           boxShadow: active ? "0 0 16px rgba(0,180,216,0.4)" : "none",
@@ -68,7 +68,7 @@ function StepDot({ index, current, label }) {
         style={{
           fontSize: 11,
           fontWeight: 600,
-          fontFamily: "'Space Grotesk',sans-serif",
+          fontFamily: "'Poppins',sans-serif",
           color: active ? "#0077B6" : done ? "#03045E" : "rgba(3,4,94,0.4)",
           textTransform: "uppercase",
           letterSpacing: "0.06em",
@@ -85,7 +85,7 @@ function Label({ children, required }) {
     <label
       style={{
         display: "block",
-        fontFamily: "'Space Grotesk',sans-serif",
+        fontFamily: "'Poppins',sans-serif",
         fontWeight: 600,
         fontSize: 13,
         color: "#03045E",
@@ -106,7 +106,7 @@ const inputBase = {
   borderRadius: 10,
   border: "1.5px solid rgba(0,180,216,0.3)",
   background: "rgba(202,240,248,0.5)",
-  fontFamily: "'Space Grotesk',sans-serif",
+  fontFamily: "'Poppins',sans-serif",
   fontSize: 14,
   color: "#03045E",
   outline: "none",
@@ -281,7 +281,7 @@ function ReviewSection({ title, children }) {
       <h4
         style={{
           margin: "0 0 14px",
-          fontFamily: "'Syne',sans-serif",
+          fontFamily: "'Nunito',sans-serif",
           fontWeight: 800,
           fontSize: 13,
           color: "#0077B6",
@@ -310,7 +310,7 @@ function ReviewRow({ label, value }) {
         style={{
           fontSize: 13,
           color: "rgba(3,4,94,0.5)",
-          fontFamily: "'Space Grotesk',sans-serif",
+          fontFamily: "'Poppins',sans-serif",
           flexShrink: 0,
         }}
       >
@@ -321,7 +321,7 @@ function ReviewRow({ label, value }) {
           fontSize: 13,
           fontWeight: 600,
           color: "#03045E",
-          fontFamily: "'Space Grotesk',sans-serif",
+          fontFamily: "'Poppins',sans-serif",
           textAlign: "right",
         }}
       >
@@ -379,11 +379,11 @@ export default function HostHackathon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontFamily: "'Space Grotesk',sans-serif",
+          fontFamily: "'Poppins',sans-serif",
           padding: 24,
         }}
       >
-        <style>{`@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@700;800&display=swap');`}</style>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Poppins:wght@400;500;600;700&display=swap');`}</style>
         <div
           style={{
             background: "#fff",
@@ -414,7 +414,7 @@ export default function HostHackathon() {
           </div>
           <h2
             style={{
-              fontFamily: "'Syne',sans-serif",
+              fontFamily: "'Nunito',sans-serif",
               fontWeight: 800,
               fontSize: "1.7rem",
               color: "#03045E",
@@ -454,7 +454,7 @@ export default function HostHackathon() {
               background: "linear-gradient(135deg,#03045E,#0077B6 60%,#00B4D8)",
               color: "#CAF0F8",
               fontWeight: 700,
-              fontFamily: "'Space Grotesk',sans-serif",
+              fontFamily: "'Poppins',sans-serif",
               fontSize: 14,
               boxShadow: "0 4px 18px rgba(0,119,182,0.35)",
             }}
@@ -472,11 +472,11 @@ export default function HostHackathon() {
         minHeight: "100vh",
         background:
           "linear-gradient(160deg,#CAF0F8 0%,#90E0EF 50%,#CAF0F8 100%)",
-        fontFamily: "'Space Grotesk',sans-serif",
+        fontFamily: "'Poppins',sans-serif",
       }}
     >
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Poppins:wght@400;500;600;700&display=swap');
 
         * { box-sizing: border-box; }
 
@@ -499,7 +499,7 @@ export default function HostHackathon() {
           border: none;
           border-radius: 11px;
           font-weight: 700;
-          font-family: 'Space Grotesk',sans-serif;
+          font-family: 'Poppins',sans-serif;
           font-size: 14px;
           cursor: pointer;
           box-shadow: 0 4px 18px rgba(0,119,182,0.35);
@@ -521,7 +521,7 @@ export default function HostHackathon() {
           border: 1.5px solid rgba(0,119,182,0.3);
           border-radius: 11px;
           font-weight: 600;
-          font-family: 'Space Grotesk',sans-serif;
+          font-family: 'Poppins',sans-serif;
           font-size: 14px;
           cursor: pointer;
           transition: all 0.2s ease;
@@ -540,7 +540,7 @@ export default function HostHackathon() {
           border: 1.5px solid rgba(0,180,216,0.3);
           background: rgba(202,240,248,0.5);
           color: rgba(3,4,94,0.65);
-          font-family: 'Space Grotesk',sans-serif;
+          font-family: 'Poppins',sans-serif;
           transition: all 0.2s ease;
           user-select: none;
         }
@@ -650,7 +650,7 @@ export default function HostHackathon() {
           </div>
           <h1
             style={{
-              fontFamily: "'Syne',sans-serif",
+              fontFamily: "'Nunito',sans-serif",
               fontWeight: 800,
               fontSize: "clamp(1.8rem,4vw,2.8rem)",
               color: "#CAF0F8",
@@ -720,7 +720,7 @@ export default function HostHackathon() {
             <div>
               <h2
                 style={{
-                  fontFamily: "'Syne',sans-serif",
+                  fontFamily: "'Nunito',sans-serif",
                   fontWeight: 800,
                   fontSize: "1.35rem",
                   color: "#03045E",
@@ -788,7 +788,7 @@ export default function HostHackathon() {
                             basics.format === f.id
                               ? "#0077B6"
                               : "rgba(3,4,94,0.65)",
-                          fontFamily: "'Space Grotesk',sans-serif",
+                          fontFamily: "'Poppins',sans-serif",
                         }}
                       >
                         {f.label}
@@ -821,7 +821,7 @@ export default function HostHackathon() {
             <div>
               <h2
                 style={{
-                  fontFamily: "'Syne',sans-serif",
+                  fontFamily: "'Nunito',sans-serif",
                   fontWeight: 800,
                   fontSize: "1.35rem",
                   color: "#03045E",
@@ -945,7 +945,7 @@ export default function HostHackathon() {
             <div>
               <h2
                 style={{
-                  fontFamily: "'Syne',sans-serif",
+                  fontFamily: "'Nunito',sans-serif",
                   fontWeight: 800,
                   fontSize: "1.35rem",
                   color: "#03045E",
@@ -1045,7 +1045,7 @@ export default function HostHackathon() {
                   color: "#0077B6",
                   fontWeight: 600,
                   fontSize: 13,
-                  fontFamily: "'Space Grotesk',sans-serif",
+                  fontFamily: "'Poppins',sans-serif",
                   transition: "all 0.2s",
                   marginBottom: 28,
                 }}
@@ -1075,7 +1075,7 @@ export default function HostHackathon() {
             <div>
               <h2
                 style={{
-                  fontFamily: "'Syne',sans-serif",
+                  fontFamily: "'Nunito',sans-serif",
                   fontWeight: 800,
                   fontSize: "1.35rem",
                   color: "#03045E",

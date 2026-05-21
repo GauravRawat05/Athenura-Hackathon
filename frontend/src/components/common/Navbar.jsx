@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -26,15 +27,9 @@ export default function Navbar() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Cabinet+Grotesk:wght@700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-        /* Palette:
-           #03045E  deep navy
-           #0077B6  ocean blue
-           #00B4D8  sky blue
-           #90E0EF  light cyan
-           #CAF0F8  pale ice
-        */
+        /* Palette: #03045E navy, #ffffff white */
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -50,18 +45,18 @@ export default function Navbar() {
           height: 68px;
           display: flex;
           align-items: center;
-          background: rgba(202, 240, 248, 0.82);
+          background: rgba(255, 255, 255, 0.92);
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
-          border-bottom: 1px solid rgba(0, 180, 216, 0.18);
+          border-bottom: 1px solid rgba(3, 4, 94, 0.1);
           transition: all 0.3s ease;
         }
 
         .hw-nav-inner.scrolled {
           height: 60px;
-          background: rgba(202, 240, 248, 0.96);
-          border-bottom-color: rgba(0, 119, 182, 0.2);
-          box-shadow: 0 4px 24px rgba(3, 4, 94, 0.08), 0 1px 0 rgba(0, 180, 216, 0.25);
+          background: rgba(255, 255, 255, 0.98);
+          border-bottom-color: rgba(3, 4, 94, 0.18);
+          box-shadow: 0 4px 24px rgba(3, 4, 94, 0.1), 0 1px 0 rgba(3, 4, 94, 0.08);
         }
 
         .hw-container {
@@ -87,9 +82,9 @@ export default function Navbar() {
         .hw-logo-mark {
           width: 38px; height: 38px;
           border-radius: 12px;
-          background: linear-gradient(140deg, #03045E 0%, #0077B6 55%, #00B4D8 100%);
+          background: #03045E;
           display: flex; align-items: center; justify-content: center;
-          box-shadow: 0 2px 14px rgba(0, 119, 182, 0.35);
+          box-shadow: 0 2px 14px rgba(3, 4, 94, 0.3);
           transition: transform 0.2s ease, box-shadow 0.2s ease;
           position: relative;
           overflow: hidden;
@@ -98,12 +93,12 @@ export default function Navbar() {
         .hw-logo-mark::before {
           content: '';
           position: absolute; inset: 0;
-          background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 60%);
+          background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
         }
 
         .hw-logo:hover .hw-logo-mark {
           transform: scale(1.07) rotate(-3deg);
-          box-shadow: 0 4px 20px rgba(0, 119, 182, 0.5);
+          box-shadow: 0 4px 20px rgba(3, 4, 94, 0.45);
         }
 
         .hw-logo-mark svg { position: relative; z-index: 1; }
@@ -118,7 +113,8 @@ export default function Navbar() {
 
         .hw-logo-name em {
           font-style: normal;
-          color: #0077B6;
+          color: #03045E;
+          opacity: 0.55;
         }
 
         /* ── Nav links ── */
@@ -145,7 +141,7 @@ export default function Navbar() {
           border: none;
           font-family: 'Plus Jakarta Sans', sans-serif;
           letter-spacing: -0.1px;
-          opacity: 0.65;
+          opacity: 0.5;
           display: flex;
           align-items: center;
           gap: 6px;
@@ -153,13 +149,13 @@ export default function Navbar() {
 
         .hw-link.active {
           opacity: 1;
-          color: #0077B6;
-          background: rgba(0, 119, 182, 0.08);
+          color: #03045E;
+          background: rgba(3, 4, 94, 0.07);
         }
 
         .hw-link:hover {
           opacity: 1;
-          background: rgba(0, 180, 216, 0.1);
+          background: rgba(3, 4, 94, 0.05);
           color: #03045E;
         }
 
@@ -169,7 +165,7 @@ export default function Navbar() {
           bottom: 2px; left: 50%; transform: translateX(-50%);
           width: 16px; height: 2px;
           border-radius: 2px;
-          background: linear-gradient(90deg, #0077B6, #00B4D8);
+          background: #03045E;
         }
 
         /* Live badge */
@@ -177,22 +173,22 @@ export default function Navbar() {
           display: inline-flex; align-items: center; gap: 3px;
           padding: 2px 6px;
           border-radius: 20px;
-          background: rgba(0, 180, 216, 0.14);
-          border: 1px solid rgba(0, 180, 216, 0.35);
+          background: rgba(3, 4, 94, 0.08);
+          border: 1px solid rgba(3, 4, 94, 0.2);
           font-size: 10px; font-weight: 700;
-          color: #0077B6;
+          color: #03045E;
           text-transform: uppercase; letter-spacing: 0.05em;
         }
 
         .hw-badge-dot {
           width: 5px; height: 5px; border-radius: 50%;
-          background: #00B4D8;
+          background: #03045E;
           animation: hw-pulse 1.6s ease-in-out infinite;
         }
 
         @keyframes hw-pulse {
           0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.45; transform: scale(0.8); }
+          50% { opacity: 0.4; transform: scale(0.8); }
         }
 
         /* ── Actions ── */
@@ -204,9 +200,9 @@ export default function Navbar() {
           padding: 8px 18px;
           border-radius: 10px;
           font-size: 13.5px; font-weight: 600;
-          color: #0077B6;
+          color: #03045E;
           background: transparent;
-          border: 1.5px solid rgba(0, 119, 182, 0.3);
+          border: 1.5px solid rgba(3, 4, 94, 0.25);
           cursor: pointer;
           font-family: 'Plus Jakarta Sans', sans-serif;
           transition: all 0.18s ease;
@@ -214,8 +210,8 @@ export default function Navbar() {
         }
 
         .hw-btn-ghost:hover {
-          border-color: #0077B6;
-          background: rgba(0, 119, 182, 0.06);
+          border-color: #03045E;
+          background: rgba(3, 4, 94, 0.05);
           transform: translateY(-1px);
         }
 
@@ -223,28 +219,28 @@ export default function Navbar() {
           padding: 9px 22px;
           border-radius: 10px;
           font-size: 13.5px; font-weight: 700;
-          color: #fff;
-          background: linear-gradient(135deg, #03045E 0%, #0077B6 60%, #00B4D8 100%);
+          color: #ffffff;
+          background: #03045E;
           border: none;
           cursor: pointer;
           font-family: 'Plus Jakarta Sans', sans-serif;
           transition: all 0.18s ease;
           letter-spacing: -0.1px;
-          box-shadow: 0 3px 14px rgba(0, 119, 182, 0.38);
+          box-shadow: 0 3px 14px rgba(3, 4, 94, 0.3);
           position: relative; overflow: hidden;
         }
 
         .hw-btn-primary::before {
           content: '';
           position: absolute; inset: 0;
-          background: rgba(255,255,255,0.08);
+          background: rgba(255,255,255,0.1);
           opacity: 0;
           transition: opacity 0.18s ease;
         }
 
         .hw-btn-primary:hover {
           transform: translateY(-2px);
-          box-shadow: 0 6px 22px rgba(0, 119, 182, 0.48);
+          box-shadow: 0 6px 22px rgba(3, 4, 94, 0.4);
         }
 
         .hw-btn-primary:hover::before { opacity: 1; }
@@ -270,8 +266,8 @@ export default function Navbar() {
         .hw-mobile-menu {
           display: none; flex-direction: column; gap: 2px;
           padding: 12px 20px 20px;
-          background: rgba(202, 240, 248, 0.98);
-          border-top: 1px solid rgba(0, 180, 216, 0.15);
+          background: rgba(255, 255, 255, 0.99);
+          border-top: 1px solid rgba(3, 4, 94, 0.1);
           animation: hw-slide-down 0.2s ease;
         }
 
@@ -288,15 +284,15 @@ export default function Navbar() {
           cursor: pointer; transition: all 0.15s ease;
           font-family: 'Plus Jakarta Sans', sans-serif;
           background: none; border: none; text-align: left;
-          opacity: 0.7; display: flex; align-items: center; gap: 8px;
+          opacity: 0.55; display: flex; align-items: center; gap: 8px;
         }
 
         .hw-mobile-link:hover, .hw-mobile-link.active {
-          opacity: 1; background: rgba(0, 119, 182, 0.08); color: #0077B6;
+          opacity: 1; background: rgba(3, 4, 94, 0.06); color: #03045E;
         }
 
         .hw-mobile-divider {
-          height: 1px; background: rgba(0, 180, 216, 0.18); margin: 8px 0;
+          height: 1px; background: rgba(3, 4, 94, 0.1); margin: 8px 0;
         }
 
         .hw-mobile-row {
@@ -310,15 +306,15 @@ export default function Navbar() {
         }
 
         .hw-m-ghost {
-          color: #0077B6; background: transparent;
-          border: 1.5px solid rgba(0, 119, 182, 0.3);
+          color: #03045E; background: transparent;
+          border: 1.5px solid rgba(3, 4, 94, 0.25);
         }
 
         .hw-m-primary {
           color: #fff;
-          background: linear-gradient(135deg, #03045E, #0077B6 70%, #00B4D8);
+          background: #03045E;
           border: none;
-          box-shadow: 0 3px 12px rgba(0, 119, 182, 0.3);
+          box-shadow: 0 3px 12px rgba(3, 4, 94, 0.25);
         }
 
         @media (max-width: 840px) {
@@ -338,13 +334,13 @@ export default function Navbar() {
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                   <path
                     d="M10 2L13 8H17L14 12L15.5 18L10 15L4.5 18L6 12L3 8H7L10 2Z"
-                    fill="#CAF0F8"
+                    fill="#ffffff"
                     fillOpacity="0.95"
                   />
                 </svg>
               </div>
               <span className="hw-logo-name">
-                Hack<em>Wave</em>
+                Hackathon-<em>Athenura</em>
               </span>
             </a>
 

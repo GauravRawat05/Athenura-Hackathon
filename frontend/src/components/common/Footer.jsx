@@ -5,12 +5,11 @@ export default function Footer() {
     <footer
       className="mt-20 relative overflow-hidden"
       style={{
-        /* Gradient using full palette: #CAF0F8 → #90E0EF */
-        background: "linear-gradient(160deg, #CAF0F8 0%, #90E0EF 100%)",
-        color: "#03045E",
+        background: "#03045E",
+        color: "#ffffff",
       }}
     >
-      {/* Top border shimmer — uses #00B4D8 accent */}
+      {/* Top border shimmer */}
       <div
         style={{
           position: "absolute",
@@ -19,7 +18,7 @@ export default function Footer() {
           right: 0,
           height: 3,
           background:
-            "linear-gradient(to right, transparent, #00B4D8, #0077B6, #00B4D8, transparent)",
+            "linear-gradient(to right, transparent, rgba(255,255,255,0.4), rgba(255,255,255,0.7), rgba(255,255,255,0.4), transparent)",
         }}
       />
 
@@ -30,7 +29,7 @@ export default function Footer() {
           inset: 0,
           pointerEvents: "none",
           backgroundImage:
-            "radial-gradient(rgba(0,119,182,0.08) 1px, transparent 1px)",
+            "radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px)",
           backgroundSize: "32px 32px",
         }}
       />
@@ -45,7 +44,7 @@ export default function Footer() {
           height: 320,
           borderRadius: "50%",
           background:
-            "radial-gradient(circle, rgba(0,180,216,0.18) 0%, transparent 70%)",
+            "radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%)",
           pointerEvents: "none",
         }}
       />
@@ -73,7 +72,7 @@ export default function Footer() {
               fontFamily: "'Syne', sans-serif",
               fontSize: "1.4rem",
               fontWeight: 800,
-              color: "#03045E",
+              color: "#ffffff",
               letterSpacing: "-0.3px",
               cursor: "default",
             }}
@@ -83,16 +82,15 @@ export default function Footer() {
                 width: 36,
                 height: 36,
                 borderRadius: 10,
-                background:
-                  "linear-gradient(135deg, #03045E, #0077B6 60%, #00B4D8)",
+                background: "rgba(255,255,255,0.12)",
+                border: "1px solid rgba(255,255,255,0.2)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow:
-                  "0 0 18px rgba(0,119,182,0.35), 0 0 6px rgba(0,180,216,0.25)",
+                boxShadow: "0 0 18px rgba(255,255,255,0.08)",
               }}
             >
-              <Zap size={18} color="#CAF0F8" />
+              <Zap size={18} color="#ffffff" />
             </div>
             <span>Hackathon-Athenura</span>
           </div>
@@ -106,7 +104,7 @@ export default function Footer() {
               maxWidth: 280,
               marginTop: 16,
               marginBottom: 20,
-              color: "rgba(3,4,94,0.6)",
+              color: "rgba(255,255,255,0.55)",
             }}
           >
             The world's leading platform for discovering and joining hackathons.
@@ -121,28 +119,28 @@ export default function Footer() {
                 style={{
                   width: 36,
                   height: 36,
-                  background: "rgba(202, 240, 248, 0.6)" /* #CAF0F8 */,
-                  border: "1px solid rgba(0, 180, 216, 0.3)",
+                  background: "rgba(255,255,255,0.08)",
+                  border: "1px solid rgba(255,255,255,0.15)",
                   borderRadius: 9,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "#0077B6",
+                  color: "rgba(255,255,255,0.7)",
                   transition: "all 0.2s ease",
                   textDecoration: "none",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(0, 180, 216, 0.2)";
-                  e.currentTarget.style.borderColor = "#00B4D8";
-                  e.currentTarget.style.color = "#03045E";
+                  e.currentTarget.style.background = "rgba(255,255,255,0.18)";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.4)";
+                  e.currentTarget.style.color = "#ffffff";
                   e.currentTarget.style.transform = "translateY(-3px)";
                   e.currentTarget.style.boxShadow =
-                    "0 6px 16px rgba(0,119,182,0.2)";
+                    "0 6px 16px rgba(0,0,0,0.2)";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "rgba(202, 240, 248, 0.6)";
-                  e.currentTarget.style.borderColor = "rgba(0, 180, 216, 0.3)";
-                  e.currentTarget.style.color = "#0077B6";
+                  e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
+                  e.currentTarget.style.color = "rgba(255,255,255,0.7)";
                   e.currentTarget.style.transform = "translateY(0)";
                   e.currentTarget.style.boxShadow = "none";
                 }}
@@ -173,7 +171,6 @@ export default function Footer() {
                 "For Organizers",
               ],
             },
-
             {
               heading: "Company",
               links: [
@@ -190,7 +187,7 @@ export default function Footer() {
                   fontFamily: "'Syne', sans-serif",
                   fontSize: "0.75rem",
                   fontWeight: 800,
-                  color: "#0077B6" /* #0077B6 for headings */,
+                  color: "rgba(255,255,255,0.4)",
                   textTransform: "uppercase",
                   letterSpacing: "0.1em",
                   marginBottom: 18,
@@ -208,18 +205,18 @@ export default function Footer() {
                     fontFamily: "'DM Sans', sans-serif",
                     fontSize: 14,
                     fontWeight: 400,
-                    color: "rgba(3,4,94,0.6)",
+                    color: "rgba(255,255,255,0.55)",
                     marginBottom: 11,
                     textDecoration: "none",
                     paddingLeft: 0,
                     transition: "all 0.2s ease",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.color = "#0077B6";
+                    e.currentTarget.style.color = "#ffffff";
                     e.currentTarget.style.paddingLeft = "10px";
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.color = "rgba(3,4,94,0.6)";
+                    e.currentTarget.style.color = "rgba(255,255,255,0.55)";
                     e.currentTarget.style.paddingLeft = "0";
                   }}
                 >
@@ -234,7 +231,7 @@ export default function Footer() {
       {/* Bottom bar */}
       <div
         style={{
-          borderTop: "1px solid rgba(0, 180, 216, 0.2)",
+          borderTop: "1px solid rgba(255,255,255,0.1)",
           padding: "18px 0",
           position: "relative",
           zIndex: 1,
@@ -255,14 +252,14 @@ export default function Footer() {
               fontFamily: "'DM Sans', sans-serif",
               fontSize: "0.78rem",
               fontWeight: 400,
-              color: "rgba(3,4,94,0.45)",
+              color: "rgba(255,255,255,0.3)",
               letterSpacing: "0.02em",
               margin: 0,
             }}
           >
-            © 2025 HackVerse. All rights reserved.
+            © 2025 Hackathon-Athenura. All rights reserved.
           </p>
-          {/* Accent pill using #00B4D8 */}
+          {/* Status pill */}
           <div
             style={{
               display: "flex",
@@ -270,8 +267,8 @@ export default function Footer() {
               gap: 6,
               padding: "4px 12px",
               borderRadius: 20,
-              background: "rgba(0, 180, 216, 0.12)",
-              border: "1px solid rgba(0, 180, 216, 0.3)",
+              background: "rgba(255,255,255,0.07)",
+              border: "1px solid rgba(255,255,255,0.15)",
             }}
           >
             <div
@@ -279,7 +276,7 @@ export default function Footer() {
                 width: 6,
                 height: 6,
                 borderRadius: "50%",
-                background: "#00B4D8",
+                background: "#ffffff",
                 animation: "footerPulse 2s ease-in-out infinite",
               }}
             />
@@ -288,7 +285,7 @@ export default function Footer() {
                 fontFamily: "'DM Sans', sans-serif",
                 fontSize: "0.72rem",
                 fontWeight: 600,
-                color: "#0077B6",
+                color: "rgba(255,255,255,0.6)",
                 letterSpacing: "0.04em",
               }}
             >
@@ -301,7 +298,7 @@ export default function Footer() {
       <style>{`
         @keyframes footerPulse {
           0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.4; transform: scale(0.8); }
+          50% { opacity: 0.3; transform: scale(0.8); }
         }
       `}</style>
     </footer>
