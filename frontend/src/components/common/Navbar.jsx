@@ -377,7 +377,7 @@ export default function Navbar() {
               </button>
               <button
                 className="hw-btn-primary"
-                onClick={() => navigate("/signup")}
+                onClick={() => navigate("/Register")}
               >
                 Sign up free
               </button>
@@ -427,15 +427,6 @@ export default function Navbar() {
               }}
             >
               Log in
-            </button>
-            <button
-              className="hw-m-primary"
-              onClick={() => {
-                navigate("/signup");
-                setMenuOpen(false);
-              }}
-            >
-              Sign up free
             </button>
           </div>
         </div>
