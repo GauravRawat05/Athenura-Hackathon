@@ -1,5 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
-
+import AdminNotifications from '../pages/admin/AdminNotifications'
 import Login from '../pages/auth/Login'
 import Register from '../pages/auth/Register'
 import VerifyEmail from '../pages/auth/VerifyEmail'
@@ -42,6 +42,7 @@ import PublicWinners from '../pages/public/PublicWinners'
 import NotFound from '../pages/public/NotFound'
 
 import Layout from '../components/common/Layout' // ✅ NEW
+import AdminLayout from '../components/common/AdminLayout'
 import PublicLayout from '../components/common/PublicLayout' // ✅ NEW
 
 import About from '../pages/public/About'    //vaishnavi
@@ -82,24 +83,25 @@ export default function AppRoutes() {
       <Route path="/results/:hackathonId" element={<Results />} />
 
       {/* ✅ Sidebar wali pages — Layout mein wrap */}
-      <Route path="/dashboard"      element={<Layout><Dashboard /></Layout>} />
-      <Route path="/certificates"   element={<Layout><Certificates /></Layout>} />
-      <Route path="/profile"        element={<Layout><Profile /></Layout>} />
-      <Route path="/my-hackathons"  element={<Layout><MyHackathons /></Layout>} />
+      <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
+      <Route path="/certificates" element={<Layout><Certificates /></Layout>} />
+      <Route path="/profile" element={<Layout><Profile /></Layout>} />
+      <Route path="/my-hackathons" element={<Layout><MyHackathons /></Layout>} />
       <Route path="/my-submissions" element={<Layout><MySubmissions /></Layout>} />
-      <Route path="/my-results"     element={<Layout><MyResults /></Layout>} />
+      <Route path="/my-results" element={<Layout><MyResults /></Layout>} />
 
       {/* Admin */}
-      <Route path="/admin" element={<AdminDashboard />} />
-      <Route path="/admin/hackathons" element={<HackathonList />} />
-      <Route path="/admin/hackathons/create" element={<CreateHackathon />} />
-      <Route path="/admin/hackathons/edit/:id" element={<CreateHackathon />} />
-      <Route path="/admin/users" element={<UserManagement />} />
-      <Route path="/admin/hackathons/:id/judges" element={<AssignJudges />} />
-      <Route path="/admin/hackathons/:id/winners" element={<DeclareWinners />} />
-      <Route path="/admin/reports" element={<RevenueReports />} />
-      <Route path="/admin/universities" element={<UniversityManagement />} />
-      <Route path="/admin/certificates" element={<CertificateManagement />} />
+      <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+      <Route path="/admin/hackathons" element={<AdminLayout><HackathonList /></AdminLayout>} />
+      <Route path="/admin/hackathons/create" element={<AdminLayout><CreateHackathon /></AdminLayout>} />
+      <Route path="/admin/hackathons/edit/:id" element={<AdminLayout><CreateHackathon /></AdminLayout>} />
+      <Route path="/admin/users" element={<AdminLayout><UserManagement /></AdminLayout>} />
+      <Route path="/admin/hackathons/:id/judges" element={<AdminLayout><AssignJudges /></AdminLayout>} />
+      <Route path="/admin/hackathons/:id/winners" element={<AdminLayout><DeclareWinners /></AdminLayout>} />
+      <Route path="/admin/reports" element={<AdminLayout><RevenueReports /></AdminLayout>} />
+      <Route path="/admin/universities" element={<AdminLayout><UniversityManagement /></AdminLayout>} />
+      <Route path="/admin/certificates" element={<AdminLayout><CertificateManagement /></AdminLayout>} />
+      <Route path="/admin/notifications" element={<AdminLayout><AdminNotifications /></AdminLayout>} />
 
       {/* Judge */}
       <Route path="/judge" element={<JudgeDashboard />} />
