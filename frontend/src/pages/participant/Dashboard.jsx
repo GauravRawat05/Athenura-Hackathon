@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import NotificationDrawer from "./NotificationDrawer";
+
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 const mockStats = [
@@ -881,19 +881,13 @@ export default function Dashboard() {
 
       <div className="db-wrap">
 
-        {/* ── Header ── */}
-        <div className="db-header">
-          <div>
-            <div className="db-username">{userName}</div>
-            <div className="db-date">{today}</div>
-          </div>
-          <div className="db-header-right">
-          <div className="db-header-right">
-  <NotificationDrawer />
+    {/* ── Header ── */}
+<div className="db-header">
+  <div>
+    <div className="db-username">{userName}</div>
+    <div className="db-date">{today}</div>
+  </div>
 </div>
-          
-          </div>
-        </div>
 
         {/* ── Stats ── */}
         <div className="db-stats">

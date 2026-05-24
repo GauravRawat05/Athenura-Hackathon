@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 
+
 const userNotifications = [
   { id: 1, type: "team_invite", unread: true, time: "2 min ago", title: "Team Invite Received", message: "Aryan Sharma invited you to join NeuralNinjas for Smart India Hackathon 2025." },
   { id: 2, type: "payment", unread: true, time: "1 hour ago", title: "Payment Successful", message: "Your registration fee ₹199 for HackWithInfy Spring Edition is confirmed." },
@@ -96,14 +97,14 @@ const styles = `
     width: 42px; height: 42px;
     border-radius: 12px;
     border: none;
-    background: #03045e;
+    
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; color: #fff;
     transition: transform 0.22s cubic-bezier(.34,1.56,.64,1), box-shadow 0.22s ease, background 0.22s ease;
     box-shadow: 0 4px 14px rgba(3,4,94,0.35);
     outline: none; flex-shrink: 0;
   }
-  .nd-bell-btn:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 8px 24px rgba(3,4,94,0.45); background: #05076e; }
+  .nd-bell-btn:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 8px 24px rgba(3,4,94,0.45); }
   .nd-bell-btn:active { transform: scale(0.96); }
   .nd-bell-btn:hover .nd-bell-icon { animation: ndRing 0.55s ease; }
 
@@ -145,7 +146,7 @@ const styles = `
   }
   @keyframes ndFadeIn { from { opacity:0; } to { opacity:1; } }
 
-  .nd-drawer {
+ .nd-drawer {
     position: fixed;
     top: 0; right: 0;
     width: 400px;
@@ -157,6 +158,7 @@ const styles = `
     animation: ndSlideIn 0.38s cubic-bezier(0.16,1,0.3,1) both;
     font-family: 'Inter', sans-serif;
     overflow: hidden;
+    overscroll-behavior: contain;
   }
   @keyframes ndSlideIn {
     from { transform: translateX(100%); }
@@ -205,9 +207,10 @@ const styles = `
   }
   .nd-mark-all-btn:hover { background: #03045e; color: #fff; border-color: #03045e; }
 
-  .nd-list {
+ .nd-list {
     flex: 1; overflow-y: auto; padding: 14px;
     display: flex; flex-direction: column; gap: 9px;
+    overscroll-behavior: contain;
   }
   .nd-list::-webkit-scrollbar { width: 4px; }
   .nd-list::-webkit-scrollbar-track { background: transparent; }

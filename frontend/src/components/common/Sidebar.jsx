@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
+import NotificationDrawer from "../../pages/participant/NotificationDrawer";
 import { logout } from "../../store/authSlice";
 
 const navItems = [
@@ -627,25 +628,43 @@ export default function Sidebar({ collapsed, setCollapsed }) {
           </div>
         </div>
 
-        {/* Nav */}
-        <div className="sb-section-label">Main Menu</div>
-        <ul className="sb-nav">
-          {navItems.map((item) => (
-            <li key={item.path}>
-              <NavLink
-                to={item.path}
-                className={({ isActive }) => `sb-nav-link${isActive ? " active" : ""}`}
-                onClick={handleNavClick}
-              >
-                <span className="sb-icon-wrap">{item.icon}</span>
-                <span className="sb-link-label">{item.label}</span>
-              </NavLink>
-              {collapsed && <span className="sb-tooltip">{item.label}</span>}
-            </li>
-          ))}
-        </ul>
+     {/* Nav */}
+<div className="sb-section-label">Main Menu</div>
+<ul className="sb-nav">
+  {navItems.map((item) => (
+    <li key={item.path}>
+      <NavLink
+        to={item.path}
+        className={({ isActive }) => `sb-nav-link${isActive ? " active" : ""}`}
+        onClick={handleNavClick}
+      >
+        <span className="sb-icon-wrap">{item.icon}</span>
+        <span className="sb-link-label">{item.label}</span>
+      </NavLink>
+      {collapsed && <span className="sb-tooltip">{item.label}</span>}
+    </li>
+  ))}
 
-        <div className="sb-divider" />
+ {/* Notifications — NotificationDrawer */}
+  <li style={{ position: "relative" }}>
+    <div className="sb-nav-link" style={{ cursor: "pointer", padding: "10px 13px" }}>
+      <span className="sb-icon-wrap">
+        <NotificationDrawer />
+      </span>
+      {!collapsed && (
+        <span className="sb-link-label"
+          onClick={() => document.querySelector(".nd-bell-btn")?.click()}
+        >
+          Notifications
+        </span>
+      )}
+    </div>
+    {collapsed && <span className="sb-tooltip">Notifications</span>}
+  </li>
+
+</ul>
+
+<div className="sb-divider" />
 
         {/* Logout */}
         <div className="sb-logout-wrap">
