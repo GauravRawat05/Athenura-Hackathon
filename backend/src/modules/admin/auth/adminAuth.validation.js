@@ -54,6 +54,25 @@ export const loginAdminValidation = Joi.object({
   })
 })
 
+// ── Forgot Password validation ───────────────────────────────────────────────
+export const forgotPasswordValidation = Joi.object({
+  email: Joi.string().email().required().messages({
+    "string.email": "Please provide a valid email address",
+    "any.required": "Email is required"
+  }),
+  newPassword: passwordSchema,
+  confirmPassword: Joi.string().valid(Joi.ref("newPassword")).required().messages({
+    "any.only": "Passwords do not match",
+    "any.required": "Confirm password is required"
+  }),
+  role: Joi.string().valid(userRoles.ADMIN, userRoles.JUDGE).required().messages({
+    "any.only": "Role must be either 'Admin' or 'Judge'",
+    "any.required": "Role is required"
+  }),
+  adminSecretKey: Joi.string().when("role", { is: userRoles.ADMIN, then: Joi.required(), otherwise: Joi.optional() }),
+  judgeSecretKey: Joi.string().when("role", { is: userRoles.JUDGE, then: Joi.required(), otherwise: Joi.optional() })
+})
+
 // Validate middleware
 export const validate = (schema) => {
   return (req, res, next) => {

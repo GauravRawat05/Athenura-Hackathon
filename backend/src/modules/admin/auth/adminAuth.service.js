@@ -127,6 +127,39 @@ class AdminAuthService {
 
     return { user: sanitizedUser, accessToken, refreshToken }
   }
+
+  // ── Forgot Password — verifies secret key and updates password ────────────
+  async forgotPasswordService(data) {
+    const { email, newPassword, role, adminSecretKey, judgeSecretKey } = data
+
+    // 1. Verify Secret Key
+    if (role === userRoles.ADMIN) {
+      if (!adminSecretKey || adminSecretKey !== envConfig.adminSecretKey) {
+        throw new ApiError(403, "Invalid admin secret key")
+      }
+    } else if (role === userRoles.JUDGE) {
+      if (!judgeSecretKey || judgeSecretKey !== envConfig.judgeSecretKey) {
+        throw new ApiError(403, "Invalid judge secret key")
+      }
+    }
+
+    // 2. Find User
+    const user = await authRepository.findUserByEmail(email)
+    if (!user) {
+      throw new ApiError(404, "User not found")
+    }
+
+    // 3. Check if user role matches the request role
+    if (user.role !== role) {
+      throw new ApiError(403, `Access denied. Specified role does not match user account.`)
+    }
+
+    // 4. Update Password
+    user.password = newPassword
+    await authRepository.saveUser(user)
+
+    return true
+  }
 }
 
 const adminAuthService = new AdminAuthService()

@@ -64,6 +64,15 @@ class AdminAuthController {
         )
       )
   }
+
+  // ── Forgot Password — resets password using secret key ───────────────────
+  async forgotPassword(req, res) {
+    await adminAuthService.forgotPasswordService(req.body)
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, null, "Password reset successfully"))
+  }
 }
 
 const adminAuthController = new AdminAuthController()

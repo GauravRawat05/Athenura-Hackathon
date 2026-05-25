@@ -8,7 +8,8 @@ import asyncHandler from "../../../libs/asyncHandler.js"
 import {
   validate,
   registerAdminValidation,
-  loginAdminValidation
+  loginAdminValidation,
+  forgotPasswordValidation
 } from "./adminAuth.validation.js"
 
 const router = Router()
@@ -21,6 +22,11 @@ router.route("/registerAdminOrJudge").post(
 router.route("/loginAdminOrJudge").post(
   validate(loginAdminValidation),
   asyncHandler(adminAuthController.loginAdmin)
+)
+
+router.route("/forgotPassword").post(
+  validate(forgotPasswordValidation),
+  asyncHandler(adminAuthController.forgotPassword)
 )
 
 export default router

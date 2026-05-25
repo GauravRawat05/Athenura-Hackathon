@@ -13,10 +13,10 @@ PROJECT_RULES.md
 GSD-STYLE.md
 model_capabilities.yaml
 .kilo
-postman-collections
 postman-to-pdf
 .blackboxrules
 .vscode
 postman_collection.json
 *.md
 .antigravitycli
+postman-collections
