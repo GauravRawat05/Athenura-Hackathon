@@ -18,9 +18,9 @@ export default function Navbar() {
 
   const NAV_LINKS = [
     { label: "Home", path: "/" },
-    { label: "Hackathons", path: "/hackathons", badge: true },
-    { label: "Result", path: "/result" },
     { label: "About", path: "/about" },
+    { label: "Result", path: "/result" },
+    { label: "Hackathons", path: "/hackathons", badge: true },
     { label: "Contact", path: "/contact" },
   ];
 
@@ -377,7 +377,7 @@ export default function Navbar() {
               </button>
               <button
                 className="hw-btn-primary"
-                onClick={() => navigate("/signup")}
+                onClick={() => navigate("/Register")}
               >
                 Sign up free
               </button>
@@ -427,15 +427,6 @@ export default function Navbar() {
               }}
             >
               Log in
-            </button>
-            <button
-              className="hw-m-primary"
-              onClick={() => {
-                navigate("/signup");
-                setMenuOpen(false);
-              }}
-            >
-              Sign up free
             </button>
           </div>
         </div>
