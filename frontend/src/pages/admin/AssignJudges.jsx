@@ -39,11 +39,11 @@ const ALL_TEAMS = [
 ];
 
 const HACKATHONS = [
-  "AI Revolution 2025",
-  "TechFest 2025",
-  "CodeJam 2025",
-  "InnovateSphere 2025",
-  "DataQuest 2025",
+  "AI Revolution 2026",
+  "TechFest 2026",
+  "CodeJam 2026",
+  "InnovateSphere 2026",
+  "DataQuest 2026",
 ];
 
 const ALL_JUDGES = [

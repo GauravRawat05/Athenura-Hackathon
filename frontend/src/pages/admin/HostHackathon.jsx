@@ -744,7 +744,7 @@ export default function HostHackathon() {
               <Input
                 label="Hackathon Name"
                 required
-                placeholder="e.g. Ocean Hack 2025"
+                placeholder="e.g. Ocean Hack 2026"
                 value={basics.name}
                 onChange={(e) =>
                   setBasics((p) => ({ ...p, name: e.target.value }))

@@ -71,7 +71,7 @@ const TABS_SHORT = ["Winners", "Certs", "Preview", "Publish"];
 const TABS_LONG  = ["Winners Selection", "Certificate Mgmt", "Result Preview", "Publish Results"];
 
 const TIMELINE_INIT = [
-  { title: "Judging Completed",    sub: "May 18, 2025 · 05:30 PM", status: "done"    },
+  { title: "Judging Completed",    sub: "May 18, 2026 · 05:30 PM", status: "done"    },
   { title: "Winners Selection",    sub: "In Progress",              status: "active"  },
   { title: "Certificate Generation", sub: "Pending",               status: "pending" },
   { title: "Results Publication",  sub: "Pending",                  status: "pending" },
@@ -478,7 +478,7 @@ function CertificateTab({ certCount, onGenerate, generating }) {
       }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: T.navy }}>Certificate Template</div>
-          <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>HackSphere 2025 — AI Revolution</div>
+          <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>HackSphere 2026 — AI Revolution</div>
         </div>
         <Badge bg="#d1fae5" color="#065f46">Active</Badge>
       </div>
@@ -528,7 +528,7 @@ function PreviewTab({ winners, published }) {
         </div>
         <div style={{ background: "#fff", borderRadius: 14, padding: 16, boxShadow: "0 2px 12px rgba(0,0,0,.06)", minWidth: 0 }}>
           <div style={{ textAlign: "center", marginBottom: 14 }}>
-            <div style={{ fontSize: 18, fontWeight: 800, color: T.navy }}>AI Revolution 2025</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: T.navy }}>AI Revolution 2026</div>
             <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>Official Results</div>
             {published && <div style={{ marginTop: 6 }}><Badge bg="#d1fae5" color="#065f46">Published</Badge></div>}
           </div>
@@ -634,7 +634,7 @@ function ResultSummary({ winners, certCount, published, onViewDetails, onReset, 
     { icon: Users,     label: "Total Teams",     value: "128" },
     { icon: Award,     label: "Winners",          value: "3 / 3" },
     { icon: FileBadge, label: "Certs Generated",  value: certCount > 0 ? String(certCount) : "0" },
-    { icon: Clock,     label: "Deadline",         value: "May 20, 2025" },
+    { icon: Clock,     label: "Deadline",         value: "May 20, 2026" },
   ];
   return (
     <Card style={{ padding: "clamp(14px,2vw,20px)", minWidth: 0, maxWidth: "100%" }}>
@@ -1014,7 +1014,7 @@ export default function ResultDeclaration() {
   const py = isXS ? 14 : isMobile ? 16 : isMD ? 16 : 24;
 
   const stats = [
-    { label: "Hackathon",    value: "AI Revolution 2025", delta: "Active",         deltaOk: true,  icon: Trophy,    iconBg: "#dbeafe", iconColor: "#2563eb" },
+    { label: "Hackathon",    value: "AI Revolution 2026", delta: "Active",         deltaOk: true,  icon: Trophy,    iconBg: "#dbeafe", iconColor: "#2563eb" },
     { label: "Total Teams",  value: "128",                delta: "Participated",    deltaOk: null,  icon: Users,     iconBg: "#ccfbf1", iconColor: "#0f766e" },
     { label: "Winners",      value: "3",                  delta: "Positions filled",deltaOk: null,  icon: Award,     iconBg: "#ede9fe", iconColor: "#7c3aed" },
     { label: "Certificates", value: String(certCount),    delta: certCount ? "Ready" : "Not generated", deltaOk: certCount > 0, icon: FileBadge, iconBg: "#e0f2fe", iconColor: "#0284c7" },
@@ -1104,7 +1104,7 @@ export default function ResultDeclaration() {
                     <Trophy size={14} color="#f59e0b" />
                     <div>
                       <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: .8, color: "#94a3b8", fontWeight: 600 }}>Hackathon</div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: T.navy }}>AI Revolution 2025</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: T.navy }}>AI Revolution 2026</div>
                     </div>
                     <Badge bg="#d1fae5" color="#065f46">Active</Badge>
                   </div>

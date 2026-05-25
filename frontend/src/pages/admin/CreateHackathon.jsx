@@ -1,5 +1,5 @@
 ﻿import { useState, useRef, useEffect } from "react";
-
+import { useNavigate } from "react-router-dom";
 const Icon = ({ d, size = 18, className = "" }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className}>
     {Array.isArray(d) ? d.map((path, i) => <path key={i} d={path} />) : <path d={d} />}
@@ -518,6 +518,7 @@ function ThemedSelect({ value, onChange, options, placeholder }) {
 }
 
 export default function CreateHackathonPage() {
+  const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [desc, setDesc] = useState("");
@@ -589,9 +590,35 @@ export default function CreateHackathonPage() {
     alert("Draft saved!");
   };
 
-  const handleCreate = () => {
+ const handleCreate = () => {
     if (!title || !status || !mode) { alert("Please fill in all required fields."); return; }
-    alert("Hackathon created successfully!");
+
+    const newHackathon = {
+      id: crypto.randomUUID(),
+      name: title,
+      subtitle: desc.slice(0, 60) || "No description",
+      status: status,
+      regFrom: startDate ? new Date(startDate).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }) : "TBD",
+      regTo: regDeadline ? new Date(regDeadline).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }) : "TBD",
+      eventFrom: startDate ? new Date(startDate).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }) : "TBD",
+      eventTo: endDate ? new Date(endDate).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }) : "TBD",
+      submissionDeadline: subDeadline || "",
+      resultsDate: "",
+      prize: Number(prizePool) || 0,
+      mode: mode,
+      teamSize: `${minTeam} - ${maxTeam} Members`,
+      eligibility: studentOnly ? "Students Only" : "All Students",
+      organizedBy: "",
+      description: desc,
+      iconKey: "ai",
+      iconBg: "from-blue-500 to-indigo-600",
+      settings: { publiclyVisible: true, registrationOpen: true, allowTeamChanges: false, requireApproval: false, sendEmailUpdates: true, showLeaderboard: true },
+    };
+
+    const existing = JSON.parse(sessionStorage.getItem("tempHackathons") || "[]");
+    sessionStorage.setItem("tempHackathons", JSON.stringify([newHackathon, ...existing]));
+    localStorage.removeItem("hackathonDraft");
+    navigate("/admin/hackathons");
   };
 
   return (
@@ -793,7 +820,7 @@ export default function CreateHackathonPage() {
                   <div className="tag-box">
                     {years.map((y) => <Chip key={y} label={y} onRemove={() => setYears(years.filter((x) => x !== y))} />)}
                     <input
-                      placeholder="e.g. 2025"
+                      placeholder="e.g. 2026"
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && e.target.value.trim()) {
                           if (!years.includes(e.target.value.trim())) setYears([...years, e.target.value.trim()]);

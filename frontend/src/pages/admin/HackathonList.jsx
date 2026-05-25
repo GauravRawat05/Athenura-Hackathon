@@ -790,9 +790,9 @@ function DetailPanel({ selected, activeTab, setActiveTab, openEdit, onUpdateSett
 }
 
 export default function HackathonDashboard() {
-  const [hackathons, setHackathons] = useState(() => {
+const [hackathons, setHackathons] = useState(() => {
     try {
-      const temp = JSON.parse(localStorage.getItem("tempHackathons") || "[]");
+      const temp = JSON.parse(sessionStorage.getItem("tempHackathons") || "[]");
       return [...temp, ...initialData];
     } catch {
       return initialData;
