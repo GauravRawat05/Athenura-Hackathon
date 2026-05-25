@@ -48,7 +48,6 @@ function Fade({ children, delay = 0, y = 24, style = {}, className = "" }) {
 /* ─────────────────────────────────────────
    SVG ILLUSTRATIONS
 ───────────────────────────────────────── */
-// Hero floating decorative SVG — trophy with orbiting elements
 const HeroIllustration = () => (
   <svg viewBox="0 0 420 420" width="420" height="420" fill="none" xmlns="http://www.w3.org/2000/svg"
     style={{ opacity: 0.92 }}>
@@ -69,13 +68,9 @@ const HeroIllustration = () => (
         <feDropShadow dx="0" dy="8" stdDeviation="16" floodColor="#f59e0b" floodOpacity="0.3" />
       </filter>
     </defs>
-
-    {/* Outer glow rings */}
     <circle cx="210" cy="210" r="180" stroke="rgba(245,158,11,0.08)" strokeWidth="1" />
     <circle cx="210" cy="210" r="140" stroke="rgba(245,158,11,0.12)" strokeWidth="1" strokeDasharray="8 6" />
     <circle cx="210" cy="210" r="100" fill="url(#glow1)" />
-
-    {/* Orbiting dots */}
     <circle cx="210" cy="40" r="5" fill="#f59e0b" opacity="0.7" />
     <circle cx="380" cy="210" r="4" fill="#2962FF" opacity="0.6" />
     <circle cx="210" cy="380" r="5" fill="#f59e0b" opacity="0.5" />
@@ -84,8 +79,6 @@ const HeroIllustration = () => (
     <circle cx="85" cy="335" r="3" fill="#fff" opacity="0.4" />
     <circle cx="335" cy="335" r="3" fill="#f59e0b" opacity="0.4" />
     <circle cx="85" cy="85" r="3" fill="#2962FF" opacity="0.4" />
-
-    {/* Star burst lines */}
     {[0,45,90,135,180,225,270,315].map((a, i) => {
       const rad = (a * Math.PI) / 180;
       const x1 = 210 + 108 * Math.cos(rad);
@@ -94,50 +87,33 @@ const HeroIllustration = () => (
       const y2 = 210 + 132 * Math.sin(rad);
       return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="rgba(245,158,11,0.3)" strokeWidth="1.5" />;
     })}
-
-    {/* Trophy base */}
     <g filter="url(#softShadow)">
-      {/* Cup body */}
       <path d="M155 130 H265 V210 Q265 258 210 270 Q155 258 155 210 Z"
         fill="url(#trophyGrad)" stroke="#f59e0b" strokeWidth="1.5" />
-      {/* Handles */}
       <path d="M155 150 H128 Q112 150 112 170 V190 Q112 218 140 218 H155"
         stroke="#fde68a" strokeWidth="4" strokeLinecap="round" fill="none" />
       <path d="M265 150 H292 Q308 150 308 170 V190 Q308 218 280 218 H265"
         stroke="#fde68a" strokeWidth="4" strokeLinecap="round" fill="none" />
-      {/* Stem */}
       <rect x="198" y="270" width="24" height="42" rx="4" fill="#f59e0b" />
-      {/* Base */}
       <rect x="170" y="308" width="80" height="16" rx="6" fill="#fde68a" />
       <rect x="180" y="320" width="60" height="10" rx="4" fill="#f59e0b" opacity="0.6" />
-
-      {/* Star on cup */}
       <path d="M210 160 L215 174 H230 L218 183 L223 197 L210 188 L197 197 L202 183 L190 174 H205 Z"
         fill="#fff" opacity="0.9" />
-
-      {/* Shine lines */}
       <path d="M175 155 Q182 148 190 153" stroke="#fff" strokeWidth="2" strokeLinecap="round" opacity="0.5" />
       <path d="M178 165 Q183 160 188 163" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
     </g>
-
-    {/* Floating rank badges */}
-    {/* Gold #1 */}
     <g transform="translate(62,150)">
       <circle cx="26" cy="26" r="26" fill="#f59e0b" opacity="0.15" stroke="#f59e0b" strokeWidth="1.5" />
       <text x="26" y="31" textAnchor="middle" fontSize="18" fontWeight="800" fill="#f59e0b" fontFamily="'Poppins',sans-serif">1</text>
     </g>
-    {/* Silver #2 */}
     <g transform="translate(308,100)">
       <circle cx="22" cy="22" r="22" fill="#94a3b8" opacity="0.12" stroke="#94a3b8" strokeWidth="1.5" />
       <text x="22" y="27" textAnchor="middle" fontSize="16" fontWeight="800" fill="#94a3b8" fontFamily="'Poppins',sans-serif">2</text>
     </g>
-    {/* Bronze #3 */}
     <g transform="translate(315,290)">
       <circle cx="20" cy="20" r="20" fill="#cd7c3f" opacity="0.12" stroke="#cd7c3f" strokeWidth="1.5" />
       <text x="20" y="25" textAnchor="middle" fontSize="14" fontWeight="800" fill="#cd7c3f" fontFamily="'Poppins',sans-serif">3</text>
     </g>
-
-    {/* Sparkles */}
     <path d="M340 150 L343 157 L350 160 L343 163 L340 170 L337 163 L330 160 L337 157 Z"
       fill="#f59e0b" opacity="0.7" />
     <path d="M72 260 L74 265 L79 267 L74 269 L72 274 L70 269 L65 267 L70 265 Z"
@@ -147,88 +123,8 @@ const HeroIllustration = () => (
   </svg>
 );
 
-// CTA Section illustration — rocket/launch concept
-const CTAIllustration = () => (
-  <svg viewBox="0 0 380 340" width="380" height="340" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="rocketGrad" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
-        <stop offset="100%" stopColor="rgba(255,255,255,0.5)" />
-      </linearGradient>
-      <linearGradient id="flameGrad" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stopColor="#fde68a" />
-        <stop offset="60%" stopColor="#f59e0b" />
-        <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
-      </linearGradient>
-    </defs>
-
-    {/* Grid dots background */}
-    {[...Array(8)].map((_, row) =>
-      [...Array(10)].map((_, col) => (
-        <circle key={`${row}-${col}`}
-          cx={20 + col * 38} cy={20 + row * 38} r="1.5"
-          fill="rgba(255,255,255,0.08)" />
-      ))
-    )}
-
-    {/* Orbit circles */}
-    <ellipse cx="190" cy="180" rx="150" ry="50" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
-    <ellipse cx="190" cy="180" rx="110" ry="36" stroke="rgba(255,255,255,0.08)" strokeWidth="1" strokeDasharray="6 4" />
-
-    {/* Trophy at center bottom */}
-    <g transform="translate(158,200) scale(0.8)">
-      <path d="M10 0 H70 V46 Q70 70 40 76 Q10 70 10 46 Z"
-        fill="rgba(245,158,11,0.2)" stroke="#f59e0b" strokeWidth="1.5" />
-      <path d="M10 8 H-6 Q-16 8 -16 22 V32 Q-16 48 2 48 H10"
-        stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-      <path d="M70 8 H86 Q96 8 96 22 V32 Q96 48 78 48 H70"
-        stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" fill="none" />
-      <path d="M40 35 L43 43 H50 L44.5 47 L47 55 L40 51 L33 55 L35.5 47 L30 43 H37 Z"
-        fill="#f59e0b" opacity="0.9" />
-    </g>
-
-    {/* Rocket */}
-    <g transform="translate(165,60) rotate(0)">
-      {/* Body */}
-      <path d="M25 80 Q10 80 6 65 L0 20 Q0 0 25 0 Q50 0 50 20 L44 65 Q40 80 25 80Z"
-        fill="url(#rocketGrad)" />
-      {/* Window */}
-      <circle cx="25" cy="30" r="9" fill="rgba(41,98,255,0.3)" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" />
-      <circle cx="25" cy="30" r="5" fill="rgba(41,98,255,0.5)" />
-      {/* Wings */}
-      <path d="M6 60 L-12 82 L6 72 Z" fill="rgba(255,255,255,0.35)" />
-      <path d="M44 60 L62 82 L44 72 Z" fill="rgba(255,255,255,0.35)" />
-      {/* Flame */}
-      <path d="M12 80 Q18 105 25 120 Q32 105 38 80Z" fill="url(#flameGrad)" />
-      <path d="M18 80 Q22 98 25 108 Q28 98 32 80Z" fill="#fde68a" opacity="0.7" />
-    </g>
-
-    {/* Dotted flight path */}
-    <path d="M190 110 Q230 80 260 60" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" strokeDasharray="5 4" />
-
-    {/* Small floating elements */}
-    <circle cx="290" cy="100" r="8" fill="rgba(245,158,11,0.2)" stroke="#f59e0b" strokeWidth="1" />
-    <text x="290" y="105" textAnchor="middle" fontSize="9" fill="#f59e0b" fontFamily="'Poppins',sans-serif" fontWeight="700">+</text>
-
-    <circle cx="80" cy="130" r="6" fill="rgba(41,98,255,0.2)" stroke="#2962FF" strokeWidth="1" />
-    <circle cx="320" cy="200" r="5" fill="rgba(245,158,11,0.15)" stroke="#f59e0b" strokeWidth="1" />
-
-    {/* Star sparkles */}
-    <path d="M310 80 L312 86 L318 88 L312 90 L310 96 L308 90 L302 88 L308 86 Z"
-      fill="#f59e0b" opacity="0.6" />
-    <path d="M56 80 L57.5 84 L62 85.5 L57.5 87 L56 91 L54.5 87 L50 85.5 L54.5 84 Z"
-      fill="#fff" opacity="0.3" />
-
-    {/* Code brackets decoration */}
-    <text x="30" y="280" fontSize="32" fill="rgba(255,255,255,0.05)" fontFamily="monospace">&lt;/&gt;</text>
-    <text x="290" y="300" fontSize="24" fill="rgba(255,255,255,0.05)" fontFamily="monospace">{`{}`}</text>
-  </svg>
-);
-
-// Podium SVG for leaderboard visual
 const PodiumSVG = ({ winners }) => (
   <svg viewBox="0 0 300 200" width="100%" height="160" fill="none">
-    {/* Silver - 2nd */}
     <rect x="30" y="100" width="80" height="90" rx="4" fill="rgba(148,163,184,0.15)" stroke="rgba(148,163,184,0.3)" strokeWidth="1" />
     <text x="70" y="97" textAnchor="middle" fontSize="11" fill={SILVER} fontWeight="700" fontFamily="'Poppins',sans-serif">2nd</text>
     <text x="70" y="135" textAnchor="middle" fontSize="9" fill={SILVER} fontFamily="'Poppins',sans-serif" opacity="0.8">
@@ -236,19 +132,14 @@ const PodiumSVG = ({ winners }) => (
     </text>
     <circle cx="70" cy="78" r="16" fill="rgba(148,163,184,0.15)" stroke={SILVER} strokeWidth="1.5" />
     <text x="70" y="83" textAnchor="middle" fontSize="13" fill={SILVER} fontWeight="800" fontFamily="'Poppins',sans-serif">2</text>
-
-    {/* Gold - 1st */}
     <rect x="110" y="68" width="80" height="122" rx="4" fill="rgba(245,158,11,0.12)" stroke="rgba(245,158,11,0.35)" strokeWidth="1" />
     <text x="150" y="65" textAnchor="middle" fontSize="11" fill={GOLD} fontWeight="700" fontFamily="'Poppins',sans-serif">1st</text>
     <text x="150" y="112" textAnchor="middle" fontSize="9" fill={GOLD} fontFamily="'Poppins',sans-serif" opacity="0.9">
       {winners[0]?.team?.split(" ")[0] || ""}
     </text>
-    {/* Crown */}
     <path d="M135 36 L140 44 L150 38 L160 44 L165 36 L168 52 H132 Z" fill={GOLD} opacity="0.8" />
     <circle cx="150" cy="26" r="14" fill="rgba(245,158,11,0.15)" stroke={GOLD} strokeWidth="1.5" />
     <text x="150" y="31" textAnchor="middle" fontSize="12" fill={GOLD} fontWeight="800" fontFamily="'Poppins',sans-serif">1</text>
-
-    {/* Bronze - 3rd */}
     <rect x="190" y="120" width="80" height="70" rx="4" fill="rgba(205,124,63,0.12)" stroke="rgba(205,124,63,0.3)" strokeWidth="1" />
     <text x="230" y="117" textAnchor="middle" fontSize="11" fill={BRONZE} fontWeight="700" fontFamily="'Poppins',sans-serif">3rd</text>
     <text x="230" y="152" textAnchor="middle" fontSize="9" fill={BRONZE} fontFamily="'Poppins',sans-serif" opacity="0.8">
@@ -256,8 +147,6 @@ const PodiumSVG = ({ winners }) => (
     </text>
     <circle cx="230" cy="98" r="14" fill="rgba(205,124,63,0.12)" stroke={BRONZE} strokeWidth="1.5" />
     <text x="230" y="103" textAnchor="middle" fontSize="12" fill={BRONZE} fontWeight="800" fontFamily="'Poppins',sans-serif">3</text>
-
-    {/* Floor line */}
     <line x1="20" y1="192" x2="280" y2="192" stroke="rgba(3,4,94,0.12)" strokeWidth="1" />
   </svg>
 );
@@ -313,15 +202,6 @@ const IconClose = () => (
     <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
   </svg>
 );
-const IconTrophy = ({ color = GOLD, size = 30 }) => (
-  <svg viewBox="0 0 48 48" width={size} height={size} fill="none">
-    <path d="M14 10h20v12c0 5.523-4.477 10-10 10s-10-4.477-10-10V10z"
-      stroke={color} strokeWidth="2" strokeLinejoin="round" />
-    <path d="M14 14H8a2 2 0 00-2 2v2a8 8 0 008 8h.5M34 14h6a2 2 0 012 2v2a8 8 0 01-8 8h-.5"
-      stroke={color} strokeWidth="2" strokeLinecap="round" />
-    <path d="M24 32v7M18 39h12" stroke={color} strokeWidth="2" strokeLinecap="round" />
-  </svg>
-);
 const IconChevron = ({ open }) => (
   <svg viewBox="0 0 16 16" width="13" height="13" fill="none"
     style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform .3s" }}>
@@ -333,6 +213,39 @@ const IconEmpty = () => (
     <circle cx="40" cy="40" r="36" stroke={NAVY_MID} strokeWidth="2" strokeDasharray="6 4" />
     <path d="M28 36h24M28 44h16" stroke={NAVY_MID} strokeWidth="2.5" strokeLinecap="round" />
     <circle cx="40" cy="28" r="6" stroke={NAVY_MID} strokeWidth="2" />
+  </svg>
+);
+const IconX = () => (
+  <svg viewBox="0 0 24 24" width="20" height="20" fill="none">
+    <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+  </svg>
+);
+const IconDownload = () => (
+  <svg viewBox="0 0 24 24" width="15" height="15" fill="none">
+    <path d="M12 3v13M7 11l5 5 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M5 21h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
+const IconUsers = () => (
+  <svg viewBox="0 0 24 24" width="14" height="14" fill="none">
+    <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="1.8" />
+    <path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    <path d="M16 3.13a4 4 0 010 7.75M21 21v-2a4 4 0 00-3-3.87" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+  </svg>
+);
+const IconStar = () => (
+  <svg viewBox="0 0 24 24" width="14" height="14" fill="none">
+    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+      stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+  </svg>
+);
+const IconTrophy = ({ color = GOLD, size = 30 }) => (
+  <svg viewBox="0 0 48 48" width={size} height={size} fill="none">
+    <path d="M14 10h20v12c0 5.523-4.477 10-10 10s-10-4.477-10-10V10z"
+      stroke={color} strokeWidth="2" strokeLinejoin="round" />
+    <path d="M14 14H8a2 2 0 00-2 2v2a8 8 0 008 8h.5M34 14h6a2 2 0 012 2v2a8 8 0 01-8 8h-.5"
+      stroke={color} strokeWidth="2" strokeLinecap="round" />
+    <path d="M24 32v7M18 39h12" stroke={color} strokeWidth="2" strokeLinecap="round" />
   </svg>
 );
 
@@ -352,9 +265,9 @@ const hackathons = [
     teams: 310,
     image: "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=600&q=80&auto=format&fit=crop",
     winners: [
-      { rank: 1, team: "Neural Ninjas", project: "NeuroAssist – Adaptive Learning Engine", score: 98.4 },
-      { rank: 2, team: "DeepMind Crew", project: "VisionGuard – Real-time Threat Detection", score: 95.1 },
-      { rank: 3, team: "ByteBuilders", project: "SpeakEase – Regional Language NLP", score: 92.7 },
+      { rank: 1, team: "Neural Ninjas", project: "NeuroAssist – Adaptive Learning Engine", score: 98.4, uni: "DTU Delhi" },
+      { rank: 2, team: "DeepMind Crew", project: "VisionGuard – Real-time Threat Detection", score: 95.1, uni: "IIT Bombay" },
+      { rank: 3, team: "ByteBuilders", project: "SpeakEase – Regional Language NLP", score: 92.7, uni: "BITS Pilani" },
     ],
   },
   {
@@ -369,9 +282,9 @@ const hackathons = [
     teams: 215,
     image: "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600&q=80&auto=format&fit=crop",
     winners: [
-      { rank: 1, team: "BlockChain Titans", project: "VaultX – Zero-Trust Banking Layer", score: 97.2 },
-      { rank: 2, team: "CipherSquad", project: "SecureLedger – Immutable Audit Trail", score: 94.0 },
-      { rank: 3, team: "HexHackers", project: "PhishStop – AI-driven Phishing Shield", score: 90.5 },
+      { rank: 1, team: "BlockChain Titans", project: "VaultX – Zero-Trust Banking Layer", score: 97.2, uni: "IIT Delhi" },
+      { rank: 2, team: "CipherSquad", project: "SecureLedger – Immutable Audit Trail", score: 94.0, uni: "NIT Trichy" },
+      { rank: 3, team: "HexHackers", project: "PhishStop – AI-driven Phishing Shield", score: 90.5, uni: "VIT Vellore" },
     ],
   },
   {
@@ -386,9 +299,9 @@ const hackathons = [
     teams: 245,
     image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600&q=80&auto=format&fit=crop",
     winners: [
-      { rank: 1, team: "MediCode", project: "DiagnoAI – Symptom Triage Assistant", score: 96.6 },
-      { rank: 2, team: "VitalSigns", project: "PulseWatch – IoT Vital Monitoring", score: 93.3 },
-      { rank: 3, team: "CareChain", project: "MedLedger – Patient Record DApp", score: 89.8 },
+      { rank: 1, team: "MediCode", project: "DiagnoAI – Symptom Triage Assistant", score: 96.6, uni: "AIIMS Delhi" },
+      { rank: 2, team: "VitalSigns", project: "PulseWatch – IoT Vital Monitoring", score: 93.3, uni: "IIT Madras" },
+      { rank: 3, team: "CareChain", project: "MedLedger – Patient Record DApp", score: 89.8, uni: "Manipal Uni" },
     ],
   },
   {
@@ -403,9 +316,9 @@ const hackathons = [
     teams: 180,
     image: "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=600&q=80&auto=format&fit=crop",
     winners: [
-      { rank: 1, team: "LearnFlow", project: "AdaptIQ – Personalised Study Planner", score: 95.9 },
-      { rank: 2, team: "EduSpark", project: "ClassLink – Real-time Doubt Resolver", score: 92.1 },
-      { rank: 3, team: "MindMesh", project: "SkillMap – Competency Graph Engine", score: 88.4 },
+      { rank: 1, team: "LearnFlow", project: "AdaptIQ – Personalised Study Planner", score: 95.9, uni: "IIT Roorkee" },
+      { rank: 2, team: "EduSpark", project: "ClassLink – Real-time Doubt Resolver", score: 92.1, uni: "SRM Chennai" },
+      { rank: 3, team: "MindMesh", project: "SkillMap – Competency Graph Engine", score: 88.4, uni: "Amity Noida" },
     ],
   },
   {
@@ -420,9 +333,9 @@ const hackathons = [
     teams: 160,
     image: "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=600&q=80&auto=format&fit=crop",
     winners: [
-      { rank: 1, team: "EcoTech Innovators", project: "SolarSync – Community Grid Balancer", score: 97.8 },
-      { rank: 2, team: "GreenGrid", project: "EcoTrace – Carbon Footprint Tracker", score: 94.5 },
-      { rank: 3, team: "RenewX", project: "WindWatch – Turbine Health Monitor", score: 91.2 },
+      { rank: 1, team: "EcoTech Innovators", project: "SolarSync – Community Grid Balancer", score: 97.8, uni: "IIT Kharagpur" },
+      { rank: 2, team: "GreenGrid", project: "EcoTrace – Carbon Footprint Tracker", score: 94.5, uni: "NSUT Delhi" },
+      { rank: 3, team: "RenewX", project: "WindWatch – Turbine Health Monitor", score: 91.2, uni: "MDU Rohtak" },
     ],
   },
   {
@@ -437,9 +350,9 @@ const hackathons = [
     teams: 275,
     image: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=600&q=80&auto=format&fit=crop",
     winners: [
-      { rank: 1, team: "Crypto Wizards", project: "TrustVault – Decentralized Identity", score: 96.1 },
-      { rank: 2, team: "DeFi Legends", project: "YieldFlow – Automated DeFi Yield", score: 93.4 },
-      { rank: 3, team: "ChainWave", project: "NFTrade – Cross-chain NFT Marketplace", score: 90.0 },
+      { rank: 1, team: "Crypto Wizards", project: "TrustVault – Decentralized Identity", score: 96.1, uni: "IIT Bombay" },
+      { rank: 2, team: "DeFi Legends", project: "YieldFlow – Automated DeFi Yield", score: 93.4, uni: "DTU Delhi" },
+      { rank: 3, team: "ChainWave", project: "NFTrade – Cross-chain NFT Marketplace", score: 90.0, uni: "VIT Vellore" },
     ],
   },
   {
@@ -454,9 +367,9 @@ const hackathons = [
     teams: 222,
     image: "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=600&q=80&auto=format&fit=crop",
     winners: [
-      { rank: 1, team: "UrbanHackers", project: "CityPulse – Live Traffic Intelligence", score: 98.0 },
-      { rank: 2, team: "SmartNexus", project: "WasteTrack – IoT Waste Management", score: 94.8 },
-      { rank: 3, team: "GridGuard", project: "SafeZone – Disaster Alert Network", score: 91.5 },
+      { rank: 1, team: "UrbanHackers", project: "CityPulse – Live Traffic Intelligence", score: 98.0, uni: "IIT Delhi" },
+      { rank: 2, team: "SmartNexus", project: "WasteTrack – IoT Waste Management", score: 94.8, uni: "NIT Warangal" },
+      { rank: 3, team: "GridGuard", project: "SafeZone – Disaster Alert Network", score: 91.5, uni: "BITS Goa" },
     ],
   },
   {
@@ -471,9 +384,9 @@ const hackathons = [
     teams: 0,
     image: "https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?w=600&q=80&auto=format&fit=crop",
     winners: [
-      { rank: 1, team: "Aryan Mehta", project: "OpenDoc – Universal API Docs Generator", score: 99.1 },
-      { rank: 2, team: "Priya Sharma", project: "CliCraft – Terminal Productivity Suite", score: 96.7 },
-      { rank: 3, team: "Rohit Verma", project: "PixelFlow – Open UI Component Library", score: 93.2 },
+      { rank: 1, team: "Aryan Mehta", project: "OpenDoc – Universal API Docs Generator", score: 99.1, uni: "IIT Guwahati" },
+      { rank: 2, team: "Priya Sharma", project: "CliCraft – Terminal Productivity Suite", score: 96.7, uni: "IIIT Hyderabad" },
+      { rank: 3, team: "Rohit Verma", project: "PixelFlow – Open UI Component Library", score: 93.2, uni: "Jadavpur Uni" },
     ],
   },
 ];
@@ -514,7 +427,7 @@ function StatCounter({ to, suffix = "", dur = 1400 }) {
 }
 
 /* ─────────────────────────────────────────
-   UNIQUE LEADERBOARD TABLE
+   LEADERBOARD TABLE
 ───────────────────────────────────────── */
 function LeaderboardTable({ winners }) {
   const rankColors = [GOLD, SILVER, BRONZE];
@@ -549,17 +462,11 @@ function LeaderboardTable({ winners }) {
           onMouseEnter={e => e.currentTarget.style.background = `${rankColors[i]}12`}
           onMouseLeave={e => e.currentTarget.style.background = rankBg[i]}
         >
-          {/* Rank indicator */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
             <span style={{ fontSize: 16 }}>{rankIcons[i]}</span>
           </div>
-
-          {/* Team + project */}
           <div>
-            <div style={{
-              fontSize: 11, fontWeight: 700, color: rankColors[i],
-              textTransform: "uppercase", letterSpacing: ".07em", marginBottom: 1
-            }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: rankColors[i], textTransform: "uppercase", letterSpacing: ".07em", marginBottom: 1 }}>
               {rankLabels[i]}
             </div>
             <div style={{ fontSize: 13, fontWeight: 700, color: NAVY, fontFamily: "'Poppins',sans-serif", lineHeight: 1.2 }}>
@@ -569,14 +476,11 @@ function LeaderboardTable({ winners }) {
               {w.project}
             </div>
           </div>
-
-          {/* Score bar */}
           <div style={{ textAlign: "right" }}>
             <div style={{ fontSize: 14, fontWeight: 800, color: rankColors[i], fontFamily: "'Poppins',sans-serif" }}>
               {w.score}
             </div>
             <div style={{ fontSize: 9, color: NAVY_TEXT, textTransform: "uppercase", letterSpacing: ".06em" }}>pts</div>
-            {/* Mini score bar */}
             <div style={{ width: 42, height: 3, background: "rgba(3,4,94,0.08)", borderRadius: 2, marginTop: 4, marginLeft: "auto" }}>
               <div style={{ width: `${(w.score - 85) / 15 * 100}%`, height: "100%", borderRadius: 2, background: rankColors[i] }} />
             </div>
@@ -588,15 +492,253 @@ function LeaderboardTable({ winners }) {
 }
 
 /* ─────────────────────────────────────────
-   HACKATHON CARD — Magazine style
+   FULL RESULTS MODAL
 ───────────────────────────────────────── */
-function HackCard({ hackathon, index }) {
+function FullResultsModal({ hackathon, onClose }) {
+  const color = dc(hackathon.domain);
+  const rankColors = [GOLD, SILVER, BRONZE];
+  const rankLabels = ["Champion", "Runner-up", "2nd Runner-up"];
+  const rankIcons = ["🥇", "🥈", "🥉"];
+
+  // Additional leaderboard entries (mock ranks 4–10)
+  const extraRows = [
+    { rank: 4,  team: "Code Crafters",  members: 4, score: 88.7, change: "+2", track: hackathon.domain, uni: "NIT Trichy" },
+    { rank: 5,  team: "Byte Busters",   members: 2, score: 87.1, change: "-1", track: hackathon.domain, uni: "MDU Rohtak" },
+    { rank: 6,  team: "AI Titans",      members: 5, score: 85.5, change: "+1", track: hackathon.domain, uni: "VIT Vellore" },
+    { rank: 7,  team: "Quantum Logic",  members: 3, score: 84.0, change: "0",  track: hackathon.domain, uni: "IIT Bombay" },
+    { rank: 8,  team: "Tech Pioneers",  members: 4, score: 82.3, change: "+4", track: hackathon.domain, uni: "SRM Chennai" },
+    { rank: 9,  team: "Robo Minds",     members: 2, score: 81.8, change: "-2", track: hackathon.domain, uni: "NSUT Delhi" },
+    { rank: 10, team: "Future Forge",   members: 5, score: 80.5, change: "0",  track: hackathon.domain, uni: "Amity Noida" },
+  ];
+
+  // Prevent body scroll
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 9999,
+      display: "flex", alignItems: "flex-end", justifyContent: "center",
+    }}>
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        style={{
+          position: "absolute", inset: 0,
+          background: "rgba(3,4,94,0.65)",
+          backdropFilter: "blur(6px)",
+          animation: "fadeIn .3s ease",
+        }}
+      />
+
+      {/* Panel */}
+      <div style={{
+        position: "relative", zIndex: 1,
+        width: "100%", maxWidth: "100vw",
+        height: "92vh",
+        background: "#f5f6ff",
+        borderRadius: "28px 28px 0 0",
+        overflow: "hidden",
+        display: "flex", flexDirection: "column",
+        animation: "slideUp .4s cubic-bezier(.22,1,.36,1)",
+        boxShadow: "0 -24px 80px rgba(3,4,94,0.25)",
+      }}>
+
+        {/* Modal Header */}
+        <div className="modal-header-container" style={{
+          background: NAVY,
+          padding: "0 32px",
+          position: "relative",
+          overflow: "hidden",
+          flexShrink: 0,
+        }}>
+          {/* bg grid */}
+          <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(255,255,255,0.022) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.022) 1px,transparent 1px)", backgroundSize: "44px 44px", pointerEvents: "none" }} />
+          {/* color blob */}
+          <div style={{ position: "absolute", top: -60, right: -60, width: 200, height: 200, borderRadius: "50%", background: `radial-gradient(circle, ${color}30 0%, transparent 70%)`, pointerEvents: "none" }} />
+
+          <div className="modal-header-flex" style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "22px 0 20px", gap: 16, flexWrap: "wrap" }}>
+            <div className="modal-header-info" style={{ flex: 1, minWidth: 0 }}>
+              {/* Domain pill */}
+              <span className="modal-header-domain-pill" style={{
+                display: "inline-flex", alignItems: "center", gap: 5,
+                padding: "3px 12px", borderRadius: 50, marginBottom: 10,
+                background: `${color}25`, border: `1px solid ${color}50`,
+                fontSize: 10, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: ".1em",
+              }}>
+                <IconDomain /> {hackathon.domain}
+              </span>
+              <h2 className="modal-header-title" style={{ fontSize: "clamp(16px,2.5vw,26px)", fontWeight: 800, color: "#fff", fontFamily: "'Poppins',sans-serif", lineHeight: 1.2, marginBottom: 6 }}>
+                {hackathon.title}
+              </h2>
+              <div className="modal-header-meta" style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                <span className="modal-header-meta-item" style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", display: "flex", alignItems: "center", gap: 4 }}>
+                  <IconCalendar /> {hackathon.date}
+                </span>
+                <span className="modal-header-meta-item" style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", display: "flex", alignItems: "center", gap: 4 }}>
+                  <IconTeam /> {hackathon.participants.toLocaleString()} Participants
+                </span>
+                <span className="modal-header-meta-item modal-header-meta-prize" style={{ fontSize: 12, color: GOLD, fontWeight: 700, display: "flex", alignItems: "center", gap: 4 }}>
+                  <IconPrize /> {hackathon.prize} Prize Pool
+                </span>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="modal-header-stats" style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+              {[
+                { val: hackathon.participants.toLocaleString(), label: "Participants" },
+                { val: hackathon.teams || "—", label: "Teams" },
+                { val: hackathon.prize, label: "Prize Pool" },
+              ].map((s, i) => (
+                <div key={i} className="modal-header-stat-card" style={{
+                  padding: "10px 18px", borderRadius: 14,
+                  background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+                  textAlign: "center", minWidth: 80,
+                }}>
+                  <div className="modal-header-stat-val" style={{ fontSize: 15, fontWeight: 800, color: "#fff", fontFamily: "'Poppins',sans-serif" }}>{s.val}</div>
+                  <div className="modal-header-stat-lbl" style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: ".08em", fontWeight: 600, marginTop: 2 }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Close button */}
+            <button
+              className="modal-close-btn"
+              onClick={onClose}
+              style={{
+                width: 42, height: 42, borderRadius: "50%",
+                background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)",
+                color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", flexShrink: 0,
+                transition: "background .2s, transform .2s",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.18)"; e.currentTarget.style.transform = "scale(1.08)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.transform = "none"; }}
+            >
+              <IconX />
+            </button>
+          </div>
+        </div>
+
+        {/* Scrollable content */}
+        <div className="modal-scrollable-content" style={{ flex: 1, overflowY: "auto", padding: "32px 32px 48px" }}>
+
+          {/* Full Leaderboard */}
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
+              <div>
+                <p style={{ fontSize: 10, fontWeight: 700, color: NAVY_TEXT, textTransform: "uppercase", letterSpacing: ".12em", marginBottom: 4 }}>All Participants</p>
+                <h3 style={{ fontSize: 22, fontWeight: 800, color: NAVY, fontFamily: "'Poppins',sans-serif", letterSpacing: "-.02em" }}>Global Leaderboard</h3>
+              </div>
+              <button
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 7,
+                  background: "#fff", border: "1px solid rgba(3,4,94,0.1)", color: NAVY,
+                  padding: "10px 20px", borderRadius: 50, fontSize: 12, fontWeight: 700,
+                  boxShadow: "0 4px 14px rgba(3,4,94,0.06)", cursor: "pointer",
+                  fontFamily: "'Poppins',sans-serif", transition: "all .22s",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 28px rgba(3,4,94,0.1)"; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 4px 14px rgba(3,4,94,0.06)"; }}
+              >
+                <IconDownload /> Export CSV
+              </button>
+            </div>
+
+            {/* Table header */}
+            <div className="modal-leaderboard-header" style={{ display: "grid", gridTemplateColumns: "52px 1fr 120px 80px", gap: "0 12px", padding: "0 20px 10px", fontSize: 10, fontWeight: 700, color: "rgba(3,4,94,0.35)", textTransform: "uppercase", letterSpacing: ".07em", borderBottom: "1px solid rgba(3,4,94,0.06)", marginBottom: 8 }}>
+              <span>Rank</span><span>Team</span><span className="modal-leaderboard-col-uni">University</span><span style={{ textAlign: "right" }}>Score</span>
+            </div>
+
+            {/* Top 3 rows */}
+            {hackathon.winners.map((w, i) => (
+              <div key={`w-${w.rank}`} className="modal-leaderboard-row modal-leaderboard-row-winner" style={{
+                display: "grid", gridTemplateColumns: "52px 1fr 120px 80px",
+                gap: "0 12px", alignItems: "center",
+                padding: "14px 20px", borderRadius: 14, marginBottom: 6,
+                background: "#fff",
+                border: `1px solid ${rankColors[i]}20`,
+                borderLeft: `4px solid ${rankColors[i]}`,
+                transition: "all .2s", cursor: "default",
+              }}
+                onMouseEnter={e => { e.currentTarget.style.transform = "translateX(4px)"; e.currentTarget.style.boxShadow = `0 8px 24px ${rankColors[i]}15`; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
+              >
+                <div style={{ textAlign: "center" }}>
+                  <span style={{ fontSize: 18 }}>{rankIcons[i]}</span>
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: NAVY, fontFamily: "'Poppins',sans-serif" }}>{w.team}</div>
+                  <div style={{ fontSize: 11, color: NAVY_TEXT, marginTop: 1 }}>{w.project}</div>
+                </div>
+                <div className="modal-leaderboard-cell-uni" style={{ fontSize: 12, color: NAVY_TEXT, fontWeight: 500 }}>{w.uni || "—"}</div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: rankColors[i], fontFamily: "'Poppins',sans-serif" }}>{w.score}</div>
+                  <div style={{ fontSize: 9, color: NAVY_TEXT, textTransform: "uppercase" }}>pts</div>
+                </div>
+              </div>
+            ))}
+
+            {/* Extra rows 4–10 */}
+            {extraRows.map((row, i) => (
+              <div key={`e-${row.rank}`} className="modal-leaderboard-row" style={{
+                display: "grid", gridTemplateColumns: "52px 1fr 120px 80px",
+                gap: "0 12px", alignItems: "center",
+                padding: "14px 20px", borderRadius: 14, marginBottom: 6,
+                background: "rgba(255,255,255,0.7)",
+                border: "1px solid rgba(3,4,94,0.06)",
+                transition: "all .2s", cursor: "default",
+              }}
+                onMouseEnter={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.transform = "translateX(4px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(3,4,94,0.07)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.7)"; e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
+              >
+                <div style={{ textAlign: "center", fontSize: 15, fontWeight: 800, color: NAVY }}>#{row.rank}</div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: NAVY, fontFamily: "'Poppins',sans-serif" }}>{row.team}</div>
+                  <div style={{ fontSize: 11, color: NAVY_TEXT, marginTop: 1 }}>{row.members} members · {row.track}</div>
+                </div>
+                <div className="modal-leaderboard-cell-uni" style={{ fontSize: 12, color: NAVY_TEXT, fontWeight: 500 }}>{row.uni}</div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: ACCENT, fontFamily: "'Poppins',sans-serif" }}>{row.score}</div>
+                  <div style={{ fontSize: 9, color: NAVY_TEXT, textTransform: "uppercase" }}>pts</div>
+                </div>
+              </div>
+            ))}
+
+            {/* Load more */}
+            <div style={{ textAlign: "center", marginTop: 28 }}>
+              <button style={{
+                background: "transparent", border: "none", color: ACCENT,
+                fontSize: 13, fontWeight: 700, cursor: "pointer",
+                display: "inline-flex", alignItems: "center", gap: 6,
+                transition: "color .2s",
+              }}
+                onMouseEnter={e => e.currentTarget.style.color = NAVY}
+                onMouseLeave={e => e.currentTarget.style.color = ACCENT}
+              >
+                Load More Results <IconChevron open={false} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   HACKATHON CARD
+───────────────────────────────────────── */
+function HackCard({ hackathon, index, onViewFull }) {
   const [expanded, setExpanded] = useState(false);
   const color = dc(hackathon.domain);
   const [imgLoaded, setImgLoaded] = useState(false);
 
   return (
-    <Fade delay={index * 0.055} style={{ height: "100%" }}>
+    <Fade delay={index * 0.055}>
       <div
         className="hcard"
         style={{
@@ -605,7 +747,6 @@ function HackCard({ hackathon, index }) {
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
-          height: "100%",
           border: "1px solid rgba(3,4,94,0.07)",
           transition: "transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s, border-color .35s",
         }}
@@ -633,12 +774,7 @@ function HackCard({ hackathon, index }) {
               filter: "brightness(0.82) saturate(1.1)",
             }}
           />
-          {/* Gradient overlay */}
-          <div style={{
-            position: "absolute", inset: 0,
-            background: `linear-gradient(to bottom, ${color}55, ${color}cc)`,
-          }} />
-          {/* Domain pill */}
+          <div style={{ position: "absolute", inset: 0, background: `linear-gradient(to bottom, ${color}55, ${color}cc)` }} />
           <div style={{ position: "absolute", top: 14, left: 14 }}>
             <span style={{
               display: "inline-flex", alignItems: "center", gap: 5,
@@ -650,7 +786,6 @@ function HackCard({ hackathon, index }) {
               <IconDomain /> {hackathon.domain}
             </span>
           </div>
-          {/* Prize badge */}
           <div style={{ position: "absolute", top: 14, right: 14 }}>
             <span style={{
               display: "inline-flex", alignItems: "center", gap: 4,
@@ -661,7 +796,6 @@ function HackCard({ hackathon, index }) {
               <IconPrize /> {hackathon.prize}
             </span>
           </div>
-          {/* Title overlay */}
           <div style={{ position: "absolute", bottom: 16, left: 16, right: 16 }}>
             <h3 style={{
               fontSize: 15, fontWeight: 700, color: "#fff",
@@ -675,7 +809,6 @@ function HackCard({ hackathon, index }) {
 
         {/* Card body */}
         <div style={{ padding: "16px 18px 0", flex: 1, display: "flex", flexDirection: "column" }}>
-          {/* Meta row */}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
             {[
               { icon: <IconCalendar />, label: hackathon.date },
@@ -707,9 +840,7 @@ function HackCard({ hackathon, index }) {
               fontSize: 16,
             }}>🏆</div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 9.5, fontWeight: 700, color: GOLD, textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 2 }}>
-                Champion
-              </div>
+              <div style={{ fontSize: 9.5, fontWeight: 700, color: GOLD, textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 2 }}>Champion</div>
               <div style={{ fontSize: 13, fontWeight: 700, color: NAVY, fontFamily: "'Poppins',sans-serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                 {hackathon.winners[0].team}
               </div>
@@ -718,19 +849,13 @@ function HackCard({ hackathon, index }) {
               </div>
             </div>
             <div style={{ textAlign: "right", flexShrink: 0 }}>
-              <div style={{ fontSize: 16, fontWeight: 800, color: GOLD, fontFamily: "'Poppins',sans-serif" }}>
-                {hackathon.winners[0].score}
-              </div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: GOLD, fontFamily: "'Poppins',sans-serif" }}>{hackathon.winners[0].score}</div>
               <div style={{ fontSize: 9, color: NAVY_TEXT }}>pts</div>
             </div>
           </div>
 
           {/* Expandable leaderboard */}
-          <div style={{
-            maxHeight: expanded ? 320 : 0,
-            overflow: "hidden",
-            transition: "max-height .45s cubic-bezier(.22,1,.36,1)",
-          }}>
+          <div style={{ maxHeight: expanded ? 320 : 0, overflow: "hidden", transition: "max-height .45s cubic-bezier(.22,1,.36,1)" }}>
             {expanded && <LeaderboardTable winners={hackathon.winners} />}
           </div>
         </div>
@@ -757,14 +882,16 @@ function HackCard({ hackathon, index }) {
             <IconChevron open={expanded} />
           </button>
 
-          <Link
-            to={`/results/${hackathon.id}`}
+          {/* ✅ Full Results — opens inline modal, NO page reload */}
+          <button
+            onClick={() => onViewFull(hackathon)}
             style={{
               display: "inline-flex", alignItems: "center", gap: 6,
               fontSize: 12, fontWeight: 700, color: NAVY,
               background: "rgba(3,4,94,0.04)", border: "1px solid rgba(3,4,94,0.1)",
-              borderRadius: 50, padding: "7px 16px", textDecoration: "none",
+              borderRadius: 50, padding: "7px 16px",
               fontFamily: "'Poppins',sans-serif", transition: "all .22s",
+              cursor: "pointer",
             }}
             onMouseEnter={e => {
               e.currentTarget.style.background = NAVY;
@@ -776,7 +903,7 @@ function HackCard({ hackathon, index }) {
             }}
           >
             Full Results <IconArrow />
-          </Link>
+          </button>
         </div>
       </div>
     </Fade>
@@ -786,7 +913,7 @@ function HackCard({ hackathon, index }) {
 /* ─────────────────────────────────────────
    FEATURED CARD — cinematic banner
 ───────────────────────────────────────── */
-function FeaturedCard({ hackathon }) {
+function FeaturedCard({ hackathon, onViewFull }) {
   const color = dc(hackathon.domain);
   const [imgLoaded, setImgLoaded] = useState(false);
 
@@ -813,7 +940,6 @@ function FeaturedCard({ hackathon }) {
             position: "absolute", inset: 0,
             background: `linear-gradient(135deg, ${NAVY}ee 0%, ${NAVY}aa 50%, ${color}44 100%)`,
           }} />
-          {/* Grid texture */}
           <div style={{
             position: "absolute", inset: 0,
             backgroundImage: "linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px)",
@@ -822,34 +948,20 @@ function FeaturedCard({ hackathon }) {
         </div>
 
         {/* Content */}
-        <div style={{
-          position: "relative", zIndex: 1,
-          padding: "40px 44px",
-          display: "flex", gap: 48, alignItems: "flex-start", flexWrap: "wrap",
-        }}>
+        <div style={{ position: "relative", zIndex: 1, padding: "40px 44px", display: "flex", gap: 48, alignItems: "flex-start", flexWrap: "wrap" }}>
           {/* Left: info */}
           <div style={{ flex: "1 1 260px" }}>
-            <div style={{
-              display: "inline-flex", alignItems: "center", gap: 8,
-              padding: "5px 14px", borderRadius: 50, marginBottom: 20,
-              background: `${GOLD}18`, border: `1px solid ${GOLD}40`,
-            }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 14px", borderRadius: 50, marginBottom: 20, background: `${GOLD}18`, border: `1px solid ${GOLD}40` }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: GOLD }} />
-              <span style={{ fontSize: 10.5, fontWeight: 700, color: GOLD, textTransform: "uppercase", letterSpacing: ".12em" }}>
-                Featured · Most Recent
-              </span>
+              <span style={{ fontSize: 10.5, fontWeight: 700, color: GOLD, textTransform: "uppercase", letterSpacing: ".12em" }}>Featured · Most Recent</span>
             </div>
-            <h2 style={{
-              fontSize: "clamp(20px,2.4vw,32px)", fontWeight: 800, color: "#fff",
-              lineHeight: 1.15, letterSpacing: "-.02em", marginBottom: 10,
-              fontFamily: "'Poppins',sans-serif",
-            }}>
+            <h2 style={{ fontSize: "clamp(20px,2.4vw,32px)", fontWeight: 800, color: "#fff", lineHeight: 1.15, letterSpacing: "-.02em", marginBottom: 10, fontFamily: "'Poppins',sans-serif" }}>
               {hackathon.title}
             </h2>
             <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", marginBottom: 22, lineHeight: 1.7, fontWeight: 300 }}>
               {hackathon.tagline}
             </p>
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 22 }}>
               {[
                 { label: hackathon.date, icon: <IconCalendar /> },
                 { label: hackathon.domain, icon: <IconDomain /> },
@@ -866,15 +978,30 @@ function FeaturedCard({ hackathon }) {
                 </span>
               ))}
             </div>
+            {/* Full Results button for featured card */}
+            <button
+              onClick={() => onViewFull(hackathon)}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 8,
+                background: GOLD, color: "#fff",
+                fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 13,
+                borderRadius: 50, padding: "12px 26px", border: "none",
+                boxShadow: `0 8px 28px ${GOLD}40`, cursor: "pointer",
+                transition: "transform .2s, box-shadow .2s",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 14px 36px ${GOLD}55`; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = `0 8px 28px ${GOLD}40`; }}
+            >
+              View Full Results <IconArrow />
+            </button>
           </div>
 
-          {/* Right: podium + winners */}
+          {/* Right: podium */}
           <div style={{ flex: "1 1 240px" }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: ".14em", marginBottom: 10 }}>
               Podium Finish
             </div>
             <PodiumSVG winners={hackathon.winners} />
-            {/* Score rows */}
             {hackathon.winners.map((w, i) => {
               const rc = [GOLD, SILVER, BRONZE][i];
               return (
@@ -891,9 +1018,7 @@ function FeaturedCard({ hackathon }) {
                     <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", fontFamily: "'Poppins',sans-serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{w.team}</div>
                     <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.4)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{w.project}</div>
                   </div>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: rc, fontFamily: "'Poppins',sans-serif", flexShrink: 0 }}>
-                    {w.score}
-                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: rc, fontFamily: "'Poppins',sans-serif", flexShrink: 0 }}>{w.score}</div>
                 </div>
               );
             })}
@@ -911,6 +1036,7 @@ export default function Result() {
   const [search, setSearch] = useState("");
   const [activeDomain, setDomain] = useState("All");
   const [activeMode, setMode] = useState("All");
+  const [selectedHackathon, setSelectedHackathon] = useState(null);
   const heroRef = useRef(null);
   const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
 
@@ -963,10 +1089,8 @@ export default function Result() {
         .marquee-track { animation: marquee 30s linear infinite; display:flex; white-space:nowrap; width:max-content; }
         .marquee-track:hover { animation-play-state:paused; }
 
-        /* Hero blob */
         .hero-blob { position:absolute; border-radius:50%; pointer-events:none; }
 
-        /* Search */
         .search-wrap { position: relative; }
         .search-input {
           width: 100%; padding: 16px 22px 16px 52px;
@@ -992,7 +1116,6 @@ export default function Result() {
           color: rgba(255,255,255,0.6); cursor: pointer;
         }
 
-        /* Filter pills */
         .filter-pill {
           padding: 7px 15px; border-radius: 50px; font-size: 12px; font-weight: 600;
           font-family: 'Poppins', sans-serif; cursor: pointer; border: 1.5px solid rgba(3,4,94,0.09);
@@ -1001,27 +1124,137 @@ export default function Result() {
         .filter-pill:hover { border-color: rgba(3,4,94,0.22); color: ${NAVY}; }
         .filter-pill.active { background: ${NAVY}; color: #fff; border-color: ${NAVY}; }
 
-        /* Stats */
         .stat-item {
           flex: 1; padding: 24px 20px; text-align: center;
           transition: background .2s;
         }
         .stat-item:hover { background: rgba(255,255,255,0.04); }
 
-        /* Card grid */
         .cards-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
           gap: 22px;
           max-width: 1200px;
           margin: 0 auto;
+          align-items: start;
         }
 
         .divider { height: 1px; background: linear-gradient(90deg,transparent,rgba(3,4,94,0.09),transparent); }
 
         @media(max-width:768px){
           .cards-grid { grid-template-columns: 1fr !important; }
+
+          /* CTA buttons — keep on one line, reduce padding */
+          .cta-btn-row { flex-wrap: nowrap !important; gap: 10px !important; }
+          .cta-btn-primary { padding: 12px 20px !important; font-size: 13px !important; }
+          .cta-btn-ghost   { padding: 11px 18px !important; font-size: 13px !important; }
+
+          /* CTA stats — tighter spacing */
+          .cta-stats-row > div { padding-left: 16px !important; padding-right: 16px !important; }
+
+          /* --- FULL RESULTS MODAL RESPONSIVENESS --- */
+          .modal-header-container {
+            padding: 0 16px !important;
+          }
+          .modal-header-flex {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            padding: 16px 0 !important;
+            gap: 16px !important;
+          }
+          .modal-header-info {
+            width: 100% !important;
+            flex: none !important;
+            padding-right: 36px !important; /* avoid overlapping absolutely positioned Close button */
+          }
+          .modal-header-title {
+            font-size: 20px !important;
+            margin-bottom: 4px !important;
+          }
+          .modal-header-meta {
+            gap: 8px 12px !important;
+          }
+          .modal-header-meta-item {
+            font-size: 11px !important;
+          }
+          .modal-header-stats {
+            width: 100% !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            gap: 8px !important;
+          }
+          .modal-header-stat-card {
+            flex: 1 1 0% !important;
+            min-width: 0 !important;
+            padding: 8px 4px !important;
+            border-radius: 10px !important;
+          }
+          .modal-header-stat-val {
+            font-size: 13px !important;
+          }
+          .modal-header-stat-lbl {
+            font-size: 8px !important;
+            margin-top: 1px !important;
+          }
+          .modal-close-btn {
+            position: absolute !important;
+            top: 12px !important;
+            right: 12px !important;
+            width: 32px !important;
+            height: 32px !important;
+            margin: 0 !important;
+          }
+          .modal-close-btn svg {
+            width: 14px !important;
+            height: 14px !important;
+          }
+          .modal-scrollable-content {
+            padding: 16px 16px 32px !important;
+          }
+          .modal-podium-grid {
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+          }
+          .modal-podium-card {
+            padding: 16px 14px !important;
+          }
+
+          /* Leaderboard grid layout on mobile */
+          .modal-leaderboard-header,
+          .modal-leaderboard-row {
+            grid-template-columns: 44px 1fr 70px !important;
+            gap: 0 8px !important;
+            padding: 10px 12px !important;
+          }
+
+          /* Hide university column on mobile */
+          .modal-leaderboard-col-uni,
+          .modal-leaderboard-cell-uni {
+            display: none !important;
+          }
         }
+
+        @media(max-width:480px){
+          .cta-btn-primary { padding: 11px 16px !important; font-size: 12px !important; }
+          .cta-btn-ghost   { padding: 10px 14px !important; font-size: 12px !important; }
+
+          .modal-header-title {
+            font-size: 18px !important;
+          }
+          .modal-header-meta-item {
+            font-size: 10px !important;
+          }
+          .modal-header-stat-val {
+            font-size: 12px !important;
+          }
+          .modal-header-stat-lbl {
+            font-size: 7.5px !important;
+          }
+        }
+
+        /* Modal animations */
+        @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+        @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
       `}</style>
 
       {/* ══ HERO ══ */}
@@ -1031,15 +1264,10 @@ export default function Result() {
         position: "relative", overflow: "hidden",
       }}>
         <div className="spotlight" style={{ "--mx": `${mousePos.x}%`, "--my": `${mousePos.y}%` }} />
-
-        {/* Grid */}
         <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(255,255,255,0.022) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.022) 1px,transparent 1px)", backgroundSize: "52px 52px", pointerEvents: "none" }} />
-
-        {/* Blobs */}
         <div style={{ position: "absolute", top: -120, left: -80, width: 480, height: 480, borderRadius: "50%", background: "radial-gradient(circle,rgba(41,98,255,0.15) 0%,transparent 65%)", pointerEvents: "none" }} />
         <div style={{ position: "absolute", bottom: -60, right: "20%", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle,rgba(245,158,11,0.1) 0%,transparent 65%)", pointerEvents: "none" }} />
 
-        {/* Content row */}
         <div style={{ position: "relative", zIndex: 1, maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", gap: 60, flexWrap: "wrap" }}>
           {/* Left: text + search */}
           <div style={{ flex: "1 1 340px" }}>
@@ -1093,171 +1321,70 @@ export default function Result() {
             </Fade>
           </div>
 
-          {/* Right: hero illustration */}
+          {/* Right: hero image card */}
           <Fade
-  delay={0.18}
-  style={{
-    flex: "1 1 480px",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    position: "relative",
-  }}
->
-  <div
-    style={{
-      position: "relative",
-      width: "100%",
-      maxWidth: "580px",
-    }}
-  >
-    {/* Main Image Card */}
-    <div
-      className="img-card"
-      style={{
-        width: "100%",
-        height: "420px",
-        borderRadius: "28px",
-        overflow: "hidden",
-        position: "relative",
-        boxShadow: "0 30px 80px rgba(0,0,0,0.28)",
-        border: "1px solid rgba(255,255,255,0.12)",
-      }}
-    >
-      <img
-        src="https://i.pinimg.com/736x/b9/b6/0e/b9b60eb215193ce939ca6721601a846b.jpg"
-        alt="Hackathon participants"
-        style={{
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          display: "block",
-        }}
-      />
+            delay={0.18}
+            style={{ flex: "1 1 480px", display: "flex", justifyContent: "center", alignItems: "center", position: "relative" }}
+          >
+            <div style={{ position: "relative", width: "100%", maxWidth: "580px" }}>
+              {/* Main Image Card */}
+              <div style={{
+                width: "100%", height: "420px",
+                borderRadius: "28px", overflow: "hidden", position: "relative",
+                boxShadow: "0 30px 80px rgba(0,0,0,0.28)",
+                border: "1px solid rgba(255,255,255,0.12)",
+              }}>
+                <img
+                  src="https://i.pinimg.com/736x/b9/b6/0e/b9b60eb215193ce939ca6721601a846b.jpg"
+                  alt="Hackathon participants"
+                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                />
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(3,4,94,0.58) 0%, rgba(41,98,255,0.22) 100%)" }} />
+                <div style={{ position: "absolute", top: "50%", right: 25, transform: "translateY(-50%)", fontSize: "72px", fontWeight: "900", color: "rgba(255,255,255,0.08)", fontFamily: "monospace" }}>
+                  {"{ }"}
+                </div>
+              </div>
 
-      {/* overlay */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background:
-            "linear-gradient(135deg, rgba(3,4,94,0.58) 0%, rgba(41,98,255,0.22) 100%)",
-        }}
-      />
+              {/* Top Floating Badge */}
+              <div style={{
+                position: "absolute", top: "28px", left: "24px",
+                background: "rgba(255,255,255,0.12)", backdropFilter: "blur(12px)",
+                border: "1px solid rgba(255,255,255,0.18)", borderRadius: "14px",
+                padding: "10px 18px", color: "#fff", fontWeight: "700", fontSize: "13px", zIndex: 10,
+              }}>
+                🏆 Live Results
+              </div>
 
-      {/* subtle code overlay */}
-      <div
-        style={{
-          position: "absolute",
-          top: "50%",
-          right: 25,
-          transform: "translateY(-50%)",
-          fontSize: "72px",
-          fontWeight: "900",
-          color: "rgba(255,255,255,0.08)",
-          fontFamily: "monospace",
-        }}
-      >
-        {"{ }"}
-      </div>
-    </div>
+              {/* Bottom Left Card */}
+              <div style={{
+                position: "absolute", bottom: "-24px", left: "-24px",
+                background: NAVY, borderRadius: "18px", padding: "18px 24px",
+                border: "1px solid rgba(255,255,255,0.12)",
+                boxShadow: "0 16px 50px rgba(3,4,94,0.35)", zIndex: 10,
+              }}>
+                <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", fontFamily: "'Poppins', sans-serif" }}>
+                  6,960+
+                </div>
+                <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.65)", textTransform: "uppercase", letterSpacing: ".08em", fontWeight: "700" }}>
+                  Developers Competed
+                </div>
+              </div>
 
-    {/* Top Floating Card */}
-    <div
-      style={{
-        position: "absolute",
-        top: "28px",
-        left: "24px",
-        background: "rgba(255,255,255,0.12)",
-        backdropFilter: "blur(12px)",
-        border: "1px solid rgba(255,255,255,0.18)",
-        borderRadius: "14px",
-        padding: "10px 18px",
-        color: "#fff",
-        fontWeight: "700",
-        fontSize: "13px",
-        zIndex: 10,
-      }}
-    >
-      🏆 Live Results
-    </div>
-
-    {/* Bottom Left Card */}
-    <div
-      style={{
-        position: "absolute",
-        bottom: "-24px",
-        left: "-24px",
-        background: NAVY,
-        borderRadius: "18px",
-        padding: "18px 24px",
-        border: "1px solid rgba(255,255,255,0.12)",
-        boxShadow: "0 16px 50px rgba(3,4,94,0.35)",
-        zIndex: 10,
-      }}
-    >
-      <div
-        style={{
-          fontSize: "28px",
-          fontWeight: "800",
-          color: "#fff",
-          fontFamily: "'Poppins', sans-serif",
-        }}
-      >
-        6,960+
-      </div>
-
-      <div
-        style={{
-          fontSize: "11px",
-          color: "rgba(255,255,255,0.65)",
-          textTransform: "uppercase",
-          letterSpacing: ".08em",
-          fontWeight: "700",
-        }}
-      >
-       Developers Competed
-      </div>
-    </div>
-
-    {/* Top Right Floating Card */}
-    <div
-      style={{
-        position: "absolute",
-        top: "-22px",
-        right: "-22px",
-        background: ACCENT,
-        borderRadius: "18px",
-        padding: "18px 24px",
-        boxShadow: "0 16px 50px rgba(41,98,255,0.45)",
-        zIndex: 10,
-      }}
-    >
-      <div
-        style={{
-          fontSize: "28px",
-          fontWeight: "800",
-          color: "#fff",
-          fontFamily: "'Poppins', sans-serif",
-        }}
-      >
-        24+
-      </div>
-
-      <div
-        style={{
-          fontSize: "11px",
-          color: "rgba(255,255,255,0.8)",
-          textTransform: "uppercase",
-          letterSpacing: ".08em",
-          fontWeight: "700",
-        }}
-      >
-        Winners Honoured
-      </div>
-    </div>
-  </div>
-</Fade>
+              {/* Top Right Card */}
+              <div style={{
+                position: "absolute", top: "-22px", right: "-22px",
+                background: ACCENT, borderRadius: "18px", padding: "18px 24px",
+                boxShadow: "0 16px 50px rgba(41,98,255,0.45)", zIndex: 10,
+              }}>
+                <div style={{ fontSize: "28px", fontWeight: "800", color: "#fff", fontFamily: "'Poppins', sans-serif" }}>
+                  24+
+                </div>
+                <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.8)", textTransform: "uppercase", letterSpacing: ".08em", fontWeight: "700" }}>
+                  Winners Honoured
+                </div>
+              </div>
+            </div>
+          </Fade>
         </div>
       </section>
 
@@ -1300,7 +1427,7 @@ export default function Result() {
       <section style={{ padding: "64px 6% 100px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
 
-          {/* ── Featured ── */}
+          {/* Featured */}
           <div style={{ marginBottom: 60 }}>
             <Fade>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
@@ -1311,12 +1438,12 @@ export default function Result() {
                 <span style={{ fontSize: 12, color: NAVY_TEXT, fontWeight: 500 }}>Most recently concluded</span>
               </div>
             </Fade>
-            <FeaturedCard hackathon={hackathons[0]} />
+            <FeaturedCard hackathon={hackathons[0]} onViewFull={setSelectedHackathon} />
           </div>
 
           <div className="divider" style={{ marginBottom: 52 }} />
 
-          {/* ── Filter bar ── */}
+          {/* Filter bar */}
           <Fade>
             <div style={{ marginBottom: 36 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, flexWrap: "wrap" }}>
@@ -1372,7 +1499,7 @@ export default function Result() {
           {/* Grid */}
           {filtered.length > 0 ? (
             <div className="cards-grid">
-              {filtered.map((h, i) => <HackCard key={h.id} hackathon={h} index={i} />)}
+              {filtered.map((h, i) => <HackCard key={h.id} hackathon={h} index={i} onViewFull={setSelectedHackathon} />)}
             </div>
           ) : (
             <Fade>
@@ -1392,86 +1519,107 @@ export default function Result() {
         </div>
       </section>
 
-      {/* ══ CTA ══ */}
-      <section style={{ background: NAVY, padding: "80px 6%", position: "relative", overflow: "hidden" }}>
-        {/* bg texture */}
+      {/* ══ CTA SECTION ══ — About-page centered structure, original content */}
+      <section style={{ padding: "110px 6%", textAlign: "center", background: NAVY, position: "relative", overflow: "hidden" }}>
+        {/* Radial bg accents — same as About */}
+        <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle at 25% 50%, rgba(255,255,255,0.04) 0%, transparent 50%), radial-gradient(circle at 75% 50%, rgba(255,255,255,0.03) 0%, transparent 50%)", pointerEvents: "none" }} />
+        {/* grid texture */}
         <div style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px)", backgroundSize: "44px 44px", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", top: -100, left: "10%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle,rgba(41,98,255,0.12) 0%,transparent 65%)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", bottom: -80, right: "5%", width: 320, height: 320, borderRadius: "50%", background: "radial-gradient(circle,rgba(245,158,11,0.09) 0%,transparent 65%)", pointerEvents: "none" }} />
 
-        <div style={{ position: "relative", zIndex: 1, maxWidth: 1100, margin: "0 auto", display: "flex", alignItems: "center", gap: 56, flexWrap: "wrap" }}>
-          {/* Left: text */}
-          <Fade style={{ flex: "1 1 300px" }}>
-            <div style={{ fontSize: 10.5, fontWeight: 700, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: ".18em", marginBottom: 14 }}>
-              Ready to compete?
-            </div>
-            <h2 style={{
-              fontSize: "clamp(26px,3.5vw,48px)", fontWeight: 900, color: "#fff",
-              letterSpacing: "-.025em", lineHeight: 1.1, marginBottom: 16,
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <Fade>
+            {/* Label — matches About sec-label pill */}
+            <div style={{
+              display: "inline-block", fontSize: 10.5, fontWeight: 800, letterSpacing: ".18em",
+              textTransform: "uppercase", color: ACCENT, marginBottom: 20,
+              padding: "5px 18px", borderRadius: 50,
+              background: "rgba(41,98,255,0.08)", border: "1px solid rgba(41,98,255,0.22)",
+              fontFamily: "'Nunito', sans-serif",
             }}>
-              Your name could<br />
-              <span style={{ color: GOLD }}>be on this list.</span>
+              Ready to Compete?
+            </div>
+
+            {/* Heading */}
+            <h2 style={{
+              fontSize: "clamp(34px,5vw,66px)", fontWeight: 700, color: "#fff",
+              letterSpacing: "-.03em", lineHeight: 1.08, marginBottom: 20,
+              fontFamily: "'Poppins', sans-serif",
+            }}>
+              Your name could be <span style={{ color: "rgba(255,255,255,0.45)" }}>on this list.</span>
             </h2>
-            <p style={{ fontSize: 14, color: "rgba(255,255,255,0.42)", lineHeight: 1.75, marginBottom: 34, maxWidth: 400 }}>
+
+            {/* Subtitle */}
+            <p style={{
+              fontSize: 16, color: "rgba(255,255,255,0.5)", fontWeight: 400,
+              maxWidth: 460, margin: "0 auto 36px",
+              fontFamily: "'Nunito', sans-serif", lineHeight: 1.75,
+            }}>
               Join thousands of developers competing in upcoming hackathons. Build something extraordinary, earn your place in the Hall of Champions.
             </p>
 
-            {/* Stats row */}
-            <div style={{ display: "flex", gap: 28, marginBottom: 36, flexWrap: "wrap" }}>
+            {/* Stats row — centered */}
+            <div className="cta-stats-row" style={{ display: "flex", gap: 0, justifyContent: "center", flexWrap: "wrap", marginBottom: 44 }}>
               {[
-                { val: "₹25L+", label: "Prize Money Distributed" },
-                { val: "8", label: "Hackathons Hosted" },
-                { val: "7,960+", label: "Developers Participated" },
+                { val: "₹25L+",   label: "Prize Money" },
+                { val: "8",       label: "Hackathons Hosted" },
+                { val: "7,960+",  label: "Developers" },
               ].map((s, i) => (
-                <div key={i}>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", fontFamily: "'Poppins',sans-serif" }}>{s.val}</div>
-                  <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.35)", fontWeight: 600, marginTop: 2 }}>{s.label}</div>
+                <div key={i} style={{
+                  paddingLeft: i === 0 ? 0 : 32, paddingRight: i === 2 ? 0 : 32,
+                  borderRight: i < 2 ? "1px solid rgba(255,255,255,0.1)" : "none",
+                }}>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: "#fff", fontFamily: "'Poppins', sans-serif", lineHeight: 1.1 }}>{s.val}</div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontWeight: 600, marginTop: 3, textTransform: "uppercase", letterSpacing: ".08em" }}>{s.label}</div>
                 </div>
               ))}
             </div>
 
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            {/* Buttons — centered, same as About */}
+            <div className="cta-btn-row" style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
               <Link
+                className="cta-btn-primary"
                 to="/hackathons"
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 8,
                   background: "#fff", color: NAVY,
-                  fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: 14,
-                  borderRadius: 50, padding: "14px 30px", textDecoration: "none",
-                  boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
-                  transition: "transform .2s, box-shadow .2s",
+                  fontFamily: "'Nunito', sans-serif", fontWeight: 800, fontSize: 14,
+                  borderRadius: 50, padding: "14px 36px", textDecoration: "none",
+                  boxShadow: "0 6px 30px rgba(0,0,0,0.25)", letterSpacing: ".04em",
+                  transition: "transform .22s, box-shadow .22s",
                 }}
-                onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 14px 40px rgba(0,0,0,0.32)"; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(0,0,0,0.25)"; }}
+                onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(0,0,0,0.35)"; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 6px 30px rgba(0,0,0,0.25)"; }}
               >
                 Browse Hackathons <IconArrow />
               </Link>
               <Link
+                className="cta-btn-ghost"
                 to="/register"
                 style={{
                   display: "inline-flex", alignItems: "center", gap: 8,
-                  background: "transparent", color: "rgba(255,255,255,0.75)",
-                  fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: 14,
-                  borderRadius: 50, padding: "13px 26px", textDecoration: "none",
-                  border: "1.5px solid rgba(255,255,255,0.2)",
-                  transition: "all .2s",
+                  background: "transparent", color: "rgba(255,255,255,0.85)",
+                  fontFamily: "'Nunito', sans-serif", fontWeight: 700, fontSize: 14,
+                  borderRadius: 50, padding: "12px 32px", textDecoration: "none",
+                  border: "2px solid rgba(255,255,255,0.35)",
+                  transition: "background .2s, color .2s, border-color .2s",
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.45)"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; }}
+                onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.6)"; e.currentTarget.style.color = "#fff"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.35)"; e.currentTarget.style.color = "rgba(255,255,255,0.85)"; }}
               >
                 Create Account
               </Link>
             </div>
           </Fade>
-
-          {/* Right: rocket illustration */}
-          <Fade delay={.12} style={{ flex: "0 0 auto", display: "flex", justifyContent: "center" }}>
-            <div className="float-b">
-              <CTAIllustration />
-            </div>
-          </Fade>
         </div>
       </section>
+
+      {/* ══ FULL RESULTS MODAL ══ */}
+      {selectedHackathon && (
+        <FullResultsModal
+          hackathon={selectedHackathon}
+          onClose={() => setSelectedHackathon(null)}
+        />
+      )}
     </div>
   );
 }

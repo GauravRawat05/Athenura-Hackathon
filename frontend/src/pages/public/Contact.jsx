@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 
 const NAVY = "#03045E";
 const WHITE = "#ffffff";
@@ -244,36 +245,86 @@ function BentoHQ() {
     );
 }
 
-/* ── Bento card — Live Chat ── */
-function BentoChat() {
+/* ── Bento card — Discord Community ── */
+const DISCORD = "#5865F2";
+function BentoCommunity() {
     const [hov, setHov] = useState(false);
+    const channels = [
+        { icon: "📢", name: "announcements", desc: "Platform updates & new hackathons" },
+        { icon: "🛠️", name: "dev-support",   desc: "Technical help from the community" },
+        { icon: "🏆", name: "showcase",       desc: "Show off your winning projects" },
+    ];
     return (
-        <a href="#" className="bento-cell" style={{ gridColumn: "span 7", background: OFF, border: `1.5px solid rgba(3,4,94,0.1)`, padding: 36, minHeight: 220, display: "flex", flexDirection: "column", justifyContent: "space-between", transform: hov ? "translateY(-6px)" : "none", boxShadow: hov ? "0 24px 60px rgba(3,4,94,0.1)" : "none" }}
+        <a href="https://discord.gg/hackforge" target="_blank" rel="noreferrer"
+            className="bento-cell"
+            style={{
+                gridColumn: "span 7", minHeight: 220,
+                background: hov
+                    ? "linear-gradient(135deg, #4752c4 0%, #5865F2 50%, #7289da 100%)"
+                    : "linear-gradient(135deg, #3c4399 0%, #5865F2 55%, #6f7fda 100%)",
+                padding: 36, display: "flex", flexDirection: "column", justifyContent: "space-between",
+                transform: hov ? "translateY(-6px)" : "none",
+                boxShadow: hov ? "0 28px 64px rgba(88,101,242,0.45)" : "0 8px 32px rgba(88,101,242,0.25)",
+                transition: "transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s, background .35s",
+                position: "relative", overflow: "hidden",
+            }}
             onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}>
-            <div>
-                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: ".14em", textTransform: "uppercase", color: NAVY_50, marginBottom: 10, display: "flex", alignItems: "center", gap: 7 }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>
-                    Socket.IO powered
+
+            {/* Background blob */}
+            <div style={{
+                position: "absolute", top: -40, right: -40, width: 200, height: 200,
+                borderRadius: "50%", background: "rgba(255,255,255,0.06)", pointerEvents: "none",
+            }} />
+            <div style={{
+                position: "absolute", bottom: -30, left: "30%", width: 140, height: 140,
+                borderRadius: "50%", background: "rgba(255,255,255,0.04)", pointerEvents: "none",
+            }} />
+
+            {/* Header */}
+            <div style={{ position: "relative", zIndex: 1 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                    <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: ".14em", textTransform: "uppercase", color: "rgba(255,255,255,0.6)", display: "flex", alignItems: "center", gap: 7 }}>
+                        {/* Discord logo */}
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(255,255,255,0.7)">
+                            <path d="M20.32 4.37A19.79 19.79 0 0015.43 2.86a.07.07 0 00-.08.04c-.21.37-.44.86-.61 1.25a18.27 18.27 0 00-5.49 0 12.64 12.64 0 00-.62-1.25.08.08 0 00-.08-.04A19.74 19.74 0 003.68 4.37a.07.07 0 00-.03.03C.53 9.05-.32 13.58.1 18.06a.08.08 0 00.03.06 19.9 19.9 0 005.99 3.03.08.08 0 00.08-.03c.46-.63.87-1.3 1.23-1.99a.08.08 0 00-.04-.11 13.1 13.1 0 01-1.87-.89.08.08 0 010-.13c.13-.09.25-.19.37-.29a.07.07 0 01.08-.01c3.93 1.79 8.18 1.79 12.06 0a.07.07 0 01.08.01c.12.1.25.2.37.29a.08.08 0 010 .13c-.6.35-1.23.65-1.87.89a.08.08 0 00-.04.11c.36.7.77 1.36 1.23 1.99a.07.07 0 00.08.03 19.84 19.84 0 006-3.03.08.08 0 00.03-.05c.5-5.18-.84-9.67-3.55-13.66a.06.06 0 00-.03-.03z"/>
+                        </svg>
+                        Community
+                    </div>
+                    {/* Live member count */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.18)", borderRadius: 50, padding: "4px 12px" }}>
+                        <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e", display: "inline-block", boxShadow: "0 0 6px #22c55e" }} />
+                        <span style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.85)" }}>1,240 online</span>
+                    </div>
                 </div>
-                <div style={{ fontSize: 22, fontWeight: 800, fontFamily: "'Poppins',sans-serif", color: NAVY, lineHeight: 1.2 }}>Live Chat Support</div>
-                <div style={{ fontSize: 13, color: NAVY_65, marginTop: 6 }}>Get real-time help from inside the HackForge app</div>
+                <div style={{ fontSize: 22, fontWeight: 800, fontFamily: "'Poppins',sans-serif", color: "white", lineHeight: 1.2, marginBottom: 6 }}>
+                    Join Our Discord
+                </div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.62)", lineHeight: 1.5 }}>
+                    10,000+ developers · get peer help, share projects &amp; be first to know about upcoming hackathons
+                </div>
             </div>
-            <div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                    <div style={{ padding: "10px 16px", borderRadius: "4px 16px 16px 16px", background: "rgba(3,4,94,0.08)", color: NAVY, fontSize: 13, fontWeight: 600, fontFamily: "'Nunito',sans-serif", maxWidth: "80%", alignSelf: "flex-start" }}>
-                        Hi! I need help setting up my university dashboard 🎓
-                    </div>
-                    <div style={{ padding: "10px 16px", borderRadius: "16px 4px 16px 16px", background: NAVY, color: "white", fontSize: 13, fontWeight: 600, fontFamily: "'Nunito',sans-serif", maxWidth: "80%", alignSelf: "flex-end" }}>
-                        Sure! I'll walk you through it right now ✓
-                    </div>
+
+            {/* Channel previews */}
+            <div style={{ position: "relative", zIndex: 1 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 7, marginBottom: 16 }}>
+                    {channels.map((ch) => (
+                        <div key={ch.name} style={{
+                            display: "flex", alignItems: "center", gap: 10,
+                            padding: "8px 12px", borderRadius: 10,
+                            background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.1)",
+                        }}>
+                            <span style={{ fontSize: 14 }}>{ch.icon}</span>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.75)" }}>#{ch.name}</span>
+                            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.38)", marginLeft: "auto", textAlign: "right", maxWidth: 160 }}>{ch.desc}</span>
+                        </div>
+                    ))}
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 14 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, fontWeight: 700, color: "#22c55e", fontFamily: "'Nunito',sans-serif" }}>
-                        <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e", display: "inline-block" }} />
-                        Support agent online
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.4)", fontWeight: 600 }}>
+                        hackforge.dev/discord
                     </div>
-                    <div style={{ display: "inline-flex", alignItems: "center", gap: hov ? 10 : 6, fontSize: 12, fontWeight: 800, letterSpacing: ".06em", textTransform: "uppercase", color: NAVY_50, transition: "gap .2s, opacity .2s", opacity: hov ? 1 : 0.5 }}>
-                        Open chat <ArrowIcon />
+                    <div style={{ display: "inline-flex", alignItems: "center", gap: hov ? 10 : 6, fontSize: 12, fontWeight: 800, letterSpacing: ".06em", textTransform: "uppercase", color: "rgba(255,255,255,0.65)", transition: "gap .2s, color .2s", ...(hov ? { color: "white" } : {}) }}>
+                        Join Server <ArrowIcon />
                     </div>
                 </div>
             </div>
@@ -500,7 +551,7 @@ export default function ContactPage() {
                                 {[
                                     { icon: <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><rect x="2" y="4" width="16" height="13" rx="2" stroke="white" strokeWidth="1.5" /><path d="M2 7l8 5 8-5" stroke="white" strokeWidth="1.5" strokeLinecap="round" /></svg>, val: "< 6h", label: "Reply Time" },
                                     { icon: <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><path d="M10 2a6 6 0 100 12A6 6 0 0010 2zM2 18c0-2 3.134-4 8-4s8 2 8 4" stroke="white" strokeWidth="1.5" strokeLinecap="round" /></svg>, val: "50+", label: "Universities" },
-                                    { icon: <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><circle cx="10" cy="10" r="8" stroke="white" strokeWidth="1.5" /><path d="M10 6v4l3 2" stroke="white" strokeWidth="1.5" strokeLinecap="round" /></svg>, val: "24/7", label: "Live Support" },
+                                    { icon: <svg viewBox="0 0 20 20" width="18" height="18" fill="none"><path d="M3 6h14M3 10h14M3 14h9" stroke="white" strokeWidth="1.5" strokeLinecap="round" /></svg>, val: "500+", label: "Hackathons" },
                                 ].map(s => (
                                     <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                                         <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>{s.icon}</div>
@@ -514,8 +565,14 @@ export default function ContactPage() {
                         </Fade>
                         <Fade delay={.3}>
                             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                                <button className="btn-primary" style={{ background: "white", color: NAVY }}>Send a Message</button>
-                                <button className="btn-ghost-white">Browse Docs <svg viewBox="0 0 16 16" width="14" height="14" fill="none"><path d="M8 3l5 5-5 5M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg></button>
+                                <button className="btn-primary" style={{ background: "white", color: NAVY }}
+                                    onClick={() => document.getElementById("contact-form")?.scrollIntoView({ behavior: "smooth" })}>
+                                    Send a Message
+                                </button>
+                                <button className="btn-ghost-white"
+                                    onClick={() => document.getElementById("faq-section")?.scrollIntoView({ behavior: "smooth" })}>
+                                    Browse FAQs <svg viewBox="0 0 16 16" width="14" height="14" fill="none"><path d="M8 3l5 5-5 5M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                                </button>
                             </div>
                         </Fade>
                     </div>
@@ -545,7 +602,7 @@ export default function ContactPage() {
                         <Fade delay={0} style={{ gridColumn: "span 7" }}><BentoEmail /></Fade>
                         <Fade delay={.08} style={{ gridColumn: "span 5" }}><BentoPhone /></Fade>
                         <Fade delay={.14} style={{ gridColumn: "span 5" }}><BentoHQ /></Fade>
-                        <Fade delay={.2} style={{ gridColumn: "span 7" }}><BentoChat /></Fade>
+                        <Fade delay={.2} style={{ gridColumn: "span 7" }}><BentoCommunity /></Fade>
                     </div>
                 </div>
             </section>
@@ -553,7 +610,7 @@ export default function ContactPage() {
             <div className="divider" />
 
             {/* ══ CONTACT FORM ══ */}
-            <section style={{ padding: "100px 5%", background: OFF, position: "relative", overflow: "hidden" }}>
+            <section id="contact-form" style={{ padding: "100px 5%", background: OFF, position: "relative", overflow: "hidden" }}>
                 <div style={{ position: "relative", zIndex: 1 }}>
                     <Fade>
                         <div style={{ textAlign: "center", marginBottom: 62 }}>
@@ -685,14 +742,19 @@ export default function ContactPage() {
                                 </div>
 
                                 {/* socials */}
-                                <div className="context-panel">
+                                {/* <div className="context-panel">
                                     <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: ".14em", textTransform: "uppercase", color: NAVY, opacity: .4, marginBottom: 16, fontFamily: "'Nunito',sans-serif" }}>Follow HackForge</div>
                                     <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                                        {socials.map(({ label, Svg }) => (
-                                            <a key={label} className="social" href="#" title={label}><Svg /></a>
+                                        {[
+                                            { label: "Twitter / X", Svg: TwitterSVG, href: "https://twitter.com/hackforge" },
+                                            { label: "LinkedIn",    Svg: LinkedInSVG, href: "https://linkedin.com/company/hackforge" },
+                                            { label: "GitHub",      Svg: GithubSVG,  href: "https://github.com/hackforge" },
+                                            { label: "Discord",     Svg: DiscordSVG, href: "https://discord.gg/hackforge" },
+                                        ].map(({ label, Svg, href }) => (
+                                            <a key={label} className="social" href={href} target="_blank" rel="noreferrer" title={label}><Svg /></a>
                                         ))}
                                     </div>
-                                </div>
+                                </div> */}
                             </div>
                         </Fade>
 
@@ -703,7 +765,7 @@ export default function ContactPage() {
             <div className="divider" />
 
             {/* ══ FAQ ══ */}
-            <section style={{ padding: "100px 5%", background: WHITE, position: "relative", overflow: "hidden" }}>
+            <section id="faq-section" style={{ padding: "100px 5%", background: WHITE, position: "relative", overflow: "hidden" }}>
                 <div style={{ position: "relative", zIndex: 1 }}>
                     <Fade>
                         <div style={{ textAlign: "center", marginBottom: 62 }}>
@@ -733,7 +795,10 @@ export default function ContactPage() {
                             <Fade delay={.35}>
                                 <div style={{ marginTop: 28 }}>
                                     <p style={{ fontSize: 14, color: NAVY_65, marginBottom: 16, fontFamily: "'Nunito',sans-serif" }}>Didn't find what you were looking for?</p>
-                                    <button className="btn-primary">Browse Documentation</button>
+                                    <button className="btn-primary"
+                                        onClick={() => document.getElementById("contact-form")?.scrollIntoView({ behavior: "smooth" })}>
+                                        Send Us a Message
+                                    </button>
                                 </div>
                             </Fade>
                         </div>
@@ -782,8 +847,11 @@ export default function ContactPage() {
                             Create your account today and access all platform features — from team formation to automated certification.
                         </p>
                         <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-                            <button className="btn-primary" style={{ background: "white", color: NAVY }}>Get Started Free</button>
-                            <button className="btn-ghost-white">Schedule a Demo</button>
+                            <Link to="/register" className="btn-primary" style={{ background: "white", color: NAVY, textDecoration: "none" }}>Get Started Free</Link>
+                            <button className="btn-ghost-white"
+                                onClick={() => document.getElementById("contact-form")?.scrollIntoView({ behavior: "smooth" })}>
+                                Send Us a Message
+                            </button>
                         </div>
                     </Fade>
                 </div>
