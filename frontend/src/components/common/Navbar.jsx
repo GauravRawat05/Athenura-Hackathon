@@ -18,9 +18,9 @@ export default function Navbar() {
 
   const NAV_LINKS = [
     { label: "Home", path: "/" },
-    { label: "Hackathons", path: "/hackathons", badge: true },
-    { label: "Result", path: "/result" },
     { label: "About", path: "/about" },
+    { label: "Result", path: "/result" },
+    { label: "Hackathons", path: "/hackathons", badge: true },
     { label: "Contact", path: "/contact" },
   ];
 

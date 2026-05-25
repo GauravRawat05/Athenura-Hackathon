@@ -137,24 +137,25 @@ const STATS = [
   { value: "1200", suffix: "+", label: "Projects Built" },
 ];
 
+// Using direct Unsplash photo IDs — these load without API key
 const FEATURES = [
   {
-    icon: "🚀",
+    img: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=400&h=200&q=80",
     title: "Find Hackathons",
     desc: "Filter by domain, prize, mode & more",
   },
   {
-    icon: "👥",
+    img: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&w=400&h=200&q=80",
     title: "Build Your Team",
     desc: "Solo or team up with brilliant minds",
   },
   {
-    icon: "⚡",
+    img: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=400&h=200&q=80",
     title: "Live Updates",
     desc: "Real-time notifications for every milestone",
   },
   {
-    icon: "🏅",
+    img: "https://images.unsplash.com/photo-1533228100845-08145b01de14?auto=format&fit=crop&w=400&h=200&q=80",
     title: "Win Big Prizes",
     desc: "Cash, swag, and career opportunities",
   },
@@ -163,39 +164,71 @@ const FEATURES = [
 const STEPS = [
   {
     num: "01",
-    icon: "🔍",
+    img: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=400&h=180&q=80",
     title: "Discover",
     desc: "Browse hundreds of live hackathons filtered by skill, domain, prize size, and format — online or in-person.",
   },
   {
     num: "02",
-    icon: "🤝",
+    img: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=400&h=180&q=80",
     title: "Form Your Team",
     desc: "Post your profile, browse teammates, and assemble the perfect squad with the exact skills your idea needs.",
   },
   {
     num: "03",
-    icon: "💡",
+    img: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=400&h=180&q=80",
     title: "Build & Submit",
     desc: "Collaborate in real-time with built-in tools, track milestones, and submit your project before the deadline.",
   },
   {
     num: "04",
-    icon: "🏆",
+    img: "https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?auto=format&fit=crop&w=400&h=180&q=80",
     title: "Win & Grow",
     desc: "Get judged by industry experts, claim prizes, and showcase your project to top companies worldwide.",
   },
 ];
 
 const CATEGORIES = [
-  { icon: "🤖", name: "Artificial Intelligence", count: "142 active" },
-  { icon: "🔗", name: "Web3 & Blockchain", count: "89 active" },
-  { icon: "💊", name: "HealthTech", count: "67 active" },
-  { icon: "🌿", name: "Sustainability", count: "54 active" },
-  { icon: "💰", name: "FinTech", count: "78 active" },
-  { icon: "🎮", name: "Gaming & XR", count: "93 active" },
-  { icon: "🛡️", name: "Cybersecurity", count: "45 active" },
-  { icon: "🚀", name: "Space Tech", count: "31 active" },
+  {
+    img: "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?auto=format&fit=crop&w=400&h=220&q=80",
+    name: "Artificial Intelligence",
+    count: "142 active",
+  },
+  {
+    img: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&w=400&h=220&q=80",
+    name: "Web3 & Blockchain",
+    count: "89 active",
+  },
+  {
+    img: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?auto=format&fit=crop&w=400&h=220&q=80",
+    name: "HealthTech",
+    count: "67 active",
+  },
+  {
+    img: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=400&h=220&q=80",
+    name: "Sustainability",
+    count: "54 active",
+  },
+  {
+    img: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&w=400&h=220&q=80",
+    name: "FinTech",
+    count: "78 active",
+  },
+  {
+    img: "https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=400&h=220&q=80",
+    name: "Gaming & XR",
+    count: "93 active",
+  },
+  {
+    img: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=400&h=220&q=80",
+    name: "Cybersecurity",
+    count: "45 active",
+  },
+  {
+    img: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=400&h=220&q=80",
+    name: "Space Tech",
+    count: "31 active",
+  },
 ];
 
 const TESTIMONIALS = [
@@ -204,42 +237,42 @@ const TESTIMONIALS = [
     role: "Full-Stack Dev · Mumbai",
     avatar: "PS",
     text: "HackWave completely changed my career trajectory. I joined a team of strangers for an AI hackathon and we ended up winning $20K and getting hired by the same startup.",
-    badge: "🏆 $20K Winner",
+    badge: "$20K Winner",
   },
   {
     name: "Marcus Chen",
     role: "ML Engineer · Singapore",
     avatar: "MC",
     text: "The team-matching feature is insane. I posted my ML skills at 11pm and had a full squad by morning. We shipped a working product in 36 hours.",
-    badge: "⚡ 36h Build",
+    badge: "36h Build",
   },
   {
     name: "Hamza Ali Mazari",
     role: "Product Designer · Lagos",
     avatar: "AO",
     text: "As a designer, I always struggled to find devs who valued design. HackWave's profile system lets me showcase my portfolio and attract the right collaborators.",
-    badge: "🎨 3× Finalist",
+    badge: "3× Finalist",
   },
   {
     name: "Diego Reyes",
     role: "Blockchain Dev · São Paulo",
     avatar: "DR",
     text: "Competed in 6 hackathons this year, won 2, and got 3 job offers. The exposure to real companies judging your work is priceless. No platform comes close.",
-    badge: "💼 3 Offers",
+    badge: "3 Offers",
   },
   {
     name: "Sara Lindqvist",
     role: "Data Scientist · Stockholm",
     avatar: "SL",
     text: "The live leaderboard keeps you motivated the entire weekend. Real-time feedback from mentors helped us pivot at exactly the right moment.",
-    badge: "🥈 2nd Place",
+    badge: "2nd Place",
   },
   {
     name: "Raj Patel",
     role: "Backend Engineer · London",
     avatar: "RP",
     text: "Built 4 side projects from hackathon ideas on HackWave. Two are now actual startups. The community here genuinely wants to see you succeed.",
-    badge: "🚀 2 Startups",
+    badge: "2 Startups",
   },
 ];
 
@@ -309,7 +342,8 @@ export default function HeroSection() {
         .hw-f-shine { position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(0,180,216,0.6),transparent); }
         .hw-f-glow { position:absolute; top:-40px; right:-40px; width:180px; height:180px; border-radius:50%; background:rgba(0,180,216,0.08); filter:blur(28px); pointer-events:none; }
         .hw-f-head { display:flex; align-items:center; gap:14px; margin-bottom:16px; }
-        .hw-f-icon { font-size:34px; filter:drop-shadow(0 4px 12px rgba(0,180,216,0.5)); }
+        .hw-f-icon { display:none; }
+        .hw-f-img { width:52px; height:52px; border-radius:12px; background-image:url("https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=120&q=80"); background-size:cover; background-position:center; border:2px solid rgba(0,180,216,0.3); flex-shrink:0; }
         .hw-f-badge { display:inline-flex; align-items:center; gap:5px; background:rgba(0,180,216,0.15); border:1px solid rgba(0,180,216,0.3); border-radius:20px; padding:3px 10px; font-size:11px; font-weight:700; color:#00B4D8; text-transform:uppercase; letter-spacing:0.06em; }
         .hw-f-live { width:5px; height:5px; border-radius:50%; background:#00B4D8; display:inline-block; animation:pulse-dot 1.8s ease-in-out infinite; }
         .hw-f-title { font-family:'Nunito',sans-serif; font-size:19px; font-weight:800; color:#fff; letter-spacing:-0.5px; margin:4px 0 3px; }
@@ -323,11 +357,12 @@ export default function HeroSection() {
         @keyframes prog { from{width:58%;} to{width:80%;} }
         @keyframes shimmer { from{background-position:100% 0;} to{background-position:0 0;} }
         .hw-mini-cards { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-        .hw-mini-card { background:rgba(255,255,255,0.03); border:1px solid rgba(0,180,216,0.1); border-radius:16px; padding:18px 16px; transition:all 0.22s; cursor:default; }
-        .hw-mini-card:hover { background:rgba(0,119,182,0.09); border-color:rgba(0,180,216,0.28); transform:translateY(-3px); box-shadow:0 10px 28px rgba(0,119,182,0.18); }
-        .hw-mini-icon { font-size:24px; margin-bottom:10px; display:block; }
-        .hw-mini-title { font-family:'Nunito',sans-serif; font-size:13px; font-weight:700; color:#CAF0F8; margin-bottom:4px; }
-        .hw-mini-desc { font-size:11.5px; color:rgba(144,224,239,0.45); line-height:1.5; }
+        .hw-mini-card { position:relative; border:1px solid rgba(0,180,216,0.1); border-radius:16px; padding:18px 16px; transition:all 0.22s; cursor:default; overflow:hidden; min-height:130px; display:flex; flex-direction:column; justify-content:flex-end; }
+        .hw-mini-card:hover { border-color:rgba(0,180,216,0.38); transform:translateY(-3px); box-shadow:0 10px 28px rgba(0,119,182,0.28); }
+        .hw-mini-img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center; z-index:0; }
+        .hw-mini-overlay { position:absolute; inset:0; background:linear-gradient(160deg, rgba(2,3,56,0.72) 0%, rgba(0,77,126,0.6) 100%); z-index:1; }
+        .hw-mini-title { font-family:'Nunito',sans-serif; font-size:13px; font-weight:700; color:#CAF0F8; margin-bottom:4px; position:relative; z-index:2; }
+        .hw-mini-desc { font-size:11.5px; color:rgba(144,224,239,0.8); line-height:1.5; position:relative; z-index:2; }
         .hw-scroll-hint { position:absolute; bottom:28px; left:50%; transform:translateX(-50%); z-index:3; display:flex; flex-direction:column; align-items:center; gap:6px; opacity:0.45; cursor:pointer; }
         .hw-scroll-hint span { font-size:10px; color:#90E0EF; text-transform:uppercase; letter-spacing:0.12em; font-weight:600; }
         .hw-scroll-line { width:1px; height:30px; background:linear-gradient(to bottom,rgba(0,180,216,0.6),transparent); animation:spulse 1.8s ease-in-out infinite; }
@@ -350,12 +385,12 @@ export default function HeroSection() {
         .s-step-connector { position:absolute; top:48px; left:calc(12.5% + 12px); right:calc(12.5% + 12px); height:2px; background:linear-gradient(90deg,rgba(0,119,182,0.2),rgba(0,180,216,0.4)); border-radius:2px; overflow:hidden; }
         .s-step-connector::after { content:''; position:absolute; top:0; height:100%; width:40%; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.9),transparent); animation:lflow 2.5s linear infinite; }
         @keyframes lflow { from{left:-40%;} to{left:140%;} }
-        .s-step { background:#fff; border:1.5px solid rgba(0,119,182,0.1); border-radius:20px; padding:28px 20px 24px; text-align:center; position:relative; z-index:1; transition:all 0.25s; cursor:default; box-shadow:0 2px 16px rgba(0,119,182,0.06); }
+        .s-step { background:#fff; border:1.5px solid rgba(0,119,182,0.1); border-radius:20px; padding:0 0 24px; text-align:center; position:relative; z-index:1; transition:all 0.25s; cursor:default; box-shadow:0 2px 16px rgba(0,119,182,0.06); overflow:hidden; }
         .s-step:hover { transform:translateY(-8px); border-color:rgba(0,180,216,0.5); box-shadow:0 20px 50px rgba(0,119,182,0.15); }
-        .s-step-num { font-family:'Nunito',sans-serif; font-size:52px; font-weight:900; color:rgba(0,119,182,0.07); letter-spacing:-3px; line-height:1; position:absolute; top:10px; right:14px; }
-        .s-step-icon { font-size:36px; margin-bottom:14px; display:block; filter:drop-shadow(0 3px 8px rgba(0,119,182,0.25)); }
-        .s-step-title { font-family:'Nunito',sans-serif; font-size:17px; font-weight:800; color:#03045E; margin-bottom:10px; letter-spacing:-0.3px; }
-        .s-step-desc { font-size:13px; color:rgba(3,4,94,0.5); line-height:1.65; }
+        .s-step-img { width:100%; height:140px; object-fit:cover; object-position:center; display:block; }
+        .s-step-num { font-family:'Nunito',sans-serif; font-size:42px; font-weight:900; color:rgba(0,119,182,0.1); letter-spacing:-3px; line-height:1; margin:14px 0 6px; padding:0 20px; }
+        .s-step-title { font-family:'Nunito',sans-serif; font-size:17px; font-weight:800; color:#03045E; margin-bottom:10px; letter-spacing:-0.3px; padding:0 20px; }
+        .s-step-desc { font-size:13px; color:rgba(3,4,94,0.5); line-height:1.65; padding:0 20px; }
         .s-hiw-banner { margin-top:52px; display:flex; align-items:center; justify-content:space-between; background:linear-gradient(135deg,#03045E,#0077B6); border-radius:20px; padding:30px 40px; }
         .s-hiw-banner-text { font-size:19px; font-weight:700; color:#fff; font-family:'Nunito',sans-serif; }
         .s-hiw-banner-text span { color:#90E0EF; }
@@ -370,15 +405,17 @@ export default function HeroSection() {
         .s-cat-blob2 { position:absolute; bottom:-60px; left:-60px; width:320px; height:320px; border-radius:50%; background:radial-gradient(circle,rgba(0,180,216,0.07),transparent 70%); pointer-events:none; }
         .s-cat-inner { max-width:1100px; margin:0 auto; position:relative; z-index:1; }
         .s-cat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
-        .s-cat-card { background:#fff; border:1.5px solid rgba(0,119,182,0.1); border-radius:18px; padding:26px 20px; cursor:default; transition:all 0.25s; position:relative; overflow:hidden; box-shadow:0 2px 12px rgba(0,119,182,0.06); }
-        .s-cat-card:hover { transform:translateY(-6px) scale(1.02); border-color:rgba(0,180,216,0.45); box-shadow:0 20px 48px rgba(0,119,182,0.16); }
-        .s-cat-topbar { position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,#0077B6,#00B4D8); opacity:0; transition:opacity 0.25s; }
+        .s-cat-card { position:relative; border:1.5px solid rgba(0,119,182,0.15); border-radius:18px; cursor:default; transition:all 0.25s; overflow:hidden; box-shadow:0 2px 12px rgba(0,119,182,0.08); min-height:160px; display:flex; flex-direction:column; justify-content:flex-end; padding:20px; }
+        .s-cat-card:hover { transform:translateY(-6px) scale(1.02); border-color:rgba(0,180,216,0.55); box-shadow:0 20px 48px rgba(0,119,182,0.25); }
+        .s-cat-img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center; z-index:0; }
+        .s-cat-overlay { position:absolute; inset:0; background:linear-gradient(160deg, rgba(2,3,56,0.45) 0%, rgba(0,20,80,0.78) 100%); transition:opacity 0.25s; z-index:1; }
+        .s-cat-card:hover .s-cat-overlay { background:linear-gradient(160deg, rgba(0,119,182,0.6) 0%, rgba(0,60,140,0.88) 100%); }
+        .s-cat-topbar { position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,#0077B6,#00B4D8); opacity:0; transition:opacity 0.25s; z-index:3; }
         .s-cat-card:hover .s-cat-topbar { opacity:1; }
-        .s-cat-icon { font-size:32px; margin-bottom:14px; display:block; filter:drop-shadow(0 3px 8px rgba(0,119,182,0.18)); }
-        .s-cat-name { font-family:'Nunito',sans-serif; font-size:14.5px; font-weight:800; color:#03045E; margin-bottom:6px; letter-spacing:-0.3px; }
-        .s-cat-count { font-size:12px; font-weight:600; color:#0077B6; }
-        .s-cat-arrow { position:absolute; bottom:16px; right:16px; font-size:16px; color:rgba(0,119,182,0.22); transition:all 0.2s; }
-        .s-cat-card:hover .s-cat-arrow { color:#0077B6; transform:translate(2px,-2px); }
+        .s-cat-name { font-family:'Nunito',sans-serif; font-size:14.5px; font-weight:800; color:#fff; margin-bottom:6px; letter-spacing:-0.3px; position:relative; z-index:2; }
+        .s-cat-count { font-size:12px; font-weight:600; color:#90E0EF; position:relative; z-index:2; }
+        .s-cat-arrow { position:absolute; top:16px; right:16px; font-size:16px; color:rgba(255,255,255,0.5); transition:all 0.2s; z-index:2; }
+        .s-cat-card:hover .s-cat-arrow { color:#fff; transform:translate(2px,-2px); }
         .s-cat-tags { margin-top:36px; display:flex; flex-wrap:wrap; gap:8px; }
         .s-cat-tag { padding:6px 14px; border-radius:20px; background:rgba(0,119,182,0.07); border:1px solid rgba(0,119,182,0.14); font-size:12px; font-weight:600; color:#0077B6; cursor:default; transition:all 0.18s; }
         .s-cat-tag:hover { background:rgba(0,119,182,0.14); border-color:rgba(0,119,182,0.28); color:#03045E; }
@@ -409,11 +446,11 @@ export default function HeroSection() {
         .s-tcard-name { font-family:'Nunito',sans-serif; font-size:14px; font-weight:800; color:#CAF0F8; letter-spacing:-0.2px; }
         .s-tcard-role { font-size:11.5px; color:rgba(144,224,239,0.4); margin-top:1px; }
         .s-tcard-badge { margin-left:auto; padding:3px 10px; border-radius:20px; background:rgba(0,180,216,0.12); border:1px solid rgba(0,180,216,0.22); font-size:11px; font-weight:700; color:#00B4D8; white-space:nowrap; }
-        .s-metrics { margin-top:40px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.03); border:1px solid rgba(0,180,216,0.1); border-radius:20px; padding:32px; }
+        .s-metrics { margin-top:40px; display:flex; align-items:center; justify-content:center; background:#fff; border:1.5px solid rgba(0,119,182,0.12); border-radius:20px; padding:32px; box-shadow:0 4px 24px rgba(0,119,182,0.08); }
         .s-metric { text-align:center; flex:1; }
-        .s-metric-val { font-family:'Nunito',sans-serif; font-size:30px; font-weight:900; letter-spacing:-1px; background:linear-gradient(135deg,#fff,#90E0EF); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-        .s-metric-lbl { font-size:11px; font-weight:600; color:rgba(144,224,239,0.4); text-transform:uppercase; letter-spacing:0.1em; margin-top:3px; }
-        .s-metric-div { width:1px; height:52px; background:rgba(0,180,216,0.12); }
+        .s-metric-val { font-family:'Nunito',sans-serif; font-size:30px; font-weight:900; letter-spacing:-1px; color:#0077B6; }
+        .s-metric-lbl { font-size:11px; font-weight:600; color:rgba(0,119,182,0.5); text-transform:uppercase; letter-spacing:0.1em; margin-top:3px; }
+        .s-metric-div { width:1px; height:52px; background:rgba(0,119,182,0.12); }
         .s-testi-cta { margin-top:40px; text-align:center; }
         .s-testi-cta-btn { display:inline-flex; align-items:center; gap:10px; padding:15px 36px; border-radius:14px; font-size:15px; font-weight:700; color:#fff; background:linear-gradient(135deg,#0077B6,#00B4D8); border:none; cursor:pointer; text-decoration:none; font-family:'Poppins',sans-serif; box-shadow:0 4px 28px rgba(0,180,216,0.4); transition:all 0.18s; }
         .s-testi-cta-btn:hover { transform:translateY(-3px); box-shadow:0 10px 36px rgba(0,180,216,0.6); }
@@ -486,7 +523,7 @@ export default function HeroSection() {
                 <span className="arr">→</span>
               </a>
               <a href="/host" className="hw-btn-ghost">
-                🎯 Host a Hackathon
+                Host a Hackathon
               </a>
             </div>
             <div
@@ -522,7 +559,7 @@ export default function HeroSection() {
               <div className="hw-f-shine" />
               <div className="hw-f-glow" />
               <div className="hw-f-head">
-                <span className="hw-f-icon">🔥</span>
+                <div className="hw-f-img" />
                 <div>
                   <span className="hw-f-badge">
                     <span className="hw-f-live" /> Featured · Ends in 14h
@@ -546,7 +583,8 @@ export default function HeroSection() {
             <div className="hw-mini-cards">
               {FEATURES.map((f) => (
                 <div className="hw-mini-card" key={f.title}>
-                  <span className="hw-mini-icon">{f.icon}</span>
+                  <img src={f.img} alt={f.title} className="hw-mini-img" />
+                  <div className="hw-mini-overlay" />
                   <div className="hw-mini-title">{f.title}</div>
                   <div className="hw-mini-desc">{f.desc}</div>
                 </div>
@@ -595,8 +633,8 @@ export default function HeroSection() {
                   key={s.num}
                   className={`s-step reveal reveal-d${i + 1}${hiwInView ? " in" : ""}`}
                 >
+                  <img src={s.img} alt={s.title} className="s-step-img" />
                   <div className="s-step-num">{s.num}</div>
-                  <span className="s-step-icon">{s.icon}</span>
                   <div className="s-step-title">{s.title}</div>
                   <div className="s-step-desc">{s.desc}</div>
                 </div>
@@ -623,9 +661,6 @@ export default function HeroSection() {
         <div className="s-cat-blob2" />
         <div className="s-cat-inner">
           <div className={`reveal${catInView ? " in" : ""}`}>
-            <div className="s-eyebrow">
-              <div className="s-eyebrow-dot" /> 20+ Domains
-            </div>
             <h2 className="s-title-dark">
               Find Your <span className="accent">Niche,</span>
               <br />
@@ -642,8 +677,9 @@ export default function HeroSection() {
                 key={c.name}
                 className={`s-cat-card reveal reveal-d${(i % 4) + 1}${catInView ? " in" : ""}`}
               >
+                <img src={c.img} alt={c.name} className="s-cat-img" />
+                <div className="s-cat-overlay" />
                 <div className="s-cat-topbar" />
-                <span className="s-cat-icon">{c.icon}</span>
                 <div className="s-cat-name">{c.name}</div>
                 <div className="s-cat-count">{c.count}</div>
                 <div className="s-cat-arrow">↗</div>
@@ -680,9 +716,6 @@ export default function HeroSection() {
         <div className="s-testi-dots" />
         <div className="s-testi-inner">
           <div className={`reveal${testiInView ? " in" : ""}`}>
-            <div className="s-eyebrow-light">
-              <div className="s-eyebrow-dot" /> 50K+ Reviews
-            </div>
             <h2 className="s-title-light">
               Builders Who <span className="accent">Made It</span>
             </h2>
