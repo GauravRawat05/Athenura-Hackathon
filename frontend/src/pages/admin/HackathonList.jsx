@@ -13,6 +13,17 @@ import {
 } from "lucide-react";
 
 const SCROLLBAR_STYLE = `
+  html, body, #root {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  img, svg, canvas, video {
+    max-width: 100%;
+  }
   .hide-scroll { scrollbar-width: none; -ms-overflow-style: none; }
   .hide-scroll::-webkit-scrollbar { display: none; }
 `;
@@ -168,7 +179,6 @@ function CustomDropdown({ value, onValueChange, options, className = "" }) {
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  // options can be [{ value, label }] or ["string", ...]
   const normalised = options.map((o) =>
     typeof o === "string" ? { value: o, label: o } : o
   );
@@ -219,6 +229,7 @@ function CustomDropdown({ value, onValueChange, options, className = "" }) {
     </div>
   );
 }
+
 function Modal({ open, onClose, title, children, footer }) {
   useEffect(() => {
     const handler = (e) => { if (e.key === "Escape") onClose(); };
@@ -239,7 +250,7 @@ function Modal({ open, onClose, title, children, footer }) {
         initial={{ opacity: 0, scale: 0.95, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="relative w-full max-w-2xl bg-white/80 backdrop-blur-xl border border-white/50 rounded-3xl shadow-2xl p-4 sm:p-6 z-10"
+        className="relative w-full max-w-2xl mx-2 sm:mx-4 bg-white/80 backdrop-blur-xl border border-white/50 rounded-3xl shadow-2xl p-4 sm:p-6 z-10 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
@@ -254,6 +265,7 @@ function Modal({ open, onClose, title, children, footer }) {
     </div>
   );
 }
+
 function ActionBtn({ color, children, onClick }) {
   return (
     <motion.button
@@ -279,21 +291,22 @@ function PageBtn({ children, onClick }) {
 
 function DetailRow({ icon: Icon, label, children }) {
   return (
-    <div className="flex items-start justify-between py-2 sm:py-2.5 border-b border-white/40 last:border-0 gap-2">
+    <div className="flex items-start justify-between py-2 sm:py-2.5 border-b border-white/40 last:border-0 gap-2 min-w-0">
       <div className="flex items-center gap-2 sm:gap-2.5 text-slate-500 flex-shrink-0">
         <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         <span className="text-xs sm:text-sm">{label}</span>
       </div>
-      <div className="text-xs sm:text-sm text-[#0b1b52] font-medium text-right">{children}</div>
+      <div className="text-xs sm:text-sm text-[#0b1b52] font-medium text-right truncate min-w-0">{children}</div>
     </div>
   );
 }
+
 function Toggle({ checked, onChange, label, description }) {
   return (
-    <div className="flex items-center justify-between py-2.5 border-b border-white/40 last:border-0 gap-3">
-      <div className="min-w-0">
-        <p className="text-xs sm:text-sm font-medium text-[#0b1b52]">{label}</p>
-        {description && <p className="text-[10px] sm:text-xs text-slate-400 mt-0.5">{description}</p>}
+    <div className="flex items-center justify-between py-2.5 border-b border-white/40 last:border-0 gap-3 min-w-0">
+      <div className="min-w-0 flex-1">
+        <p className="text-xs sm:text-sm font-medium text-[#0b1b52] truncate">{label}</p>
+        {description && <p className="text-[10px] sm:text-xs text-slate-400 mt-0.5 truncate">{description}</p>}
       </div>
       <button
         type="button"
@@ -314,22 +327,22 @@ function Toggle({ checked, onChange, label, description }) {
   );
 }
 
-const inputCls = "w-full mt-1 bg-white/40 border border-white/50 rounded-xl px-3 py-2 text-sm text-[#0b1b52] outline-none focus:ring-2 focus:ring-blue-400/40 placeholder:text-slate-400";
+const inputCls = "w-full mt-1 bg-white/40 border border-white/50 rounded-xl px-3 py-2 text-sm text-[#0b1b52] outline-none focus:ring-2 focus:ring-blue-400/40 placeholder:text-slate-400 min-w-0";
 const labelCls = "text-[#0b1b52] text-xs sm:text-sm font-medium";
 
 function FormFields({ value, onChange }) {
   const set = (k, v) => onChange({ ...value, [k]: v });
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-h-[55vh] overflow-y-auto hide-scroll pr-1">
-      <div className="sm:col-span-2">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-h-[55vh] overflow-y-auto hide-scroll pr-1 min-w-0">
+      <div className="sm:col-span-2 min-w-0">
         <label className={labelCls}>Name</label>
         <input value={value.name} onChange={(e) => set("name", e.target.value)} className={inputCls} />
       </div>
-      <div className="sm:col-span-2">
+      <div className="sm:col-span-2 min-w-0">
         <label className={labelCls}>Subtitle</label>
         <input value={value.subtitle} onChange={(e) => set("subtitle", e.target.value)} className={inputCls} />
       </div>
-      <div>
+      <div className="min-w-0">
         <label className={labelCls}>Status</label>
         <CustomDropdown
           value={value.status}
@@ -338,7 +351,7 @@ function FormFields({ value, onChange }) {
           className="mt-1"
         />
       </div>
-      <div>
+      <div className="min-w-0">
         <label className={labelCls}>Mode</label>
         <CustomDropdown
           value={value.mode}
@@ -347,47 +360,47 @@ function FormFields({ value, onChange }) {
           className="mt-1"
         />
       </div>
-      <div>
+      <div className="min-w-0">
         <label className={labelCls}>Registration From</label>
         <input value={value.regFrom} onChange={(e) => set("regFrom", e.target.value)} placeholder="May 01, 2026" className={inputCls} />
       </div>
-      <div>
+      <div className="min-w-0">
         <label className={labelCls}>Registration To</label>
         <input value={value.regTo} onChange={(e) => set("regTo", e.target.value)} placeholder="May 31, 2026" className={inputCls} />
       </div>
-      <div>
+      <div className="min-w-0">
         <label className={labelCls}>Event From</label>
         <input value={value.eventFrom} onChange={(e) => set("eventFrom", e.target.value)} className={inputCls} />
       </div>
-      <div>
+      <div className="min-w-0">
         <label className={labelCls}>Event To</label>
         <input value={value.eventTo} onChange={(e) => set("eventTo", e.target.value)} className={inputCls} />
       </div>
-      <div>
+      <div className="min-w-0">
         <label className={labelCls}>Submission Deadline</label>
         <input value={value.submissionDeadline} onChange={(e) => set("submissionDeadline", e.target.value)} placeholder="Jun 16, 2026, 11:59 PM" className={inputCls} />
       </div>
-      <div>
+      <div className="min-w-0">
         <label className={labelCls}>Results Date</label>
         <input value={value.resultsDate} onChange={(e) => set("resultsDate", e.target.value)} className={inputCls} />
       </div>
-      <div>
+      <div className="min-w-0">
         <label className={labelCls}>Prize Pool (₹)</label>
         <input type="number" value={value.prize} onChange={(e) => set("prize", Number(e.target.value))} className={inputCls} />
       </div>
-      <div>
+      <div className="min-w-0">
         <label className={labelCls}>Team Size</label>
         <input value={value.teamSize} onChange={(e) => set("teamSize", e.target.value)} className={inputCls} />
       </div>
-      <div>
+      <div className="min-w-0">
         <label className={labelCls}>Eligibility</label>
         <input value={value.eligibility} onChange={(e) => set("eligibility", e.target.value)} className={inputCls} />
       </div>
-      <div>
+      <div className="min-w-0">
         <label className={labelCls}>Organized By</label>
         <input value={value.organizedBy} onChange={(e) => set("organizedBy", e.target.value)} className={inputCls} />
       </div>
-      <div className="sm:col-span-2">
+      <div className="sm:col-span-2 min-w-0">
         <label className={labelCls}>Description</label>
         <textarea
           value={value.description}
@@ -399,31 +412,32 @@ function FormFields({ value, onChange }) {
     </div>
   );
 }
+
 function OverviewContent({ selected }) {
   return (
-    <div className="space-y-1">
+    <div className="space-y-1 min-w-0">
       <DetailRow icon={Activity} label="Status">
-        <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${statusBadge[selected.status]}`}>
+        <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${statusBadge[selected.status]}`}>
           {selected.status}
         </span>
       </DetailRow>
       <DetailRow icon={Calendar} label="Registration">
-        <span className="text-right">{selected.regFrom} – {selected.regTo}</span>
+        <span className="text-right truncate">{selected.regFrom} – {selected.regTo}</span>
       </DetailRow>
       <DetailRow icon={CalendarDays} label="Event Dates">
-        <span className="text-right">{selected.eventFrom} – {selected.eventTo}</span>
+        <span className="text-right truncate">{selected.eventFrom} – {selected.eventTo}</span>
       </DetailRow>
-      <DetailRow icon={Globe} label="Mode">{selected.mode}</DetailRow>
-      <DetailRow icon={Users} label="Team Size">{selected.teamSize}</DetailRow>
-      <DetailRow icon={GraduationCap} label="Eligibility">{selected.eligibility}</DetailRow>
-      <DetailRow icon={Trophy} label="Prize Pool">{formatINR(selected.prize)}</DetailRow>
-      <DetailRow icon={Building2} label="Organized By">{selected.organizedBy}</DetailRow>
-      <div className="pt-3 sm:pt-4 border-t border-white/60 mt-2 sm:mt-3">
+      <DetailRow icon={Globe} label="Mode"><span className="truncate">{selected.mode}</span></DetailRow>
+      <DetailRow icon={Users} label="Team Size"><span className="truncate">{selected.teamSize}</span></DetailRow>
+      <DetailRow icon={GraduationCap} label="Eligibility"><span className="truncate">{selected.eligibility}</span></DetailRow>
+      <DetailRow icon={Trophy} label="Prize Pool"><span className="truncate">{formatINR(selected.prize)}</span></DetailRow>
+      <DetailRow icon={Building2} label="Organized By"><span className="truncate">{selected.organizedBy}</span></DetailRow>
+      <div className="pt-3 sm:pt-4 border-t border-white/60 mt-2 sm:mt-3 min-w-0">
         <div className="flex items-center gap-2 text-slate-500 mb-2">
-          <FileText className="w-4 h-4" />
+          <FileText className="w-4 h-4 flex-shrink-0" />
           <span className="text-xs sm:text-sm">Description</span>
         </div>
-        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">{selected.description}</p>
+        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed break-words">{selected.description}</p>
       </div>
     </div>
   );
@@ -482,7 +496,7 @@ function DeadlinesContent({ selected }) {
   ];
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-2.5 min-w-0">
       {milestones.map((m, i) => {
         const Icon = m.icon;
         return (
@@ -491,7 +505,7 @@ function DeadlinesContent({ selected }) {
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.05 }}
-            className="flex items-center gap-3 rounded-xl border border-white/50 bg-white/40 px-3 py-2.5 backdrop-blur-sm"
+            className="flex items-center gap-3 rounded-xl border border-white/50 bg-white/40 px-3 py-2.5 backdrop-blur-sm min-w-0"
           >
             <div className={`flex-shrink-0 w-8 h-8 rounded-lg ${m.color} flex items-center justify-center`}>
               <Icon className="w-4 h-4" />
@@ -501,7 +515,7 @@ function DeadlinesContent({ selected }) {
               <p className="text-[10px] text-slate-400 truncate">{m.sub}</p>
             </div>
             <div className="flex-shrink-0 text-right">
-              <p className="text-xs font-medium text-[#0b1b52]">{m.date}</p>
+              <p className="text-xs font-medium text-[#0b1b52] whitespace-nowrap">{m.date}</p>
             </div>
           </motion.div>
         );
@@ -526,9 +540,9 @@ function PrizePoolContent({ selected }) {
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 min-w-0">
       <div className="space-y-2">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-2">Top Prize Distribution</p>
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-2 truncate">Top Prize Distribution</p>
         {tiers.map((t, i) => {
           const Icon = t.icon;
           const amount = Math.round(total * t.pct);
@@ -538,35 +552,35 @@ function PrizePoolContent({ selected }) {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.07 }}
-              className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 ${t.bg}`}
+              className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 ${t.bg} min-w-0`}
             >
               <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${t.color} flex items-center justify-center shadow-sm flex-shrink-0`}>
                 <Icon className="w-4 h-4 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className={`text-xs font-bold ${t.text}`}>{t.rank}</p>
-                <p className="text-[10px] text-slate-400">{t.label}</p>
+                <p className={`text-xs font-bold ${t.text} truncate`}>{t.rank}</p>
+                <p className="text-[10px] text-slate-400 truncate">{t.label}</p>
               </div>
               <div className="text-right flex-shrink-0">
-                <p className={`text-sm font-bold ${t.text}`}>{formatINR(amount)}</p>
-                <p className="text-[10px] text-slate-400">{Math.round(t.pct * 100)}% of pool</p>
+                <p className={`text-sm font-bold ${t.text} whitespace-nowrap`}>{formatINR(amount)}</p>
+                <p className="text-[10px] text-slate-400 whitespace-nowrap">{Math.round(t.pct * 100)}% of pool</p>
               </div>
             </motion.div>
           );
         })}
       </div>
 
-      <div className="rounded-xl bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-200/50 px-4 py-3 flex items-center justify-between">
-        <div>
-          <p className="text-xs text-slate-500">Total Prize Pool</p>
-          <p className="text-lg font-bold text-[#0b1b52]">{formatINR(total)}</p>
+      <div className="rounded-xl bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-200/50 px-4 py-3 flex items-center justify-between min-w-0">
+        <div className="min-w-0">
+          <p className="text-xs text-slate-500 truncate">Total Prize Pool</p>
+          <p className="text-lg font-bold text-[#0b1b52] truncate">{formatINR(total)}</p>
         </div>
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg flex-shrink-0">
           <Star className="w-5 h-5 text-white" />
         </div>
       </div>
       <div>
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-2">Special Awards</p>
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-2 truncate">Special Awards</p>
         <div className="space-y-1.5">
           {extras.map((e, i) => (
             <motion.div
@@ -574,13 +588,13 @@ function PrizePoolContent({ selected }) {
               initial={{ opacity: 0, x: -8 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.25 + i * 0.05 }}
-              className="flex items-center justify-between rounded-lg border border-white/50 bg-white/40 px-3 py-2"
+              className="flex items-center justify-between rounded-lg border border-white/50 bg-white/40 px-3 py-2 min-w-0"
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 flex-shrink-0" />
-                <span className="text-xs text-[#0b1b52]">{e.label}</span>
+                <span className="text-xs text-[#0b1b52] truncate">{e.label}</span>
               </div>
-              <span className="text-xs font-semibold text-indigo-700">{formatINR(e.prize)}</span>
+              <span className="text-xs font-semibold text-indigo-700 whitespace-nowrap flex-shrink-0 ml-2">{formatINR(e.prize)}</span>
             </motion.div>
           ))}
         </div>
@@ -588,11 +602,12 @@ function PrizePoolContent({ selected }) {
     </div>
   );
 }
+
 function RulesContent() {
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 min-w-0">
       <div className="flex items-center gap-2 text-slate-500 mb-3">
-        <BookOpen className="w-4 h-4" />
+        <BookOpen className="w-4 h-4 flex-shrink-0" />
         <span className="text-xs font-semibold uppercase tracking-wider">Rules & Guidelines</span>
       </div>
       <div className="space-y-2">
@@ -602,22 +617,23 @@ function RulesContent() {
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.04 }}
-            className="flex items-start gap-2.5 rounded-xl border border-white/50 bg-white/40 px-3 py-2.5 backdrop-blur-sm"
+            className="flex items-start gap-2.5 rounded-xl border border-white/50 bg-white/40 px-3 py-2.5 backdrop-blur-sm min-w-0"
           >
             <span className="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-[10px] font-bold shadow-sm">
               {i + 1}
             </span>
-            <p className="text-xs text-slate-600 leading-relaxed">{rule}</p>
+            <p className="text-xs text-slate-600 leading-relaxed break-words">{rule}</p>
           </motion.div>
         ))}
       </div>
-      <div className="mt-3 rounded-xl border border-amber-200/60 bg-amber-50/60 px-3 py-2.5 flex items-start gap-2">
+      <div className="mt-3 rounded-xl border border-amber-200/60 bg-amber-50/60 px-3 py-2.5 flex items-start gap-2 min-w-0">
         <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
-        <p className="text-xs text-amber-700">Violation of any rule may result in disqualification without prior notice. The organizer's decision is final.</p>
+        <p className="text-xs text-amber-700 break-words">Violation of any rule may result in disqualification without prior notice. The organizer's decision is final.</p>
       </div>
     </div>
   );
 }
+
 function SettingsContent({ selected, onUpdateSettings }) {
   const s = selected.settings ?? DEFAULT_SETTINGS;
   const update = (k, v) => onUpdateSettings({ ...s, [k]: v });
@@ -662,9 +678,9 @@ function SettingsContent({ selected, onUpdateSettings }) {
   ];
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-1 min-w-0">
       <div className="flex items-center gap-2 text-slate-500 mb-3">
-        <SlidersHorizontal className="w-4 h-4" />
+        <SlidersHorizontal className="w-4 h-4 flex-shrink-0" />
         <span className="text-xs font-semibold uppercase tracking-wider">Hackathon Settings</span>
       </div>
       {toggles.map((t, i) => (
@@ -673,6 +689,7 @@ function SettingsContent({ selected, onUpdateSettings }) {
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: i * 0.05 }}
+          className="min-w-0"
         >
           <Toggle
             checked={s[t.key] ?? false}
@@ -683,29 +700,29 @@ function SettingsContent({ selected, onUpdateSettings }) {
         </motion.div>
       ))}
 
-      <div className="mt-3 rounded-xl border border-white/50 bg-white/30 px-3 py-2.5">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Current Status</p>
+      <div className="mt-3 rounded-xl border border-white/50 bg-white/30 px-3 py-2.5 min-w-0">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5 truncate">Current Status</p>
         <div className="flex flex-wrap gap-1.5">
           {s.publiclyVisible ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 border border-emerald-200 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 border border-emerald-200 px-2 py-0.5 text-[10px] font-medium text-emerald-700 whitespace-nowrap">
               <Eye className="w-3 h-3" /> Public
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 border border-slate-200 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 border border-slate-200 px-2 py-0.5 text-[10px] font-medium text-slate-600 whitespace-nowrap">
               <EyeOff className="w-3 h-3" /> Hidden
             </span>
           )}
           {s.registrationOpen ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 border border-blue-200 px-2 py-0.5 text-[10px] font-medium text-blue-700">
+            <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 border border-blue-200 px-2 py-0.5 text-[10px] font-medium text-blue-700 whitespace-nowrap">
               <Unlock className="w-3 h-3" /> Reg. Open
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 border border-rose-200 px-2 py-0.5 text-[10px] font-medium text-rose-700">
+            <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 border border-rose-200 px-2 py-0.5 text-[10px] font-medium text-rose-700 whitespace-nowrap">
               <Lock className="w-3 h-3" /> Reg. Closed
             </span>
           )}
           {s.requireApproval && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-200 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 border border-amber-200 px-2 py-0.5 text-[10px] font-medium text-amber-700 whitespace-nowrap">
               <Shield className="w-3 h-3" /> Approval Required
             </span>
           )}
@@ -722,24 +739,24 @@ function DetailPanel({ selected, activeTab, setActiveTab, openEdit, onUpdateSett
 
   return (
     <>
-      <div className="flex items-start justify-between mb-2">
-        <h3 className="text-base sm:text-lg font-bold text-[#0b1b52]">Hackathon Details</h3>
+      <div className="flex items-start justify-between mb-2 min-w-0">
+        <h3 className="text-base sm:text-lg font-bold text-[#0b1b52] truncate mr-2">Hackathon Details</h3>
         <motion.button
           whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
           onClick={() => openEdit(selected)}
-          className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium"
+          className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium flex-shrink-0"
         >
           Edit
         </motion.button>
       </div>
-      <p className="text-base sm:text-xl font-semibold text-[#0b1b52] mb-4 sm:mb-5">{selected.name}</p>
+      <p className="text-base sm:text-xl font-semibold text-[#0b1b52] mb-4 sm:mb-5 truncate">{selected.name}</p>
 
-      <div className="flex gap-3 sm:gap-5 border-b border-white/60 mb-4 sm:mb-5 overflow-x-auto hide-scroll">
+      <div className="flex gap-3 sm:gap-5 border-b border-white/60 mb-4 sm:mb-5 overflow-x-auto hide-scroll min-w-0 w-full">
         {tabs.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`pb-2.5 sm:pb-3 text-xs sm:text-sm whitespace-nowrap transition-colors relative ${
+            className={`pb-2.5 sm:pb-3 text-xs sm:text-sm whitespace-nowrap transition-colors relative flex-shrink-0 ${
               activeTab === tab ? "text-[#0b1b52] font-semibold" : "text-slate-400 hover:text-slate-600"
             }`}
           >
@@ -757,7 +774,7 @@ function DetailPanel({ selected, activeTab, setActiveTab, openEdit, onUpdateSett
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.2 }}
-          className="overflow-y-auto hide-scroll max-h-[420px] pr-0.5"
+          className="overflow-y-auto hide-scroll max-h-[420px] pr-0.5 min-w-0 w-full"
         >
           {activeTab === "Overview"   && <OverviewContent selected={selected} />}
           {activeTab === "Deadlines"  && <DeadlinesContent selected={selected} />}
@@ -771,6 +788,7 @@ function DetailPanel({ selected, activeTab, setActiveTab, openEdit, onUpdateSett
     </>
   );
 }
+
 export default function HackathonDashboard() {
   const [hackathons, setHackathons] = useState(() => {
     try {
@@ -790,7 +808,7 @@ export default function HackathonDashboard() {
   const [editOpen, setEditOpen] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const toast = useToast();
-const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const filtered = useMemo(() => hackathons.filter((h) => {
     const matchSearch = h.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -866,24 +884,22 @@ const navigate = useNavigate();
       <GlobalStyle />
       <ToastContainer toasts={toast.toasts} />
       <div
-        className="min-h-screen bg-gradient-to-br from-[#ecfcff] via-[#f8ffff] to-[#dff7ff]"
+        className="min-h-screen bg-gradient-to-br from-[#ecfcff] via-[#f8ffff] to-[#dff7ff] overflow-x-hidden"
         style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" }}
       >
-        <div className="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-10 py-4 sm:py-6">
+        <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-10 py-4 sm:py-6 min-w-0">
           <motion.nav
             initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
-            className="flex items-center justify-between mb-6 sm:mb-8 gap-2"
+            className="flex items-center justify-between mb-6 sm:mb-8 gap-2 flex-wrap min-w-0"
           >
-            <div className="flex flex-col">
-              <h1 className="text-xl sm:text-2xl font-bold text-[#0b1b52]">Hackathon Management</h1>
-              <p className="text-slate-500 text-xs sm:text-sm hidden sm:block">Create, manage and organize hackathons.</p>
+            <div className="flex flex-col min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-bold text-[#0b1b52] truncate">Hackathon Management</h1>
             </div>
-            <div className="flex items-center gap-2 sm:gap-3">
-              
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
               <motion.button
                 whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}
                 onClick={() => navigate('/admin/hackathons/create')}
-                className={`${btnBlue} flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm whitespace-nowrap flex-shrink-0`}
+                className={`${btnBlue} flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm whitespace-nowrap`}
               >
                 <Plus className="w-4 h-4" />
                 <span className="hidden sm:inline">Create New</span>
@@ -891,6 +907,7 @@ const navigate = useNavigate();
               </motion.button>
             </div>
           </motion.nav>
+
           <motion.div
             initial="hidden" animate="visible"
             variants={{ visible: { transition: { staggerChildren: 0.08, delayChildren: 0.2 } } }}
@@ -903,9 +920,9 @@ const navigate = useNavigate();
                   key={s.label}
                   variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
                   whileHover={{ y: -4 }}
-                  className="bg-white/40 backdrop-blur-sm border border-white/50 rounded-2xl sm:rounded-3xl p-4 sm:p-6 transition-all"
+                  className="bg-white/40 backdrop-blur-sm border border-white/50 rounded-2xl sm:rounded-3xl p-4 sm:p-6 transition-all min-w-0"
                 >
-                  <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="flex items-start gap-3 sm:gap-4 min-w-0">
                     <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br ${s.iconBg} flex items-center justify-center shadow-lg flex-shrink-0`}>
                       <Icon className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
                     </div>
@@ -914,53 +931,53 @@ const navigate = useNavigate();
                       <p className="text-2xl sm:text-3xl font-bold text-[#0b1b52] mt-0.5 sm:mt-1">{s.value}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 mt-3 sm:mt-4 text-[10px] sm:text-xs">
-                    <TrendingUp className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-500" />
-                    <span className="text-emerald-600 font-semibold">{s.change}</span>
-                    <span className="text-slate-400 hidden sm:inline">from last month</span>
+                  <div className="flex items-center gap-1 mt-3 sm:mt-4 text-[10px] sm:text-xs min-w-0">
+                    <TrendingUp className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-500 flex-shrink-0" />
+                    <span className="text-emerald-600 font-semibold truncate">{s.change}</span>
+                    <span className="text-slate-400 hidden sm:inline truncate">from last month</span>
                   </div>
                 </motion.div>
               );
             })}
           </motion.div>
-          <div className="grid grid-cols-1 lg:grid-cols-10 gap-4 sm:gap-6">
 
+          <div className="grid grid-cols-1 lg:grid-cols-10 gap-4 sm:gap-6">
             <motion.section
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}
-              className="lg:col-span-7 bg-white/40 backdrop-blur-sm border border-white/50 rounded-2xl sm:rounded-3xl p-4 sm:p-6"
+              className="lg:col-span-7 bg-white/40 backdrop-blur-sm border border-white/50 rounded-2xl sm:rounded-3xl p-4 sm:p-6 min-w-0 overflow-hidden"
             >
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
-                <h2 className="text-lg sm:text-xl font-bold text-[#0b1b52]">All Hackathons</h2>
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="relative flex-1 sm:w-[220px] md:w-[260px]">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6 min-w-0 flex-wrap">
+                <h2 className="text-lg sm:text-xl font-bold text-[#0b1b52] truncate">All Hackathons</h2>
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-wrap w-full sm:w-auto">
+                  <div className="relative flex-1 sm:w-[220px] md:w-[260px] min-w-0">
                     <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Search..."
-                      className="w-full rounded-xl border border-white/60 bg-white/60 py-2.5 pl-11 pr-4 text-sm text-slate-700 placeholder:text-slate-400 outline-none ring-blue-200 backdrop-blur-xl transition focus:bg-white/90 focus:ring-2"
+                      className="w-full rounded-xl border border-white/60 bg-white/60 py-2.5 pl-11 pr-4 text-sm text-slate-700 placeholder:text-slate-400 outline-none ring-blue-200 backdrop-blur-xl transition focus:bg-white/90 focus:ring-2 min-w-0"
                     />
                   </div>
                   <CustomDropdown
                     value={statusFilter}
                     onValueChange={setStatusFilter}
                     options={statusOptions}
-                    className="w-[130px] sm:w-[150px]"
+                    className="w-[130px] sm:w-[150px] flex-shrink-0"
                   />
                 </div>
               </div>
 
-              <div className="overflow-x-auto hide-scroll -mx-1 px-1">
-                <table className="w-full text-sm min-w-[520px]">
+              <div className="w-full overflow-x-auto hide-scroll min-w-0">
+                <table className="w-full text-sm min-w-[520px] table-fixed">
                   <thead>
                     <tr className="text-left text-slate-500 text-xs font-semibold border-b border-white/60">
-                      <th className="py-3 pr-4">Hackathon Name</th>
-                      <th className="py-3 px-2">Status</th>
-                      <th className="py-3 px-2 hidden md:table-cell">Registration</th>
-                      <th className="py-3 px-2 hidden md:table-cell">Event Dates</th>
-                      <th className="py-3 px-2">Prize Pool</th>
-                      <th className="py-3 pl-2">Actions</th>
+                      <th className="py-3 pr-4 w-[30%]">Hackathon Name</th>
+                      <th className="py-3 px-2 w-[15%]">Status</th>
+                      <th className="py-3 px-2 hidden md:table-cell w-[20%]">Registration</th>
+                      <th className="py-3 px-2 hidden md:table-cell w-[20%]">Event Dates</th>
+                      <th className="py-3 px-2 w-[15%]">Prize Pool</th>
+                      <th className="py-3 pl-2 w-[10%]">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -977,35 +994,35 @@ const navigate = useNavigate();
                             onClick={() => { setSelectedId(h.id); setActiveTab("Overview"); }}
                             className={`border-b border-white/40 cursor-pointer transition-colors hover:bg-white/40 ${selectedId === h.id ? "bg-white/50" : ""}`}
                           >
-                            <td className="py-3 sm:py-4 pr-4">
-                              <div className="flex items-center gap-2 sm:gap-3">
+                            <td className="py-3 sm:py-4 pr-4 min-w-0">
+                              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                                 <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br ${h.iconBg} flex items-center justify-center shadow-md flex-shrink-0`}>
                                   <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                                 </div>
                                 <div className="min-w-0">
-                                  <p className="font-semibold text-[#0b1b52] text-xs sm:text-sm truncate max-w-[100px] sm:max-w-none">{h.name}</p>
-                                  <p className="text-[10px] sm:text-xs text-slate-500 truncate max-w-[100px] sm:max-w-none hidden sm:block">{h.subtitle}</p>
+                                  <p className="font-semibold text-[#0b1b52] text-xs sm:text-sm truncate">{h.name}</p>
+                                  <p className="text-[10px] sm:text-xs text-slate-500 truncate hidden sm:block">{h.subtitle}</p>
                                 </div>
                               </div>
                             </td>
                             <td className="py-3 sm:py-4 px-2">
-                              <span className={`inline-flex px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium backdrop-blur-sm ${statusBadge[h.status]}`}>
+                              <span className={`inline-flex px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium backdrop-blur-sm whitespace-nowrap ${statusBadge[h.status]}`}>
                                 {h.status}
                               </span>
                             </td>
                             <td className="py-3 sm:py-4 px-2 text-slate-600 hidden md:table-cell">
-                              <div className="text-xs sm:text-sm">{h.regFrom}</div>
-                              <div className="text-[10px] sm:text-xs text-slate-400">to {h.regTo}</div>
+                              <div className="text-xs sm:text-sm truncate">{h.regFrom}</div>
+                              <div className="text-[10px] sm:text-xs text-slate-400 truncate">to {h.regTo}</div>
                             </td>
                             <td className="py-3 sm:py-4 px-2 text-slate-600 hidden md:table-cell">
-                              <div className="text-xs sm:text-sm">{h.eventFrom}</div>
-                              <div className="text-[10px] sm:text-xs text-slate-400">to {h.eventTo}</div>
+                              <div className="text-xs sm:text-sm truncate">{h.eventFrom}</div>
+                              <div className="text-[10px] sm:text-xs text-slate-400 truncate">to {h.eventTo}</div>
                             </td>
                             <td className="py-3 sm:py-4 px-2 font-semibold text-[#0b1b52] text-xs sm:text-sm whitespace-nowrap">
                               {formatINR(h.prize)}
                             </td>
                             <td className="py-3 sm:py-4 pl-2">
-                              <div className="flex items-center gap-1.5 sm:gap-2">
+                              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                                 <ActionBtn color="from-blue-400 to-indigo-500" onClick={(e) => { e.stopPropagation(); openEdit(h); }}>
                                   <Pencil className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
                                 </ActionBtn>
@@ -1028,11 +1045,11 @@ const navigate = useNavigate();
                 )}
               </div>
 
-              <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-2 mt-4 sm:mt-6">
-                <p className="text-[10px] sm:text-xs text-slate-500">
+              <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-2 mt-4 sm:mt-6 min-w-0">
+                <p className="text-[10px] sm:text-xs text-slate-500 truncate">
                   Showing 1–{filtered.length} of {hackathons.length}
                 </p>
-                <div className="flex items-center gap-1 sm:gap-1.5">
+                <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap">
                   <PageBtn onClick={() => setPage(Math.max(1, page - 1))}>
                     <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </PageBtn>
@@ -1070,7 +1087,7 @@ const navigate = useNavigate();
             <motion.aside
               key={selected?.id}
               initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.4 }}
-              className="lg:col-span-3 bg-white/40 backdrop-blur-sm border border-white/50 rounded-3xl p-6 h-fit lg:sticky lg:top-6"
+              className="lg:col-span-3 bg-white/40 backdrop-blur-sm border border-white/50 rounded-3xl p-6 h-fit lg:sticky lg:top-6 min-w-0 w-full"
             >
               <DetailPanel
                 selected={selected}

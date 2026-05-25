@@ -4,12 +4,33 @@ import {
   Search, Bell, Send, Eye, Mail, ArrowUp, ArrowDown,
   Filter, FileDown, UserPlus, CreditCard, AlertTriangle,
   Trophy, Calendar, ChevronLeft, ChevronRight, Settings, FileText, X,
-  Download, Plus, Trash2, CheckCircle, Clock, ChevronDown
+  Download, Plus, Trash2, CheckCircle, Clock, ChevronDown, Menu
 } from "lucide-react";
+
 const globalStyle = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  
+  *, *::before, *::after { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+    min-width: 0; /* prevent flex/grid children from overflowing */ 
+  }
+  
+  html, body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  
+  body { 
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  
+  img, svg, canvas, video {
+    max-width: 100%;
+  }
 
   .glass {
     background: rgba(255,255,255,0.65);
@@ -23,7 +44,9 @@ const globalStyle = `
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255,255,255,0.60);
   }
-  .shadow-glass { box-shadow: 0 8px 32px rgba(30,64,175,0.08), 0 2px 8px rgba(30,64,175,0.04); }
+  .shadow-glass { 
+    box-shadow: 0 8px 32px rgba(30,64,175,0.08), 0 2px 8px rgba(30,64,175,0.04); 
+  }
 
   .date-input {
     width: 100%;
@@ -34,6 +57,9 @@ const globalStyle = `
     color: #475569;
     font-family: 'Plus Jakarta Sans', sans-serif;
     cursor: pointer;
+    position: absolute;
+    inset: 0;
+    opacity: 0;
   }
   .date-input::-webkit-calendar-picker-indicator {
     opacity: 0;
@@ -59,7 +85,40 @@ const globalStyle = `
     #print-area, #print-area * { visibility: visible; }
     #print-area { position: absolute; left: 0; top: 0; width: 100%; }
   }
+  
+  /* Responsive helpers */
+  .table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+  }
+  
+  .table-wrapper table {
+    min-width: 100%;
+  }
+  
+  @media (max-width: 1024px) {
+    .stats-grid {
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    .table-wrapper table {
+      font-size: 0.8rem;
+    }
+  }
+  
+  @media (max-width: 640px) {
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+    .filter-row {
+      flex-wrap: wrap;
+    }
+    .filter-row > * {
+      flex: 1 1 100% !important;
+    }
+  }
 `;
+
 const stats = [
   { label: "Total Notifications", value: "1,248", delta: "18.6%", up: true, icon: Bell, iconBg: "from-blue-400/30 to-blue-600/20", iconColor: "text-blue-600" },
   { label: "Sent (This Month)", value: "842", delta: "12.4%", up: true, icon: Send, iconBg: "from-emerald-400/30 to-emerald-600/20", iconColor: "text-emerald-600" },
@@ -94,6 +153,17 @@ const INITIAL_TEMPLATES = [
 
 const ITEMS_PER_PAGE = 7;
 
+function useMediaQuery(query) {
+  const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
+  useEffect(() => {
+    const mql = window.matchMedia(query);
+    const listener = (e) => setMatches(e.matches);
+    mql.addEventListener('change', listener);
+    return () => mql.removeEventListener('change', listener);
+  }, [query]);
+  return matches;
+}
+
 function CustomSelect({ label, value, onChange, options }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -103,13 +173,13 @@ function CustomSelect({ label, value, onChange, options }) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
   return (
-    <div ref={ref} style={{ position: "relative" }}>
+    <div ref={ref} style={{ position: "relative", width: "100%" }}>
       {label && <label style={{ fontSize: "0.72rem", fontWeight: 600, color: "#94a3b8", display: "block", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</label>}
       <button
         onClick={() => setOpen(p => !p)}
         style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", background: "rgba(255,255,255,0.7)", border: "1.5px solid rgba(203,213,225,0.5)", borderRadius: "14px", padding: "10px 14px", fontSize: "0.875rem", fontWeight: 500, color: "#334155", cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif", transition: "border-color 0.2s, box-shadow 0.2s", boxShadow: open ? "0 0 0 3px rgba(59,130,246,0.15)" : "none", borderColor: open ? "rgba(59,130,246,0.5)" : "rgba(203,213,225,0.5)" }}
       >
-        {value}
+        <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{value}</span>
         <ChevronDown size={15} color="#94a3b8" style={{ transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "rotate(0deg)", flexShrink: 0 }} />
       </button>
       <AnimatePresence>
@@ -125,7 +195,7 @@ function CustomSelect({ label, value, onChange, options }) {
               <button
                 key={opt}
                 onClick={() => { onChange(opt); setOpen(false); }}
-                style={{ width: "100%", display: "flex", alignItems: "center", padding: "11px 14px", fontSize: "0.875rem", fontWeight: value === opt ? 600 : 500, background: value === opt ? "linear-gradient(135deg, #2563eb, #1d4ed8)" : "transparent", color: value === opt ? "white" : "#334155", border: "none", cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif", transition: "background 0.15s" }}
+                style={{ width: "100%", display: "flex", alignItems: "center", padding: "11px 14px", fontSize: "0.875rem", fontWeight: value === opt ? 600 : 500, background: value === opt ? "linear-gradient(135deg, #2563eb, #1d4ed8)" : "transparent", color: value === opt ? "white" : "#334155", border: "none", cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif", transition: "background 0.15s", whiteSpace: "nowrap" }}
                 onMouseEnter={e => { if (value !== opt) e.currentTarget.style.background = "rgba(239,246,255,0.9)"; }}
                 onMouseLeave={e => { if (value !== opt) e.currentTarget.style.background = "transparent"; }}
               >
@@ -138,6 +208,7 @@ function CustomSelect({ label, value, onChange, options }) {
     </div>
   );
 }
+
 function TypeBadge({ type }) {
   const styles = {
     Registration: "bg-blue-100/80 text-blue-700 border-blue-200/60",
@@ -168,9 +239,10 @@ function StatusBadge({ status, onClick }) {
     </button>
   );
 }
+
 function FilterPill({ label, onRemove }) {
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "rgba(219,234,254,0.8)", border: "1px solid rgba(147,197,253,0.6)", borderRadius: "999px", padding: "3px 10px", fontSize: "0.72rem", fontWeight: 600, color: "#1d4ed8" }}>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "rgba(219,234,254,0.8)", border: "1px solid rgba(147,197,253,0.6)", borderRadius: "999px", padding: "3px 10px", fontSize: "0.72rem", fontWeight: 600, color: "#1d4ed8", whiteSpace: "nowrap" }}>
       {label}
       <button onClick={onRemove} style={{ background: "none", border: "none", cursor: "pointer", color: "#60a5fa", display: "flex", alignItems: "center", padding: 0 }}>
         <X size={11} />
@@ -180,13 +252,23 @@ function FilterPill({ label, onRemove }) {
 }
 
 export default function NotificationsDashboard() {
+  // ── Responsive state ──
+  const isMobile = useMediaQuery('(max-width: 1024px)');  // tablet & below
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
   const [activeTab, setActiveTab] = useState(0);
   const [activePage, setActivePage] = useState(1);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("All Types");
   const [filterStatus, setFilterStatus] = useState("All Status");
   const [filterHackathon, setFilterHackathon] = useState("All Hackathons");
-  const [appliedFilters, setAppliedFilters] = useState({ type: "All Types", status: "All Status", hackathon: "All Hackathons", dateFrom: "", dateTo: "" });
+  const [appliedFilters, setAppliedFilters] = useState({
+    type: "All Types",
+    status: "All Status",
+    hackathon: "All Hackathons",
+    dateFrom: "",
+    dateTo: ""
+  });
   const [showFilterBar, setShowFilterBar] = useState(false);
   const [dateFrom, setDateFrom] = useState("2026-05-01");
   const [dateTo, setDateTo] = useState("2026-05-20");
@@ -202,6 +284,7 @@ export default function NotificationsDashboard() {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 2800);
   };
+
   const hackathons = useMemo(() => {
     const set = new Set(notifData.map(n => {
       const m = n.message.match(/for (.+?) (was|is|has|failed|have)/);
@@ -250,12 +333,14 @@ export default function NotificationsDashboard() {
   };
 
   const hasActiveFilters = appliedFilters.type !== "All Types" || appliedFilters.status !== "All Status" || appliedFilters.hackathon !== "All Hackathons" || appliedFilters.dateFrom || appliedFilters.dateTo;
+
   const toggleStatus = (id) => {
     setNotifData(prev => prev.map(n =>
       n.id === id ? { ...n, status: n.status === "Read" ? "Unread" : "Read" } : n
     ));
     showToast("Status updated", "info");
   };
+
   const handleExportPDF = () => {
     const rows = filtered.map(n =>
       `<tr style="border-bottom:1px solid #e2e8f0">
@@ -281,29 +366,26 @@ export default function NotificationsDashboard() {
     <>
       <style>{globalStyle}</style>
       <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #ecfcff 0%, #f8ffff 50%, #dff7ff 100%)", fontFamily: "'Plus Jakarta Sans', sans-serif", color: "#0b1b52" }}>
-        {/* Decorative glow */}
         <div style={{ pointerEvents: "none", position: "fixed", inset: 0, zIndex: -1, overflow: "hidden" }}>
           <div style={{ position: "absolute", top: "-160px", left: "-160px", height: "500px", width: "500px", borderRadius: "50%", background: "rgba(147,197,253,0.2)", filter: "blur(80px)" }} />
           <div style={{ position: "absolute", top: "33%", right: "-160px", height: "500px", width: "500px", borderRadius: "50%", background: "rgba(196,181,253,0.2)", filter: "blur(80px)" }} />
         </div>
 
-        <div style={{ maxWidth: "1800px", margin: "0 auto" }}>
-          <Navbar />
-          <div style={{ padding: "24px 24px" }}>
+        <div style={{ maxWidth: "1800px", margin: "0 auto", padding: "0 16px" }}>
+          <Navbar onSidebarToggle={() => setMobileSidebarOpen(true)} isMobile={isMobile} />
+          <div style={{ padding: "24px 0" }}>
             <StatsGrid />
 
-            <div style={{ marginTop: "32px", display: "grid", gridTemplateColumns: "1fr 360px", gap: "24px" }}>
-              {/* ── LEFT ── */}
+            <div style={{ marginTop: "32px", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 360px", gap: "24px" }}>
               <motion.section
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}
                 className="glass shadow-glass"
-                style={{ overflow: "hidden", borderRadius: "28px", padding: "24px" }}
+                style={{ overflow: "hidden", borderRadius: "28px", padding: "24px", minWidth: 0 }}
               >
-                {/* Tabs */}
-                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "4px", borderBottom: "1px solid rgba(226,232,240,0.7)" }}>
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "4px", borderBottom: "1px solid rgba(226,232,240,0.7)", overflowX: "auto" }}>
                   {tabs.map((t, i) => (
                     <button key={t} onClick={() => handleTabChange(i)}
-                      style={{ position: "relative", padding: "12px 16px", fontSize: "0.875rem", fontWeight: 500, background: "none", border: "none", cursor: "pointer", color: activeTab === i ? "#0b1b52" : "#64748b", transition: "color 0.2s", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                      style={{ position: "relative", padding: "12px 16px", fontSize: "0.875rem", fontWeight: 500, background: "none", border: "none", cursor: "pointer", color: activeTab === i ? "#0b1b52" : "#64748b", transition: "color 0.2s", fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: "nowrap" }}>
                       {t}
                       {activeTab === i && (
                         <motion.span layoutId="tab-underline" style={{ position: "absolute", left: "8px", right: "8px", bottom: "-1px", height: "2px", borderRadius: "9999px", background: "#2563eb" }} />
@@ -312,32 +394,33 @@ export default function NotificationsDashboard() {
                   ))}
                 </div>
 
-                <div style={{ marginTop: "20px", display: "flex", gap: "12px", alignItems: "center" }}>
-                  <div className="glass-soft" style={{ flex: 1, display: "flex", alignItems: "center", gap: "8px", borderRadius: "16px", padding: "10px 16px" }}>
+                <div style={{ marginTop: "20px", display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
+                  <div className="glass-soft" style={{ flex: "1 1 260px", minWidth: "200px", display: "flex", alignItems: "center", gap: "8px", borderRadius: "16px", padding: "10px 16px" }}>
                     <Search size={16} color="#94a3b8" />
                     <input value={search} onChange={handleSearch} placeholder="Search by title, message or recipient..."
-                      style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: "0.875rem", color: "#475569", fontFamily: "'Plus Jakarta Sans', sans-serif" }} />
+                      style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: "0.875rem", color: "#475569", fontFamily: "'Plus Jakarta Sans', sans-serif", minWidth: 0 }} />
                     {search && (
                       <button onClick={() => { setSearch(""); setActivePage(1); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8" }}>
                         <X size={14} />
                       </button>
                     )}
                   </div>
-                  <div style={{ display: "flex", gap: "8px" }}>
+                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                     <motion.button
                       whileHover={{ y: -1 }} whileTap={{ scale: 0.97 }}
                       onClick={() => setShowFilterBar(p => !p)}
-                      style={{ display: "flex", alignItems: "center", gap: "8px", borderRadius: "16px", padding: "10px 16px", fontSize: "0.875rem", fontWeight: 500, cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif", border: showFilterBar ? "1.5px solid #2563eb" : "1.5px solid rgba(203,213,225,0.5)", background: showFilterBar ? "rgba(239,246,255,0.9)" : "rgba(255,255,255,0.45)", backdropFilter: "blur(10px)", color: showFilterBar ? "#2563eb" : "#475569", transition: "all 0.2s" }}>
+                      style={{ display: "flex", alignItems: "center", gap: "8px", borderRadius: "16px", padding: "10px 16px", fontSize: "0.875rem", fontWeight: 500, cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif", border: showFilterBar ? "1.5px solid #2563eb" : "1.5px solid rgba(203,213,225,0.5)", background: showFilterBar ? "rgba(239,246,255,0.9)" : "rgba(255,255,255,0.45)", backdropFilter: "blur(10px)", color: showFilterBar ? "#2563eb" : "#475569", transition: "all 0.2s", whiteSpace: "nowrap" }}>
                       <Filter size={16} /> Filters {hasActiveFilters && <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#2563eb", flexShrink: 0 }} />}
                     </motion.button>
                     <motion.button
                       whileHover={{ y: -1 }} whileTap={{ scale: 0.97 }}
                       onClick={handleExportPDF}
-                      style={{ display: "flex", alignItems: "center", gap: "8px", borderRadius: "16px", padding: "10px 16px", fontSize: "0.875rem", fontWeight: 500, cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif", border: "1.5px solid rgba(203,213,225,0.5)", background: "rgba(255,255,255,0.45)", backdropFilter: "blur(10px)", color: "#475569", transition: "all 0.2s" }}>
+                      style={{ display: "flex", alignItems: "center", gap: "8px", borderRadius: "16px", padding: "10px 16px", fontSize: "0.875rem", fontWeight: 500, cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif", border: "1.5px solid rgba(203,213,225,0.5)", background: "rgba(255,255,255,0.45)", backdropFilter: "blur(10px)", color: "#475569", transition: "all 0.2s", whiteSpace: "nowrap" }}>
                       <FileDown size={16} /> Export PDF
                     </motion.button>
                   </div>
                 </div>
+
                 <AnimatePresence>
                   {showFilterBar && (
                     <motion.div
@@ -358,24 +441,23 @@ export default function NotificationsDashboard() {
                           <CustomSelect label="Hackathon" value={filterHackathon} onChange={setFilterHackathon}
                             options={hackathons} />
                         </div>
-                        {/* Date range */}
                         <div style={{ flex: "1 1 260px", minWidth: "240px" }}>
                           <label style={{ fontSize: "0.72rem", fontWeight: 600, color: "#94a3b8", display: "block", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Custom Range</label>
                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                             <div style={{ flex: 1, position: "relative", display: "flex", alignItems: "center", gap: "6px", background: "rgba(255,255,255,0.7)", border: "1.5px solid rgba(203,213,225,0.5)", borderRadius: "14px", padding: "9px 12px" }}>
                               <Calendar size={14} color="#94a3b8" style={{ flexShrink: 0 }} />
-                              <span style={{ fontSize: "0.8rem", color: "#475569", whiteSpace: "nowrap" }}>{dateFrom || "Start date"}</span>
-                              <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="date-input" style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer" }} />
+                              <span style={{ fontSize: "0.8rem", color: dateFrom ? "#475569" : "#94a3b8", whiteSpace: "nowrap" }}>{dateFrom || "Start date"}</span>
+                              <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="date-input" />
                             </div>
                             <span style={{ color: "#94a3b8", fontSize: "0.8rem", flexShrink: 0 }}>to</span>
                             <div style={{ flex: 1, position: "relative", display: "flex", alignItems: "center", gap: "6px", background: "rgba(255,255,255,0.7)", border: "1.5px solid rgba(203,213,225,0.5)", borderRadius: "14px", padding: "9px 12px" }}>
                               <Calendar size={14} color="#94a3b8" style={{ flexShrink: 0 }} />
-                              <span style={{ fontSize: "0.8rem", color: "#475569", whiteSpace: "nowrap" }}>{dateTo || "End date"}</span>
-                              <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="date-input" style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer" }} />
+                              <span style={{ fontSize: "0.8rem", color: dateTo ? "#475569" : "#94a3b8", whiteSpace: "nowrap" }}>{dateTo || "End date"}</span>
+                              <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="date-input" />
                             </div>
                           </div>
                         </div>
-                        <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
+                        <div style={{ display: "flex", gap: "8px", flexShrink: 0, flexWrap: "wrap" }}>
                           <motion.button whileHover={{ y: -1 }} whileTap={{ scale: 0.97 }} onClick={handleApplyFilters}
                             style={{ display: "flex", alignItems: "center", gap: "8px", borderRadius: "14px", background: "linear-gradient(135deg, #2563eb, #1d4ed8)", padding: "10px 18px", fontSize: "0.875rem", fontWeight: 600, color: "white", border: "none", cursor: "pointer", boxShadow: "0 6px 20px rgba(37,99,235,0.3)", fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: "nowrap" }}>
                             <Filter size={15} /> Apply
@@ -401,8 +483,9 @@ export default function NotificationsDashboard() {
                     <button onClick={handleClearFilters} style={{ fontSize: "0.72rem", color: "#ef4444", fontWeight: 600, background: "none", border: "none", cursor: "pointer", padding: "2px 6px" }}>Clear all</button>
                   </div>
                 )}
-                <div id="print-area" style={{ marginTop: "20px", overflowX: "auto" }}>
-                  <table style={{ width: "100%", minWidth: "820px", borderCollapse: "separate", borderSpacing: "0 8px", textAlign: "left", fontSize: "0.875rem" }}>
+
+                <div id="print-area" style={{ marginTop: "20px", width: "100%", overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "separate", borderSpacing: "0 8px", textAlign: "left", fontSize: "0.875rem", minWidth: "700px" }}>
                     <thead>
                       <tr style={{ fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "#94a3b8" }}>
                         <th style={{ width: "40px", padding: "8px 12px" }}><input type="checkbox" style={{ width: "16px", height: "16px", borderRadius: "4px", accentColor: "#2563eb" }} /></th>
@@ -489,14 +572,58 @@ export default function NotificationsDashboard() {
                     </tbody>
                   </table>
                 </div>
-                <div style={{ marginTop: "24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+
+                <div style={{ marginTop: "24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
                   <p style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
                     Showing {filtered.length === 0 ? 0 : (activePage - 1) * ITEMS_PER_PAGE + 1} to {Math.min(activePage * ITEMS_PER_PAGE, filtered.length)} of {filtered.length} notifications
                   </p>
                   <Pagination active={activePage} total={totalPages} onChange={setActivePage} />
                 </div>
               </motion.section>
-              <aside style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+
+              {!isMobile ? (
+                <aside style={{ display: "flex", flexDirection: "column", gap: "24px", minWidth: 0 }}>
+                  <FiltersPanel
+                    filterType={filterType} setFilterType={setFilterType}
+                    filterStatus={filterStatus} setFilterStatus={setFilterStatus}
+                    filterHackathon={filterHackathon} setFilterHackathon={setFilterHackathon}
+                    hackathons={hackathons}
+                    dateFrom={dateFrom} setDateFrom={setDateFrom}
+                    dateTo={dateTo} setDateTo={setDateTo}
+                    onApply={handleApplyFilters} onClear={handleClearFilters}
+                  />
+                  <TemplatesPanel
+                    templates={templatesList}
+                    onViewAll={() => setShowViewAll(true)}
+                    onManage={() => setShowManage(true)}
+                  />
+                </aside>
+              ) : (
+                null
+              )}
+            </div>
+          </div>
+        </div>
+
+        <AnimatePresence>
+          {isMobile && mobileSidebarOpen && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(15,23,42,0.35)", backdropFilter: "blur(6px)" }}
+                onClick={() => setMobileSidebarOpen(false)}
+              />
+              <motion.aside
+                initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
+                transition={{ type: "spring", damping: 24, stiffness: 200 }}
+                style={{ position: "fixed", top: 0, right: 0, zIndex: 210, height: "100vh", width: "min(85vw, 360px)", overflowY: "auto", background: "rgba(255,255,255,0.95)", backdropFilter: "blur(24px)", borderLeft: "1px solid rgba(255,255,255,0.7)", padding: "24px", display: "flex", flexDirection: "column", gap: "24px", boxShadow: "0 24px 60px rgba(15,23,42,0.2)" }}
+              >
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                  <button onClick={() => setMobileSidebarOpen(false)} style={{ background: "rgba(241,245,249,0.8)", border: "none", borderRadius: "10px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#64748b" }}>
+                    <X size={16} />
+                  </button>
+                </div>
                 <FiltersPanel
                   filterType={filterType} setFilterType={setFilterType}
                   filterStatus={filterStatus} setFilterStatus={setFilterStatus}
@@ -504,21 +631,24 @@ export default function NotificationsDashboard() {
                   hackathons={hackathons}
                   dateFrom={dateFrom} setDateFrom={setDateFrom}
                   dateTo={dateTo} setDateTo={setDateTo}
-                  onApply={handleApplyFilters} onClear={handleClearFilters}
+                  onApply={() => { handleApplyFilters(); setMobileSidebarOpen(false); }}
+                  onClear={handleClearFilters}
                 />
                 <TemplatesPanel
                   templates={templatesList}
-                  onViewAll={() => setShowViewAll(true)}
-                  onManage={() => setShowManage(true)}
+                  onViewAll={() => { setShowViewAll(true); setMobileSidebarOpen(false); }}
+                  onManage={() => { setShowManage(true); setMobileSidebarOpen(false); }}
                 />
-              </aside>
-            </div>
-          </div>
-        </div>
+              </motion.aside>
+            </>
+          )}
+        </AnimatePresence>
+
         <AnimatePresence>
           {detailNotif && (
-            <Modal title="Notification Detail" onClose={() => setDetailNotif(null)}>
-              <div style={{ display: "flex", alignItems: "flex-start", gap: "16px", marginBottom: "20px" }}>
+            <Modal title="Notification Detail" onClose={() => setDetailNotif(null)} wide={false}>
+              {/* ... same content as original, no changes needed beyond modal itself ... */}
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "16px", marginBottom: "20px", flexWrap: "wrap" }}>
                 <span style={{ width: "52px", height: "52px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "16px", flexShrink: 0 }} className={detailNotif.iconBg}>
                   <detailNotif.icon size={24} className={detailNotif.iconColor} />
                 </span>
@@ -544,7 +674,7 @@ export default function NotificationsDashboard() {
                   </div>
                 ))}
               </div>
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px", flexWrap: "wrap" }}>
                 <button onClick={() => setDetailNotif(null)}
                   style={{ padding: "9px 18px", borderRadius: "12px", border: "1.5px solid rgba(203,213,225,0.6)", background: "rgba(255,255,255,0.5)", fontSize: "0.875rem", fontWeight: 500, color: "#64748b", cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                   Close
@@ -566,23 +696,24 @@ export default function NotificationsDashboard() {
             </Modal>
           )}
         </AnimatePresence>
+
         <AnimatePresence>
           {showViewAll && (
             <Modal title="All Notification Templates" onClose={() => setShowViewAll(false)} wide>
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px", maxHeight: "50vh", overflowY: "auto" }}>
                 {templatesList.map(t => (
-                  <div key={t.id} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 16px", borderRadius: "16px", background: "rgba(248,250,252,0.7)", border: "1px solid rgba(226,232,240,0.6)" }}>
+                  <div key={t.id} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 16px", borderRadius: "16px", background: "rgba(248,250,252,0.7)", border: "1px solid rgba(226,232,240,0.6)", flexWrap: "wrap" }}>
                     <span style={{ width: "40px", height: "40px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "12px", flexShrink: 0 }} className={t.bg}>
                       <t.icon size={18} className={t.color} />
                     </span>
-                    <span style={{ flex: 1, fontSize: "0.9rem", fontWeight: 600, color: "#0b1b52" }}>{t.name}</span>
+                    <span style={{ flex: 1, fontSize: "0.9rem", fontWeight: 600, color: "#0b1b52", minWidth: "120px" }}>{t.name}</span>
                     <button style={{ display: "flex", alignItems: "center", gap: "6px", padding: "7px 14px", borderRadius: "10px", background: "rgba(239,246,255,0.8)", border: "1.5px solid rgba(147,197,253,0.4)", color: "#2563eb", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                       <FileText size={13} /> Use Template
                     </button>
                   </div>
                 ))}
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "8px" }}>
                 <button onClick={() => { setShowViewAll(false); setShowManage(true); }}
                   style={{ display: "flex", alignItems: "center", gap: "6px", padding: "9px 16px", borderRadius: "12px", border: "1.5px solid rgba(203,213,225,0.6)", background: "rgba(255,255,255,0.5)", color: "#64748b", fontSize: "0.875rem", fontWeight: 500, cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                   <Settings size={15} /> Manage
@@ -595,16 +726,17 @@ export default function NotificationsDashboard() {
             </Modal>
           )}
         </AnimatePresence>
+
         <AnimatePresence>
           {showManage && (
             <Modal title="Manage Templates" onClose={() => setShowManage(false)} wide>
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "300px", overflowY: "auto", marginBottom: "20px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxHeight: "50vh", overflowY: "auto", marginBottom: "20px" }}>
                 {templatesList.map(t => (
-                  <div key={t.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 14px", borderRadius: "14px", background: "rgba(248,250,252,0.7)", border: "1px solid rgba(226,232,240,0.5)" }}>
+                  <div key={t.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 14px", borderRadius: "14px", background: "rgba(248,250,252,0.7)", border: "1px solid rgba(226,232,240,0.5)", flexWrap: "wrap" }}>
                     <span style={{ width: "36px", height: "36px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "10px", flexShrink: 0 }} className={t.bg}>
                       <t.icon size={16} className={t.color} />
                     </span>
-                    <span style={{ flex: 1, fontSize: "0.875rem", fontWeight: 600, color: "#0b1b52" }}>{t.name}</span>
+                    <span style={{ flex: 1, fontSize: "0.875rem", fontWeight: 600, color: "#0b1b52", minWidth: "120px" }}>{t.name}</span>
                     <button onClick={() => { setTemplatesList(prev => prev.filter(x => x.id !== t.id)); showToast("Template removed", "info"); }}
                       style={{ width: "30px", height: "30px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "8px", background: "rgba(254,226,226,0.7)", border: "1px solid rgba(252,165,165,0.4)", color: "#ef4444", cursor: "pointer" }}>
                       <Trash2 size={14} />
@@ -615,11 +747,11 @@ export default function NotificationsDashboard() {
                   <div style={{ textAlign: "center", padding: "32px", color: "#94a3b8", fontSize: "0.875rem" }}>No templates yet.</div>
                 )}
               </div>
-              <div style={{ borderTop: "1px solid rgba(226,232,240,0.6)", paddingTop: "16px", display: "flex", gap: "10px" }}>
+              <div style={{ borderTop: "1px solid rgba(226,232,240,0.6)", paddingTop: "16px", display: "flex", gap: "10px", flexWrap: "wrap" }}>
                 <input
                   value={newTplName} onChange={e => setNewTplName(e.target.value)}
                   placeholder="New template name..."
-                  style={{ flex: 1, background: "rgba(255,255,255,0.7)", border: "1.5px solid rgba(203,213,225,0.5)", borderRadius: "12px", padding: "10px 14px", fontSize: "0.875rem", color: "#334155", fontFamily: "'Plus Jakarta Sans', sans-serif", outline: "none" }}
+                  style={{ flex: 1, background: "rgba(255,255,255,0.7)", border: "1.5px solid rgba(203,213,225,0.5)", borderRadius: "12px", padding: "10px 14px", fontSize: "0.875rem", color: "#334155", fontFamily: "'Plus Jakarta Sans', sans-serif", outline: "none", minWidth: "180px" }}
                 />
                 <button
                   onClick={() => {
@@ -647,6 +779,7 @@ export default function NotificationsDashboard() {
             </Modal>
           )}
         </AnimatePresence>
+
         <AnimatePresence>
           {toast && (
             <motion.div
@@ -665,6 +798,7 @@ export default function NotificationsDashboard() {
     </>
   );
 }
+
 function Modal({ title, children, onClose, wide }) {
   return (
     <motion.div
@@ -675,7 +809,7 @@ function Modal({ title, children, onClose, wide }) {
       <motion.div
         initial={{ opacity: 0, y: 20, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.97 }}
         transition={{ type: "spring", stiffness: 300, damping: 24 }}
-        style={{ background: "rgba(255,255,255,0.95)", backdropFilter: "blur(24px)", border: "1px solid rgba(255,255,255,0.7)", borderRadius: "28px", padding: "28px", width: "100%", maxWidth: wide ? "520px" : "440px", boxShadow: "0 24px 60px rgba(15,23,42,0.15)" }}
+        style={{ background: "rgba(255,255,255,0.95)", backdropFilter: "blur(24px)", border: "1px solid rgba(255,255,255,0.7)", borderRadius: "28px", padding: "28px", width: "min(95vw, " + (wide ? "520px" : "440px") + ")", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 24px 60px rgba(15,23,42,0.15)" }}
         onClick={e => e.stopPropagation()}
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
@@ -689,17 +823,25 @@ function Modal({ title, children, onClose, wide }) {
     </motion.div>
   );
 }
-function Navbar() {
+
+function Navbar({ onSidebarToggle, isMobile }) {
   return (
     <motion.nav
       initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
-      style={{ borderBottom: "1px solid rgba(255,255,255,0.4)", padding: "16px 24px", display: "flex", alignItems: "center", gap: "16px" }}
+      style={{ borderBottom: "1px solid rgba(255,255,255,0.4)", padding: "16px 0", display: "flex", alignItems: "center", gap: "16px" }}
     >
-      <div>
+      <div style={{ minWidth: 0 }}>
         <p style={{ fontSize: "1.5rem", fontWeight: 800, letterSpacing: "-0.02em", color: "#0b1b52" }}>Admin Notifications</p>
-        <p style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: "2px" }}>View and manage all real-time notifications sent across the platform.</p>
       </div>
       <div style={{ flex: 1 }} />
+      {isMobile && (
+        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+          onClick={onSidebarToggle}
+          className="glass-soft"
+          style={{ width: "40px", height: "40px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "12px", border: "none", cursor: "pointer", color: "#2563eb" }}>
+          <Menu size={20} />
+        </motion.button>
+      )}
       <motion.button whileHover={{ scale: 1.05 }}
         style={{ width: "40px", height: "40px", overflow: "hidden", borderRadius: "9999px", border: "none", cursor: "pointer", boxShadow: "0 0 0 2px rgba(255,255,255,0.8), 0 4px 12px rgba(37,99,235,0.2)" }}>
         <img src="https://i.pravatar.cc/80" alt="Account" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -711,17 +853,17 @@ function Navbar() {
 function StatsGrid() {
   return (
     <motion.div initial="hidden" animate="show" variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } } }}
-      style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px" }}>
+      className="stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px" }}>
       {stats.map(s => (
         <motion.div key={s.label} variants={{ hidden: { opacity: 0, y: 18 }, show: { opacity: 1, y: 0 } }}
           whileHover={{ y: -4, scale: 1.01 }} transition={{ type: "spring", stiffness: 220, damping: 18 }}
-          className="glass shadow-glass" style={{ borderRadius: "28px", padding: "20px" }}>
+          className="glass shadow-glass" style={{ borderRadius: "28px", padding: "20px", minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-            <div style={{ width: "56px", height: "56px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "16px" }}
+            <div style={{ width: "56px", height: "56px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "16px", flexShrink: 0 }}
               className={`bg-gradient-to-br ${s.iconBg}`}>
               <s.icon size={24} className={s.iconColor} />
             </div>
-            <div>
+            <div style={{ minWidth: 0 }}>
               <p style={{ fontSize: "0.8rem", color: "#64748b" }}>{s.label}</p>
               <p style={{ fontSize: "1.75rem", fontWeight: 700, color: "#0b1b52", lineHeight: 1.1 }}>{s.value}</p>
             </div>
@@ -736,6 +878,7 @@ function StatsGrid() {
     </motion.div>
   );
 }
+
 function Pagination({ active, total, onChange }) {
   const getPages = () => {
     if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1);
@@ -772,10 +915,11 @@ function Pagination({ active, total, onChange }) {
     </div>
   );
 }
+
 function FiltersPanel({ filterType, setFilterType, filterStatus, setFilterStatus, filterHackathon, setFilterHackathon, hackathons, dateFrom, setDateFrom, dateTo, setDateTo, onApply, onClear }) {
   return (
     <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.3 }}
-      className="glass shadow-glass" style={{ borderRadius: "30px", padding: "24px" }}>
+      className="glass shadow-glass" style={{ borderRadius: "30px", padding: "24px", width: "100%" }}>
       <h3 style={{ fontSize: "1.05rem", fontWeight: 700, color: "#0b1b52", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Notification Filters</h3>
       <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", gap: "16px" }}>
         <CustomSelect label="Type" value={filterType} onChange={setFilterType}
@@ -816,10 +960,11 @@ function FiltersPanel({ filterType, setFilterType, filterStatus, setFilterStatus
     </motion.div>
   );
 }
+
 function TemplatesPanel({ templates, onViewAll, onManage }) {
   return (
     <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.45 }}
-      className="glass shadow-glass" style={{ borderRadius: "30px", padding: "24px" }}>
+      className="glass shadow-glass" style={{ borderRadius: "30px", padding: "24px", width: "100%" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <h3 style={{ fontSize: "1.05rem", fontWeight: 700, color: "#0b1b52", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Notification Templates</h3>
         <button onClick={onViewAll} style={{ fontSize: "0.75rem", fontWeight: 600, color: "#2563eb", background: "none", border: "none", cursor: "pointer", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>View All</button>
@@ -828,13 +973,13 @@ function TemplatesPanel({ templates, onViewAll, onManage }) {
         {templates.slice(0, 5).map((t, i) => (
           <motion.li key={t.id || t.name}
             initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 + i * 0.06 }}
-            style={{ display: "flex", alignItems: "center", gap: "12px", borderRadius: "14px", padding: "8px 10px", transition: "background 0.2s", cursor: "pointer" }}
+            style={{ display: "flex", alignItems: "center", gap: "12px", borderRadius: "14px", padding: "8px 10px", transition: "background 0.2s", cursor: "pointer", minWidth: 0 }}
             onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.6)"}
             onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
             <span style={{ width: "36px", height: "36px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "10px", flexShrink: 0 }} className={t.bg}>
               <t.icon size={16} className={t.color} />
             </span>
-            <span style={{ flex: 1, fontSize: "0.875rem", fontWeight: 500, color: "#0b1b52", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{t.name}</span>
+            <span style={{ flex: 1, fontSize: "0.875rem", fontWeight: 500, color: "#0b1b52", fontFamily: "'Plus Jakarta Sans', sans-serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.name}</span>
             <button className="glass-soft" style={{ width: "28px", height: "28px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "8px", border: "none", cursor: "pointer", color: "#f43f5e", flexShrink: 0 }}>
               <FileText size={13} />
             </button>

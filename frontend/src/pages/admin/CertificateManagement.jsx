@@ -1,5 +1,4 @@
-﻿
-import { useState, useRef } from "react";
+﻿import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Bell, User, ShieldCheck, FileText, Medal, Download,
@@ -10,8 +9,9 @@ import {
 
 const styleTag = document.createElement("style");
 styleTag.textContent =
-  ".scrollbar-hide::-webkit-scrollbar{display:none}.scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none}";
+  ".scrollbar-hide::-webkit-scrollbar{display:none}.scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none} html,body,#root{overflow-x:hidden;width:100%;max-width:100%} *{box-sizing:border-box} img,svg,video,canvas{max-width:100%}";
 document.head.appendChild(styleTag);
+
 const INITIAL_TEMPLATES = [
   { id: 1, name: "Participation Certificate", desc: "Certificate for all participants", type: "Participation", usage: 1756, date: "May 18, 2026", time: "10:30 AM", color: "from-blue-200 to-blue-400" },
   { id: 2, name: "Rank Certificate", desc: "Certificate for winners with rank", type: "Rank", usage: 702, date: "May 17, 2026", time: "02:15 PM", color: "from-purple-200 to-purple-400" },
@@ -78,7 +78,7 @@ function Modal({ title, children, onClose, wide = false }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm" onClick={onClose}>
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-        className={`bg-white rounded-3xl shadow-2xl p-6 w-full mx-4 border border-white/60 ${wide ? "max-w-lg" : "max-w-md"}`}
+        className={`bg-white rounded-3xl shadow-2xl p-6 w-full mx-2 sm:mx-4 border border-white/60 max-h-[90vh] overflow-y-auto ${wide ? "max-w-lg" : "max-w-md"}`}
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-5">
@@ -164,7 +164,7 @@ export default function CertificatesDashboard() {
   const [activeTab, setActiveTab] = useState(0);
   const [templates, setTemplates] = useState(INITIAL_TEMPLATES);
   const [issued, setIssued] = useState(INITIAL_ISSUED);
-  const [modal, setModal] = useState(null); // { type: "create" | "edit" | "view" | "delete" | "viewIssued" | "deleteIssued" | "bulkGen" | "settings" | "design" | "preview" }
+  const [modal, setModal] = useState(null);
   const [toast, setToast] = useState(null);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
@@ -266,34 +266,33 @@ export default function CertificatesDashboard() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-[#ecfcff] via-[#f8ffff] to-[#dff7ff] font-sans text-[#0b1b52] scrollbar-hide">
-      <div className="mx-auto w-full max-w-[1850px] px-6 lg:px-10 pb-6 pt-0">
+    <div className="min-h-screen w-full bg-gradient-to-br from-[#ecfcff] via-[#f8ffff] to-[#dff7ff] font-sans text-[#0b1b52] scrollbar-hide overflow-x-hidden">
+      <div className="mx-auto w-full max-w-[1850px] px-4 sm:px-6 lg:px-10 pb-6 pt-0">
 
         <motion.nav
           initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
-          className="border-b border-white/40 -mx-6 lg:-mx-10 px-6 lg:px-10 pt-4 pb-4 flex items-center gap-4"
+          className="border-b border-white/40 -mx-6 lg:-mx-10 px-4 sm:px-6 lg:px-10 pt-4 pb-4 flex flex-wrap items-center gap-4 gap-y-3"
         >
-          <div className="flex items-center gap-3">
-            <div>
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="min-w-0">
               <p className="text-2xl font-bold text-[#0b1b52]">Certificates</p>
-              <p className="text-xs text-slate-400">Create, manage and configure certificate templates and issued certificates.</p>
             </div>
           </div>
 
           <div className="flex-1" />
 
-         
-          <div className="w-36">
+          <div className="w-[90px] sm:w-[110px] md:w-[140px] shrink-0">
             <CustomDropdown
               value={typeFilter}
               onChange={v => setTypeFilter(v)}
               options={["All", "Participation", "Rank", "Special"]}
             />
           </div>
-          <button type="button" className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full ring-2 ring-white/80 shadow-md transition hover:ring-blue-300" aria-label="Account">
-            <img src="https://i.pravatar.cc/80" alt="Account" className="h-full w-full object-cover" />
+          <button type="button" className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full ring-2 ring-white/80 shadow-md transition hover:ring-blue-300 shrink-0" aria-label="Account">
+            <img src="https://i.pravatar.cc/80" alt="Account" className="h-full w-full object-cover rounded-full" />
           </button>
         </motion.nav>
+
         <motion.section
           initial="hidden" animate="show"
           variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08, delayChildren: 0.15 } } }}
@@ -321,13 +320,14 @@ export default function CertificatesDashboard() {
             </motion.div>
           ))}
         </motion.section>
+
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-[72%_28%] gap-6">
-          <div className="space-y-6">
+          <div className="space-y-6 min-w-0">
             <motion.div
               initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
               className="rounded-[24px] bg-white/70 backdrop-blur-xl border border-white/60 shadow-[0_10px_40px_rgba(13,38,103,0.05)] px-6 pt-4"
             >
-              <div className="flex gap-8 border-b border-slate-100 overflow-x-auto scrollbar-hide">
+              <div className="flex gap-8 border-b border-slate-100 overflow-x-auto scrollbar-hide whitespace-nowrap">
                 {TABS.map((t, i) => (
                   <button
                     key={t} onClick={() => setActiveTab(i)}
@@ -338,22 +338,23 @@ export default function CertificatesDashboard() {
                   </button>
                 ))}
               </div>
+
               {activeTab === 0 && (
                 <div>
                   <div className="flex flex-wrap items-center justify-between gap-4 py-5">
-                    <div>
+                    <div className="min-w-0">
                       <h3 className="text-lg font-bold text-[#0b1b52]">Certificate Templates</h3>
-                      <p className="text-sm text-slate-500">Manage certificate templates for different types.</p>
+                      <p className="text-sm text-slate-500 break-words">Manage certificate templates for different types.</p>
                     </div>
                     <motion.button
                       whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                       onClick={() => { setForm({ name: "", type: "", desc: "", file: null }); setFormError({}); setModal({ type: "create" }); }}
-                      className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 transition"
+                      className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 transition shrink-0"
                     >
                       <Plus className="h-4 w-4" /> Create New Template
                     </motion.button>
                   </div>
-                  <div className="overflow-x-auto scrollbar-hide pb-6">
+                  <div className="overflow-x-auto scrollbar-hide pb-6 w-full">
                     <table className="w-full min-w-[700px] text-left">
                       <thead>
                         <tr className="text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-50/70">
@@ -373,7 +374,7 @@ export default function CertificatesDashboard() {
                             className="border-b border-slate-100 last:border-0 hover:bg-blue-50/40 transition"
                           >
                             <td className="px-4 py-4">
-                              <div className="flex items-center gap-4">
+                              <div className="flex items-center gap-4 min-w-0">
                                 <div className="h-12 w-16 rounded-lg ring-1 ring-white shadow-sm shrink-0 overflow-hidden">
                                   <img
                                     src={`/src/assets/${t.id === 1 ? "certificate1" :
@@ -385,9 +386,9 @@ export default function CertificatesDashboard() {
                                     className="h-full w-full object-cover"
                                   />
                                 </div>
-                                <div>
-                                  <p className="font-semibold text-[#0b1b52] text-sm">{t.name}</p>
-                                  <p className="text-xs text-slate-500">{t.desc}</p>
+                                <div className="min-w-0">
+                                  <p className="font-semibold text-[#0b1b52] text-sm truncate">{t.name}</p>
+                                  <p className="text-xs text-slate-500 truncate">{t.desc}</p>
                                 </div>
                               </div>
                             </td>
@@ -400,7 +401,7 @@ export default function CertificatesDashboard() {
                               <p className="text-xs text-slate-400">{t.time}</p>
                             </td>
                             <td className="px-4 py-4">
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 {[
                                   { Icon: Eye, color: "text-blue-600 bg-blue-50 hover:bg-blue-100", onClick: () => setModal({ type: "view", data: t }) },
                                   { Icon: Pencil, color: "text-amber-600 bg-amber-50 hover:bg-amber-100", onClick: () => { setEditForm({ ...t }); setModal({ type: "edit" }); } },
@@ -427,16 +428,17 @@ export default function CertificatesDashboard() {
                   </div>
                 </div>
               )}
+
               {activeTab === 1 && (
                 <div>
                   <div className="flex flex-wrap items-center justify-between gap-4 py-5">
-                    <div>
+                    <div className="min-w-0">
                       <h3 className="text-lg font-bold text-[#0b1b52]">Issued Certificates</h3>
-                      <p className="text-sm text-slate-500">View and manage all issued certificates.</p>
+                      <p className="text-sm text-slate-500 break-words">View and manage all issued certificates.</p>
                     </div>
-                    <span className="text-xs text-slate-400 bg-slate-100 px-3 py-1.5 rounded-full">{filteredIssued.length} records</span>
+                    <span className="text-xs text-slate-400 bg-slate-100 px-3 py-1.5 rounded-full shrink-0">{filteredIssued.length} records</span>
                   </div>
-                  <div className="overflow-x-auto scrollbar-hide pb-6">
+                  <div className="overflow-x-auto scrollbar-hide pb-6 w-full">
                     <table className="w-full min-w-[760px] text-left">
                       <thead>
                         <tr className="text-xs font-semibold uppercase tracking-wider text-slate-500 bg-slate-50/70">
@@ -457,24 +459,24 @@ export default function CertificatesDashboard() {
                             className="border-b border-slate-100 last:border-0 hover:bg-blue-50/40 transition"
                           >
                             <td className="px-4 py-4">
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-3 min-w-0">
                                 <div className="h-9 w-9 rounded-full shrink-0 overflow-hidden ring-2 ring-white shadow">
-  <img src={cert.avatar} alt={cert.recipient} className="h-full w-full object-cover" />
-</div>
-                                <div>
-                                  <p className="font-semibold text-sm text-[#0b1b52]">{cert.recipient}</p>
-                                  <p className="text-xs text-slate-400">{cert.certId}</p>
+                                  <img src={cert.avatar} alt={cert.recipient} className="h-full w-full object-cover rounded-full" />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="font-semibold text-sm text-[#0b1b52] truncate">{cert.recipient}</p>
+                                  <p className="text-xs text-slate-400 truncate">{cert.certId}</p>
                                 </div>
                               </div>
                             </td>
-                            <td className="px-4 py-4 text-sm text-slate-600">{cert.template}</td>
-                            <td className="px-4 py-4 text-sm text-slate-600">{cert.hackathon}</td>
+                            <td className="px-4 py-4 text-sm text-slate-600 truncate">{cert.template}</td>
+                            <td className="px-4 py-4 text-sm text-slate-600 truncate">{cert.hackathon}</td>
                             <td className="px-4 py-4 text-sm text-[#0b1b52] font-medium">{cert.issuedOn}</td>
                             <td className="px-4 py-4">
                               <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${STATUS_BADGE[cert.status]}`}>{cert.status}</span>
                             </td>
                             <td className="px-4 py-4">
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
                                   onClick={() => setModal({ type: "viewIssued", data: cert })}
                                   className="grid place-items-center h-9 w-9 rounded-lg text-blue-600 bg-blue-50 hover:bg-blue-100 ring-1 ring-white/80 transition"
@@ -512,7 +514,7 @@ export default function CertificatesDashboard() {
                   <p className="text-sm text-slate-500 mt-1 mb-6">Verify the authenticity of any issued certificate by its ID.</p>
 
                   <div className="flex gap-3 max-w-xl">
-                    <div className="relative flex-1">
+                    <div className="relative flex-1 min-w-0">
                       <QrCode className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                       <input
                         value={verifInput}
@@ -525,7 +527,7 @@ export default function CertificatesDashboard() {
                     <motion.button
                       whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                       onClick={handleVerify}
-                      className="px-5 py-3 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white text-sm font-semibold shadow-lg shadow-blue-600/25 transition"
+                      className="px-5 py-3 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white text-sm font-semibold shadow-lg shadow-blue-600/25 transition shrink-0"
                     >
                       Verify
                     </motion.button>
@@ -579,16 +581,16 @@ export default function CertificatesDashboard() {
                         <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.05 }}
                           className="flex items-center justify-between px-4 py-3 rounded-xl bg-white border border-slate-100 hover:border-slate-200 transition"
                         >
-                          <div className="flex items-center gap-3">
-                            <div className="h-8 w-8 rounded-lg bg-slate-100 grid place-items-center">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="h-8 w-8 rounded-lg bg-slate-100 grid place-items-center shrink-0">
                               <Award className="h-4 w-4 text-slate-500" />
                             </div>
-                            <div>
-                              <p className="text-sm font-semibold text-[#0b1b52]">{v.certId}</p>
-                              <p className="text-xs text-slate-400">{v.recipient} · {v.by}</p>
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-[#0b1b52] truncate">{v.certId}</p>
+                              <p className="text-xs text-slate-400 truncate">{v.recipient} · {v.by}</p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 shrink-0">
                             <span className="text-xs text-slate-400 flex items-center gap-1"><Clock className="h-3 w-3" />{v.verifiedOn}</span>
                             <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${VERIF_BADGE[v.status]}`}>{v.status}</span>
                           </div>
@@ -606,13 +608,14 @@ export default function CertificatesDashboard() {
             >
             </motion.div>
           </div>
-          <div className="space-y-6">
+
+          <div className="space-y-6 min-w-0">
             <motion.div
               initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}
               className="rounded-[24px] bg-white/70 backdrop-blur-xl border border-white/60 shadow-[0_10px_40px_rgba(13,38,103,0.05)] p-6"
             >
               <h3 className="text-lg font-bold text-[#0b1b52]">Quick Actions</h3>
-              <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {quickActions.map(a => (
                   <motion.button
                     key={a.title} whileHover={{ y: -3, scale: 1.02 }} whileTap={{ scale: 0.97 }}
@@ -622,12 +625,13 @@ export default function CertificatesDashboard() {
                     <div className={`h-9 w-9 rounded-lg grid place-items-center ${a.color}`}>
                       <a.icon className="h-4 w-4" />
                     </div>
-                    <p className="mt-2 text-sm font-semibold text-[#0b1b52]">{a.title}</p>
-                    <p className="text-xs text-slate-500">{a.desc}</p>
+                    <p className="mt-2 text-sm font-semibold text-[#0b1b52] break-words">{a.title}</p>
+                    <p className="text-xs text-slate-500 break-words">{a.desc}</p>
                   </motion.button>
                 ))}
               </div>
             </motion.div>
+
             <motion.div
               initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}
               className="rounded-[24px] bg-white/70 backdrop-blur-xl border border-white/60 shadow-[0_10px_40px_rgba(13,38,103,0.05)] p-6"
@@ -635,10 +639,10 @@ export default function CertificatesDashboard() {
               <h3 className="text-lg font-bold text-[#0b1b52] mb-4">Recent Activity</h3>
               <div className="space-y-3">
                 {issued.slice(0, 4).map((cert, i) => (
-                  <div key={cert.id} className="flex items-center gap-3">
+                  <div key={cert.id} className="flex items-center gap-3 min-w-0">
                     <div className="h-8 w-8 rounded-full shrink-0 overflow-hidden ring-2 ring-white shadow">
-  <img src={cert.avatar} alt={cert.recipient} className="h-full w-full object-cover" />
-</div>
+                      <img src={cert.avatar} alt={cert.recipient} className="h-full w-full object-cover rounded-full" />
+                    </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-[#0b1b52] truncate">{cert.recipient}</p>
                       <p className="text-xs text-slate-400 truncate">{cert.template}</p>
@@ -651,6 +655,7 @@ export default function CertificatesDashboard() {
           </div>
         </div>
       </div>
+
       <AnimatePresence>
         {modal?.type === "create" && (
           <Modal title="Create New Template" onClose={() => setModal(null)}>
@@ -775,7 +780,7 @@ export default function CertificatesDashboard() {
                 <Trash2 className="h-6 w-6 text-red-600" />
               </div>
               <p className="text-sm text-slate-600 mb-1">Are you sure you want to delete</p>
-              <p className="font-bold text-[#0b1b52]">"{modal.data.name}"</p>
+              <p className="font-bold text-[#0b1b52] break-words">"{modal.data.name}"</p>
               <p className="text-xs text-slate-400 mt-1">This action cannot be undone.</p>
             </div>
             <div className="flex gap-3 mt-6">
@@ -821,7 +826,7 @@ export default function CertificatesDashboard() {
                 <XCircle className="h-6 w-6 text-red-600" />
               </div>
               <p className="text-sm text-slate-600 mb-1">Revoke certificate for</p>
-              <p className="font-bold text-[#0b1b52]">{modal.data.recipient}</p>
+              <p className="font-bold text-[#0b1b52] break-words">{modal.data.recipient}</p>
               <p className="text-xs text-slate-400 mt-1">{modal.data.certId} · This cannot be undone.</p>
             </div>
             <div className="flex gap-3 mt-6">
@@ -883,8 +888,11 @@ export default function CertificatesDashboard() {
               ].map(o => (
                 <button key={o.label} onClick={() => { setModal(null); showToast(`Opening ${o.label}...`, "info"); }}
                   className="w-full flex items-center gap-4 px-4 py-3 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50/40 transition text-left">
-                  <div className={`h-10 w-10 rounded-xl grid place-items-center ${o.color}`}><o.icon className="h-5 w-5" /></div>
-                  <div><p className="font-semibold text-sm text-[#0b1b52]">{o.label}</p><p className="text-xs text-slate-400">{o.desc}</p></div>
+                  <div className={`h-10 w-10 rounded-xl grid place-items-center shrink-0 ${o.color}`}><o.icon className="h-5 w-5" /></div>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm text-[#0b1b52]">{o.label}</p>
+                    <p className="text-xs text-slate-400 truncate">{o.desc}</p>
+                  </div>
                 </button>
               ))}
             </div>
@@ -901,8 +909,11 @@ export default function CertificatesDashboard() {
                   <div className={`h-10 w-14 rounded-lg bg-gradient-to-br ${t.color} grid place-items-center shrink-0`}>
                     <div className="h-5 w-8 rounded-sm bg-white/70" />
                   </div>
-                  <div><p className="font-semibold text-sm text-[#0b1b52]">{t.name}</p><p className="text-xs text-slate-400">{t.usage.toLocaleString()} issued</p></div>
-                  <span className={`ml-auto text-xs px-2.5 py-1 rounded-full ${TYPE_BADGE[t.type]}`}>{t.type}</span>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm text-[#0b1b52]">{t.name}</p>
+                    <p className="text-xs text-slate-400">{t.usage.toLocaleString()} issued</p>
+                  </div>
+                  <span className={`ml-auto text-xs px-2.5 py-1 rounded-full shrink-0 ${TYPE_BADGE[t.type]}`}>{t.type}</span>
                 </button>
               ))}
             </div>
@@ -918,9 +929,9 @@ export default function CertificatesDashboard() {
                 { label: "Allow Re-downloads", desc: "Participants can re-download anytime" },
               ].map((s, i) => (
                 <div key={s.label} className="flex items-center justify-between py-3 border-b border-slate-100 last:border-0">
-                  <div>
+                  <div className="min-w-0 mr-2">
                     <p className="text-sm font-semibold text-[#0b1b52]">{s.label}</p>
-                    <p className="text-xs text-slate-400">{s.desc}</p>
+                    <p className="text-xs text-slate-400 break-words">{s.desc}</p>
                   </div>
                   <ToggleSwitch defaultOn={i % 2 === 0} />
                 </div>
@@ -946,7 +957,7 @@ function ToggleSwitch({ defaultOn = false }) {
   const [on, setOn] = useState(defaultOn);
   return (
     <button onClick={() => setOn(!on)}
-      className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${on ? "bg-blue-600" : "bg-slate-200"}`}
+      className={`relative w-11 h-6 rounded-full transition-colors duration-200 shrink-0 ${on ? "bg-blue-600" : "bg-slate-200"}`}
     >
       <span className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all duration-200 ${on ? "left-6" : "left-1"}`} />
     </button>

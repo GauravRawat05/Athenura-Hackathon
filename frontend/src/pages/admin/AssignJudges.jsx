@@ -295,7 +295,6 @@ export default function Dashboard() {
             <div className="flex items-center gap-3">
               <div>
                 <p className="text-2xl font-bold text-[#0b1b52]">Judge Management</p>
-                <p className="text-xs text-slate-400">Assign judges, review scores, resolve ties, and declare winners.</p>
               </div>
             </div>
             <div className="flex-1" />
@@ -383,8 +382,6 @@ export default function Dashboard() {
                     Manage Judges
                   </button>
                 </div>
-
-                {/* Tabs */}
                 <div className="mt-6 border-b border-slate-200/70 flex gap-6 overflow-x-auto">
                   {TABS.map((t, i) => (
                     <button

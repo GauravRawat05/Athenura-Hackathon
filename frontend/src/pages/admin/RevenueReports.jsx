@@ -116,7 +116,6 @@ function Navbar() {
         <div className="flex items-center gap-3">
           <div>
             <p className="text-2xl font-bold text-[#0b1b52]">Reports & Export</p>
-            <p className="text-xs text-slate-400">Generate reports and export data in CSV or PDF format.</p>
           </div>
         </div>
         <div className="flex-1" />

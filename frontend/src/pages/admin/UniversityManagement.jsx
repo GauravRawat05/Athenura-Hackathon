@@ -355,7 +355,6 @@ export function UniversityDashboard() {
           className="flex items-center gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-[#0b1b52]">University Management</h1>
-            <p className="text-xs text-slate-400 mt-0.5">Create, view, edit and manage university entries.</p>
           </div>
           <div className="flex-1" />
         

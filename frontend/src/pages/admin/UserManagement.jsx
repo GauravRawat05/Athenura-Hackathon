@@ -417,7 +417,7 @@ export default function UserManagementDashboard() {
   const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [toast, setToast] = useState(null); // Custom toast state
+  const [toast, setToast] = useState(null);
   const [tempRole, setTempRole] = useState("All Roles");
   const [tempStatus, setTempStatus] = useState("All Status");
   const [tempTeam, setTempTeam] = useState("All Teams");
@@ -574,7 +574,6 @@ export default function UserManagementDashboard() {
             <div className="flex items-center gap-3">
               <div>
                 <p className="text-2xl font-bold text-[#0b1b52]">User Management</p>
-                <p className="text-xs text-slate-400">View, manage, and control user accounts.</p>
               </div>
             </div>
             <div className="flex-1" />
