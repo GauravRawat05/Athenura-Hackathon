@@ -370,7 +370,7 @@ export default function Navbar() {
             {/* Actions */}
             <div className="hw-actions">
               <button
-                className="hw-btn-ghost"
+                className="hw-btn-primary"
                 onClick={() => navigate("/login")}
               >
                 Log in

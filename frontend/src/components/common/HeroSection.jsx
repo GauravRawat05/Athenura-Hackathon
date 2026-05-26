@@ -564,7 +564,7 @@ export default function HeroSection() {
                   <span className="hw-f-badge">
                     <span className="hw-f-live" /> Featured · Ends in 14h
                   </span>
-                  <h3 className="hw-f-title">Global AI Challenge 2025</h3>
+                  <h3 className="hw-f-title">Global AI Challenge 2026</h3>
                   <p className="hw-f-meta">
                     $50K prize pool · 4,200 participants joined
                   </p>
@@ -612,9 +612,6 @@ export default function HeroSection() {
         <div className="s-hiw-pattern" />
         <div className="s-hiw-inner">
           <div className={`reveal${hiwInView ? " in" : ""}`}>
-            <div className="s-eyebrow">
-              <div className="s-eyebrow-dot" /> Simple Process
-            </div>
             <h2 className="s-title-dark">
               From Zero to <span className="accent">Winner</span>
               <br />
