@@ -217,7 +217,7 @@ class CertificateController {
 
     return res
       .status(200)
-      .json(new ApiResponse(200, result.data, 'Certificates fetched successfully'));
+      .json(new ApiResponse(200, result, 'Certificates fetched successfully'));
   }
 }
 

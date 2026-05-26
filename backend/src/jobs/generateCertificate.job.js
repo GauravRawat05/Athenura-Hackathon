@@ -28,59 +28,79 @@
 
 import certificateService from '../modules/certificates/certificate.service.js';
 import Hackathon from '../modules/admin/hackathons/hackathon.model.js';
+import Team from '../modules/teams/team.model.js';
 import { CERTIFICATE_TYPES } from '../utils/constants/certificateTypes.js';
 
 /**
  * Batch certificate generation adapter.
  *
  * Iterates over `resultsData` (array of result summary objects) and calls
- * `certificateService.issueCertificate()` for each entry.  Each call fires
- * the full 3-stage non-blocking pipeline independently — the loop is
- * fire-and-forget from the caller's perspective.
+ * `certificateService.issueCertificate()` for each entry. 
+ * Expansion: If it's a team result, it fetches all team members and issues 
+ * a certificate to each.
  *
  * @param {string}        hackathonId   — MongoDB hackathon id
  * @param {Array<object>} resultsData   — array of result objects, each must have:
- *                                        { userId, certificateType, rank?, awardCategory? }
+ *                                        { userId, teamId, rank, awardCategory, submissionId }
  * @returns {Promise<void>}
  */
 const generateCertificateJob = async (hackathonId, resultsData = []) => {
-  console.log(`[Job] generateCertificate started for hackathon ${hackathonId} — ${resultsData.length} entries`);
+  console.log(`[Job] generateCertificate started for hackathon ${hackathonId} — ${resultsData.length} result entries`);
 
   let successCount = 0;
   let failCount = 0;
 
-  // Fetch hackathon metadata once for all entries.
-  let hackathonTitle = 'Hackathon';
-  try {
-    const hackathon = await Hackathon.findById(hackathonId);
-    if (hackathon) hackathonTitle = hackathon.title;
-  } catch {
-    // Non-fatal: continue with generic title if hackathon lookup fails.
-  }
-
   for (const result of resultsData) {
-    const { userId, certificateType, rank, awardCategory, submissionId } = result;
+    const { userId, teamId, rank, awardCategory, submissionId } = result;
 
-    try {
-      await certificateService.issueCertificate({
-        userId:              userId,
-        hackathonId:         hackathonId,
-        certificateType:     certificateType || CERTIFICATE_TYPES.PARTICIPATION,
-        awardCategory:       awardCategory || null,
-        rank:                rank || null,
-        submissionId:        submissionId || null,
-      });
-      successCount++;
-    } catch (issueErr) {
-      failCount++;
-      console.error(
-        `[Job Error] Certificate issue failed for user ${userId}:`,
-        issueErr.message
-      );
+    // Rank-based logic: 1-3 are Winners, others are Participants
+    const certificateType = (rank > 0 && rank <= 3) 
+      ? CERTIFICATE_TYPES.WINNER 
+      : CERTIFICATE_TYPES.PARTICIPATION;
+
+    // Identify recipients: single user or all team members
+    let recipientIds = [userId];
+    let teamName = null;
+
+    if (teamId) {
+      try {
+        const team = await Team.findById(teamId).populate('members.userId');
+        if (team) {
+          teamName = team.teamName;
+          // Filter only accepted members
+          recipientIds = team.members
+            .filter(m => m.invitationStatus === 'accepted')
+            .map(m => m.userId._id || m.userId);
+        }
+      } catch (teamErr) {
+        console.error(`[Job Error] Failed to fetch team members for team ${teamId}:`, teamErr.message);
+      }
+    }
+
+    // Issue certificates to all recipients
+    for (const recipientId of recipientIds) {
+      try {
+        await certificateService.issueCertificate({
+          userId:              recipientId,
+          hackathonId:         hackathonId,
+          certificateType:     certificateType,
+          awardCategory:       awardCategory || null,
+          rank:                rank || null,
+          submissionId:        submissionId || null,
+          teamName:            teamName
+        });
+        successCount++;
+      } catch (issueErr) {
+        failCount++;
+        console.error(
+          `[Job Error] Certificate issue failed for user ${recipientId}:`,
+          issueErr.message
+        );
+      }
     }
   }
 
-  console.log(`[Job Finished] generateCertificate: ${successCount} succeeded, ${failCount} failed.`);
+  console.log(`[Job Finished] generateCertificate: ${successCount} individual certificates issued, ${failCount} failed.`);
 };
 
 export default generateCertificateJob;

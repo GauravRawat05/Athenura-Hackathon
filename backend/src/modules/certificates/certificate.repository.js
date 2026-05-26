@@ -22,7 +22,8 @@ class CertificateRepository {
     return await Certificate.find({
       userId,
       isDeleted: false,
-      isRevoked: false
+      isRevoked: false,
+      generationStatus: GENERATION_STATUS.COMPLETED
     })
       .populate('hackathonId', 'title')
       .sort({ createdAt: -1 })
@@ -39,7 +40,7 @@ class CertificateRepository {
       userId,
       isDeleted: false,
       isRevoked: false,
-      generationStatus: 'COMPLETED'
+      generationStatus: GENERATION_STATUS.COMPLETED
     });
   }
 

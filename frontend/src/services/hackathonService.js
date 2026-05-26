@@ -9,4 +9,5 @@ export const hackathonService = {
   getMySubmission: (hackathonId) => api.get(`/submissions/hackathons/${hackathonId}/submissions/me`),
   createSubmission: (hackathonId, data) => api.post(`/submissions/hackathons/${hackathonId}/submissions`, data),
   updateSubmission: (submissionId, data) => api.patch(`/submissions/${submissionId}`, data),
+  getWinners: (id) => api.get(`/hackathons/${id}/winners`),
 };

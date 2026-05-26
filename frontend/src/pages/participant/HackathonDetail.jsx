@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../../components/common/Navbar";
-import { hackathons } from "../../data/hackathons";
+import { hackathonService } from "../../services/hackathonService";
 
 const statusConfig = {
   upcoming: { label: "Upcoming", color: "#0077B6", bg: "rgba(0,119,182,0.12)" },
@@ -24,13 +24,72 @@ const TAB_ICONS = {
 export default function HackathonDetail() {
   const { id } = useParams();
   const routerNavigate = useNavigate();
-  const h = hackathons.find((hk) => String(hk.id) === String(id));
+  const [h, setH] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("overview");
+
+  useEffect(() => {
+    const fetchHackathon = async () => {
+      try {
+        const response = await hackathonService.getHackathonById(id);
+        const data = response.data.data;
+        
+        // Map backend data to frontend structure
+        const mappedData = {
+          ...data,
+          id: data._id,
+          title: data.title,
+          tagline: data.tagline || data.description?.substring(0, 100) + "...",
+          status: data.status,
+          mode: (data.allowedModes && data.allowedModes.includes('team')) ? 'team' : 'solo',
+          prize: data.prizePool || 0,
+          fee: data.registrationFee || 0,
+          domain: data.technologyDomains?.[0] || "General",
+          deadline: data.registrationDeadline,
+          startDate: new Date(data.startDate).toLocaleDateString(),
+          endDate: new Date(data.endDate).toLocaleDateString(),
+          teamSize: { min: data.minTeamSize || 1, max: data.maxTeamSize || 4 },
+          participants: data.participantsCount || 0,
+          image: data.image || "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&q=80",
+          sponsors: data.sponsors?.map(s => s.name) || [],
+          tags: data.technologyDomains || [],
+          description: data.description,
+          rules: data.rules || [],
+          timeline: [
+            { date: new Date(data.startDate).toLocaleDateString(), event: "Hackathon Kickoff" },
+            { date: new Date(data.registrationDeadline).toLocaleDateString(), event: "Registration Closes" },
+            { date: new Date(data.submissionDeadline).toLocaleDateString(), event: "Submissions Deadline" },
+            { date: new Date(data.endDate).toLocaleDateString(), event: "Winners Announced" },
+          ],
+          prizes: [
+            { place: "1st", amount: `$${((data.prizePool || 0) * 0.6).toLocaleString()}`, perks: "Winner Trophy + Mentorship" },
+            { place: "2nd", amount: `$${((data.prizePool || 0) * 0.3).toLocaleString()}`, perks: "Runner up Trophy" },
+            { place: "3rd", amount: `$${((data.prizePool || 0) * 0.1).toLocaleString()}`, perks: "Participation Certificate" },
+          ],
+          judging: data.judgingCriteria?.map(j => ({
+            criterion: j.name,
+            weight: j.weight
+          })) || []
+        };
+        
+        setH(mappedData);
+      } catch (error) {
+        console.error("Error fetching hackathon details:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHackathon();
+  }, [id]);
+
+  if (loading) return <div style={{ color: "#0077B6", padding: 40 }}>Loading...</div>;
   if (!h)
     return (
       <div style={{ color: "#0077B6", padding: 40 }}>Hackathon not found.</div>
     );
-  const [activeTab, setActiveTab] = useState("overview");
-  const s = statusConfig[h.status];
+  
+  const s = statusConfig[h.status] || statusConfig.upcoming;
   const daysLeft = Math.max(
     0,
     Math.ceil((new Date(h.deadline) - new Date()) / 86400000),

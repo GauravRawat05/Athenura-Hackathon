@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
+import { hackathonService } from "../../services/hackathonService";
 
 /* ─────────────────────────────────────────
    DESIGN TOKENS
@@ -249,151 +250,6 @@ const IconTrophy = ({ color = GOLD, size = 30 }) => (
   </svg>
 );
 
-/* ─────────────────────────────────────────
-   MOCK DATA
-───────────────────────────────────────── */
-const hackathons = [
-  {
-    id: 1,
-    title: "Global AI Innovators Challenge 2025",
-    tagline: "Build the intelligence of tomorrow",
-    date: "May 2025",
-    domain: "Artificial Intelligence",
-    mode: "Team",
-    prize: "₹5,00,000",
-    participants: 1240,
-    teams: 310,
-    image: "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=600&q=80&auto=format&fit=crop",
-    winners: [
-      { rank: 1, team: "Neural Ninjas", project: "NeuroAssist – Adaptive Learning Engine", score: 98.4, uni: "DTU Delhi" },
-      { rank: 2, team: "DeepMind Crew", project: "VisionGuard – Real-time Threat Detection", score: 95.1, uni: "IIT Bombay" },
-      { rank: 3, team: "ByteBuilders", project: "SpeakEase – Regional Language NLP", score: 92.7, uni: "BITS Pilani" },
-    ],
-  },
-  {
-    id: 2,
-    title: "FinTech Security Sprint",
-    tagline: "Secure finance for a digital world",
-    date: "April 2025",
-    domain: "Cybersecurity",
-    mode: "Team",
-    prize: "₹3,00,000",
-    participants: 860,
-    teams: 215,
-    image: "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600&q=80&auto=format&fit=crop",
-    winners: [
-      { rank: 1, team: "BlockChain Titans", project: "VaultX – Zero-Trust Banking Layer", score: 97.2, uni: "IIT Delhi" },
-      { rank: 2, team: "CipherSquad", project: "SecureLedger – Immutable Audit Trail", score: 94.0, uni: "NIT Trichy" },
-      { rank: 3, team: "HexHackers", project: "PhishStop – AI-driven Phishing Shield", score: 90.5, uni: "VIT Vellore" },
-    ],
-  },
-  {
-    id: 3,
-    title: "HealthTech Hack 2024",
-    tagline: "Innovation that saves lives",
-    date: "December 2024",
-    domain: "Healthcare",
-    mode: "Solo & Team",
-    prize: "₹2,50,000",
-    participants: 980,
-    teams: 245,
-    image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=600&q=80&auto=format&fit=crop",
-    winners: [
-      { rank: 1, team: "MediCode", project: "DiagnoAI – Symptom Triage Assistant", score: 96.6, uni: "AIIMS Delhi" },
-      { rank: 2, team: "VitalSigns", project: "PulseWatch – IoT Vital Monitoring", score: 93.3, uni: "IIT Madras" },
-      { rank: 3, team: "CareChain", project: "MedLedger – Patient Record DApp", score: 89.8, uni: "Manipal Uni" },
-    ],
-  },
-  {
-    id: 4,
-    title: "EdTech Future Builders",
-    tagline: "Reimagining how the world learns",
-    date: "October 2024",
-    domain: "Education",
-    mode: "Team",
-    prize: "₹1,50,000",
-    participants: 720,
-    teams: 180,
-    image: "https://images.unsplash.com/photo-1509062522246-3755977927d7?w=600&q=80&auto=format&fit=crop",
-    winners: [
-      { rank: 1, team: "LearnFlow", project: "AdaptIQ – Personalised Study Planner", score: 95.9, uni: "IIT Roorkee" },
-      { rank: 2, team: "EduSpark", project: "ClassLink – Real-time Doubt Resolver", score: 92.1, uni: "SRM Chennai" },
-      { rank: 3, team: "MindMesh", project: "SkillMap – Competency Graph Engine", score: 88.4, uni: "Amity Noida" },
-    ],
-  },
-  {
-    id: 5,
-    title: "Green Energy Hackathon",
-    tagline: "Code for a sustainable planet",
-    date: "August 2024",
-    domain: "Sustainability",
-    mode: "Team",
-    prize: "₹2,00,000",
-    participants: 640,
-    teams: 160,
-    image: "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=600&q=80&auto=format&fit=crop",
-    winners: [
-      { rank: 1, team: "EcoTech Innovators", project: "SolarSync – Community Grid Balancer", score: 97.8, uni: "IIT Kharagpur" },
-      { rank: 2, team: "GreenGrid", project: "EcoTrace – Carbon Footprint Tracker", score: 94.5, uni: "NSUT Delhi" },
-      { rank: 3, team: "RenewX", project: "WindWatch – Turbine Health Monitor", score: 91.2, uni: "MDU Rohtak" },
-    ],
-  },
-  {
-    id: 6,
-    title: "Web3 Decentralized Jam",
-    tagline: "Decentralise everything",
-    date: "June 2024",
-    domain: "Blockchain",
-    mode: "Solo & Team",
-    prize: "₹4,00,000",
-    participants: 1100,
-    teams: 275,
-    image: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=600&q=80&auto=format&fit=crop",
-    winners: [
-      { rank: 1, team: "Crypto Wizards", project: "TrustVault – Decentralized Identity", score: 96.1, uni: "IIT Bombay" },
-      { rank: 2, team: "DeFi Legends", project: "YieldFlow – Automated DeFi Yield", score: 93.4, uni: "DTU Delhi" },
-      { rank: 3, team: "ChainWave", project: "NFTrade – Cross-chain NFT Marketplace", score: 90.0, uni: "VIT Vellore" },
-    ],
-  },
-  {
-    id: 7,
-    title: "Smart Cities Hack",
-    tagline: "Build the city of tomorrow, today",
-    date: "March 2024",
-    domain: "IoT & Infrastructure",
-    mode: "Team",
-    prize: "₹3,50,000",
-    participants: 890,
-    teams: 222,
-    image: "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=600&q=80&auto=format&fit=crop",
-    winners: [
-      { rank: 1, team: "UrbanHackers", project: "CityPulse – Live Traffic Intelligence", score: 98.0, uni: "IIT Delhi" },
-      { rank: 2, team: "SmartNexus", project: "WasteTrack – IoT Waste Management", score: 94.8, uni: "NIT Warangal" },
-      { rank: 3, team: "GridGuard", project: "SafeZone – Disaster Alert Network", score: 91.5, uni: "BITS Goa" },
-    ],
-  },
-  {
-    id: 8,
-    title: "Open Source Sprint 2024",
-    tagline: "Ship code. Help millions.",
-    date: "January 2024",
-    domain: "Open Source",
-    mode: "Solo",
-    prize: "₹1,00,000",
-    participants: 530,
-    teams: 0,
-    image: "https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?w=600&q=80&auto=format&fit=crop",
-    winners: [
-      { rank: 1, team: "Aryan Mehta", project: "OpenDoc – Universal API Docs Generator", score: 99.1, uni: "IIT Guwahati" },
-      { rank: 2, team: "Priya Sharma", project: "CliCraft – Terminal Productivity Suite", score: 96.7, uni: "IIIT Hyderabad" },
-      { rank: 3, team: "Rohit Verma", project: "PixelFlow – Open UI Component Library", score: 93.2, uni: "Jadavpur Uni" },
-    ],
-  },
-];
-
-const ALL_DOMAINS = ["All", ...Array.from(new Set(hackathons.map(h => h.domain)))];
-const ALL_MODES = ["All", "Solo", "Team", "Solo & Team"];
-
 const DOMAIN_COLORS = {
   "Artificial Intelligence": "#7c3aed",
   "Cybersecurity": "#dc2626",
@@ -500,16 +356,8 @@ function FullResultsModal({ hackathon, onClose }) {
   const rankLabels = ["Champion", "Runner-up", "2nd Runner-up"];
   const rankIcons = ["🥇", "🥈", "🥉"];
 
-  // Additional leaderboard entries (mock ranks 4–10)
-  const extraRows = [
-    { rank: 4,  team: "Code Crafters",  members: 4, score: 88.7, change: "+2", track: hackathon.domain, uni: "NIT Trichy" },
-    { rank: 5,  team: "Byte Busters",   members: 2, score: 87.1, change: "-1", track: hackathon.domain, uni: "MDU Rohtak" },
-    { rank: 6,  team: "AI Titans",      members: 5, score: 85.5, change: "+1", track: hackathon.domain, uni: "VIT Vellore" },
-    { rank: 7,  team: "Quantum Logic",  members: 3, score: 84.0, change: "0",  track: hackathon.domain, uni: "IIT Bombay" },
-    { rank: 8,  team: "Tech Pioneers",  members: 4, score: 82.3, change: "+4", track: hackathon.domain, uni: "SRM Chennai" },
-    { rank: 9,  team: "Robo Minds",     members: 2, score: 81.8, change: "-2", track: hackathon.domain, uni: "NSUT Delhi" },
-    { rank: 10, team: "Future Forge",   members: 5, score: 80.5, change: "0",  track: hackathon.domain, uni: "Amity Noida" },
-  ];
+  // Leaderboard entries (ranks 4+)
+  const extraRows = (hackathon.allWinners || []).slice(3);
 
   // Prevent body scroll
   useEffect(() => {
@@ -1037,8 +885,66 @@ export default function Result() {
   const [activeDomain, setDomain] = useState("All");
   const [activeMode, setMode] = useState("All");
   const [selectedHackathon, setSelectedHackathon] = useState(null);
+  const [hackathons, setHackathons] = useState([]);
+  const [loading, setLoading] = useState(true);
   const heroRef = useRef(null);
   const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await hackathonService.getAllHackathons();
+        const allHackathons = response.data.data || [];
+        
+        // Filter for 'past' hackathons and fetch their winners
+        const pastHackathons = allHackathons.filter(h => h.status === 'past');
+        
+        const hackathonsWithWinners = await Promise.all(pastHackathons.map(async (h) => {
+          try {
+            const winnersResponse = await hackathonService.getWinners(h._id);
+            const winnersData = winnersResponse.data.data.winners || [];
+            
+            // Map winners to frontend structure
+            const mappedWinners = winnersData.map(w => ({
+              rank: w.rank,
+              team: w.team?.teamName || w.user?.fullName || "Participant",
+              project: w.submission?.title || w.award || "Innovative Project",
+              score: w.score,
+              uni: w.team?.university || "Independent",
+              members: w.team?.members?.length || 1,
+              track: h.technologyDomains?.[0] || "General",
+            }));
+
+            return {
+              id: h._id,
+              title: h.title,
+              tagline: h.tagline || h.description?.substring(0, 100) + "...",
+              date: new Date(h.endDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+              domain: h.technologyDomains?.[0] || "General",
+              mode: (h.allowedModes && h.allowedModes.includes('team')) ? (h.allowedModes.includes('solo') ? 'Solo & Team' : 'Team') : 'Solo',
+              prize: h.prizePool ? `₹${h.prizePool.toLocaleString()}` : "Recognition",
+              participants: h.participantsCount || 0,
+              teams: h.teamsCount || 0,
+              image: h.image || "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&q=80",
+              winners: mappedWinners.slice(0, 3),
+              allWinners: mappedWinners, // Keep all for modal
+            };
+          } catch (err) {
+            console.error(`Error fetching winners for ${h._id}:`, err);
+            return null;
+          }
+        }));
+
+        setHackathons(hackathonsWithWinners.filter(h => h !== null));
+      } catch (error) {
+        console.error("Error fetching results data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   useEffect(() => {
     const handle = e => {
@@ -1059,6 +965,11 @@ export default function Result() {
   });
 
   const totalParticipants = hackathons.reduce((a, h) => a + h.participants, 0);
+
+  const ALL_DOMAINS = useMemo(() => ["All", ...Array.from(new Set(hackathons.map(h => h.domain)))], [hackathons]);
+  const ALL_MODES = useMemo(() => ["All", "Solo", "Team", "Solo & Team"], []);
+
+  if (loading) return <div style={{ background: NAVY, color: "#fff", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>Loading Hall of Champions...</div>;
 
   return (
     <div style={{ fontFamily: "'DM Sans', 'Nunito', sans-serif", background: OFF, color: NAVY, minHeight: "100vh", overflowX: "hidden" }}>
@@ -1560,9 +1471,9 @@ export default function Result() {
             {/* Stats row — centered */}
             <div className="cta-stats-row" style={{ display: "flex", gap: 0, justifyContent: "center", flexWrap: "wrap", marginBottom: 44 }}>
               {[
-                { val: "₹25L+",   label: "Prize Money" },
-                { val: "8",       label: "Hackathons Hosted" },
-                { val: "7,960+",  label: "Developers" },
+                { val: `₹${(hackathons.reduce((acc, h) => acc + (parseInt(h.prize.replace(/[^0-9]/g, "")) || 0), 0) / 100000).toFixed(0)}L+`,   label: "Prize Money" },
+                { val: hackathons.length,       label: "Hackathons Hosted" },
+                { val: `${totalParticipants.toLocaleString()}+`,  label: "Developers" },
               ].map((s, i) => (
                 <div key={i} style={{
                   paddingLeft: i === 0 ? 0 : 32, paddingRight: i === 2 ? 0 : 32,

@@ -1,13 +1,17 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { hackathons, domains, statuses, modes } from "../../data/hackathons";
+import { useDispatch, useSelector } from "react-redux";
+import { domains, statuses, modes } from "../../data/hackathons";
+import { hackathonService } from "../../services/hackathonService";
+import { setHackathons, setLoading } from "../../store/hackathonSlice";
 import HackathonCard from "./HackathonCard";
 import HackathonFilters from "./HackathonFilters";
 import Navbar from "./Navbar";
 
 export default function HackathonList() {
-  // ✅ Use react-router-dom's navigate so the URL actually changes to /hackathons/:id
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { hackathons, loading } = useSelector((state) => state.hackathon);
 
   const [filters, setFilters] = useState({
     status: "all",
@@ -18,6 +22,47 @@ export default function HackathonList() {
     search: "",
   });
   const [showFilters, setShowFilters] = useState(false);
+
+  useEffect(() => {
+    const fetchHackathons = async () => {
+      dispatch(setLoading(true));
+      try {
+        const response = await hackathonService.getAllHackathons();
+        // The backend returns an ApiResponse object with the data in response.data.data
+        const data = response.data.data || [];
+        
+        // Map backend data to frontend structure
+        const mappedData = data.map((h) => ({
+          ...h,
+          id: h._id,
+          title: h.title,
+          tagline: h.tagline || h.description?.substring(0, 100) + "...",
+          status: h.status,
+          mode: (h.allowedModes && h.allowedModes.includes('team')) ? 'team' : 'solo',
+          prize: h.prizePool || 0,
+          fee: h.registrationFee || 0,
+          domain: h.technologyDomains?.[0] || "General",
+          deadline: h.registrationDeadline,
+          startDate: h.startDate,
+          endDate: h.endDate,
+          teamSize: { min: h.minTeamSize || 1, max: h.maxTeamSize || 4 },
+          participants: h.participantsCount || 0,
+          image: h.image || "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&q=80",
+          sponsors: h.sponsors?.map(s => s.name) || [],
+          tags: h.technologyDomains || [],
+          description: h.description,
+        }));
+
+        dispatch(setHackathons(mappedData));
+      } catch (error) {
+        console.error("Error fetching hackathons:", error);
+      } finally {
+        dispatch(setLoading(false));
+      }
+    };
+
+    fetchHackathons();
+  }, [dispatch]);
 
   const filtered = useMemo(() => {
     return hackathons.filter((h) => {
@@ -30,12 +75,12 @@ export default function HackathonList() {
       if (
         filters.search &&
         !h.title.toLowerCase().includes(filters.search.toLowerCase()) &&
-        !h.domain.toLowerCase().includes(filters.search.toLowerCase())
+        !(h.domain && h.domain.toLowerCase().includes(filters.search.toLowerCase()))
       )
         return false;
       return true;
     });
-  }, [filters]);
+  }, [filters, hackathons]);
 
   const setFilter = (key, val) => setFilters((f) => ({ ...f, [key]: val }));
 
