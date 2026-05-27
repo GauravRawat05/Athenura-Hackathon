@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import Navbar from "../../components/common/Navbar";
 import { hackathons } from "../../data/hackathons";
 import { hackathonService } from "../../services/hackathonService";
@@ -99,6 +100,7 @@ const mapDbHackathon = (h) => {
 export default function HackathonDetail() {
   const { id } = useParams();
   const routerNavigate = useNavigate();
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const [h, setH] = useState(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
@@ -745,9 +747,15 @@ export default function HackathonDetail() {
             )}
 
             <button
-              onClick={() =>
-                h.status !== "past" && routerNavigate(`/hackathons/${id}/join`)
-              }
+              onClick={() => {
+                if (h.status !== "past") {
+                  if (!isAuthenticated) {
+                    routerNavigate("/login");
+                  } else {
+                    routerNavigate(`/hackathons/${id}/join`);
+                  }
+                }
+              }}
               onMouseEnter={(e) => {
                 if (h.status !== "past")
                   e.currentTarget.style.transform = "scale(1.03)";

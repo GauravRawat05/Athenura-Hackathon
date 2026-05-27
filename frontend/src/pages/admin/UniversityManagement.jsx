@@ -1,5 +1,6 @@
-﻿import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { universityService } from "../../services/universityService";
 import {
   Search, Bell, Building2, CheckCircle2, Clock, XCircle,
   Filter, Eye, Pencil, Trash2, ChevronDown, ChevronLeft, ChevronRight,
@@ -16,13 +17,17 @@ function useToast() {
     setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3200);
   }, []);
 
-  const toast = {
+  const toast = useMemo(() => ({
     success: (msg) => addToast(msg, "success"),
     error: (msg) => addToast(msg, "error"),
     info: (msg) => addToast(msg, "info"),
-  };
+  }), [addToast]);
 
-  return { toasts, toast, removeToast: (id) => setToasts((prev) => prev.filter((t) => t.id !== id)) };
+  const removeToast = useCallback((id) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  return { toasts, toast, removeToast };
 }
 
 function ToastContainer({ toasts, removeToast }) {
@@ -115,7 +120,7 @@ function ActionButton({ icon: Icon, color, onClick, title }) {
 }
 
 const emptyForm = {
-  name: "", email: "", address: "", contact: "", contactEmail: "", phone: "", status: "Active",
+  name: "", email: "", address: "", contact: "", contactEmail: "", phone: "", status: "Active", color: "",
 };
 
 function formatDate(ts) {
@@ -131,140 +136,16 @@ function Row({ label, value }) {
   );
 }
 
-export function UniversityDashboard() {
-  const { toasts, toast, removeToast } = useToast();
-
-  const [universities, setUniversities] = useState(initialUniversities);
-  const [globalSearch, setGlobalSearch] = useState("");
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [statusOpen, setStatusOpen] = useState(false);
-  const [sortBy, setSortBy] = useState("added");
-  const [sortDir, setSortDir] = useState("desc");
-  const [page, setPage] = useState(1);
-  const [showForm, setShowForm] = useState(false);
-
-
-  const [form, setForm] = useState(emptyForm);
-  const [editingId, setEditingId] = useState(null);
-  const [viewing, setViewing] = useState(null);
-  const [deleting, setDeleting] = useState(null);
-  const [logoName, setLogoName] = useState("");
-
-  const effectiveSearch = (globalSearch || search).toLowerCase();
-
-  const filtered = useMemo(() => {
-    let list = universities.filter((u) => {
-      const matchesSearch =
-        !effectiveSearch ||
-        (u.name + " " + u.email + " " + u.contact + " " + u.city + " " + u.state).toLowerCase().includes(effectiveSearch);
-      const matchesStatus = statusFilter === "All" || u.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    });
-    if (sortBy === "added") {
-      list = [...list].sort((a, b) => sortDir === "asc" ? a.addedTs - b.addedTs : b.addedTs - a.addedTs);
-    } else if (sortBy === "status") {
-      list = [...list].sort((a, b) => sortDir === "asc" ? a.status.localeCompare(b.status) : b.status.localeCompare(a.status));
-    }
-    return list;
-  }, [universities, effectiveSearch, statusFilter, sortBy, sortDir]);
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const currentPage = Math.min(page, totalPages);
-  const paged = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-
-  const stats = useMemo(() => {
-    const total = universities.length;
-    const active = universities.filter((u) => u.status === "Active").length;
-    const pending = universities.filter((u) => u.status === "Pending").length;
-    const inactive = universities.filter((u) => u.status === "Inactive").length;
-    return [
-      { title: "Total", value: String(total), change: "12.5%", trend: "up", icon: Building2, iconBg: "from-blue-400 to-blue-600", iconRing: "bg-blue-100" },
-      { title: "Active", value: String(active), change: "10.3%", trend: "up", icon: CheckCircle2, iconBg: "from-emerald-400 to-emerald-600", iconRing: "bg-emerald-100" },
-      { title: "Pending", value: String(pending), change: "2.1%", trend: "down", icon: Clock, iconBg: "from-amber-400 to-orange-500", iconRing: "bg-amber-100" },
-      { title: "Inactive", value: String(inactive), change: "14.3%", trend: "down", icon: XCircle, iconBg: "from-violet-400 to-purple-600", iconRing: "bg-violet-100" },
-    ];
-  }, [universities]);
-
-  function toggleSort(col) {
-    if (sortBy === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    else { setSortBy(col); setSortDir("desc"); }
-  }
-
-  function resetForm() {
-    setForm(emptyForm);
-    setEditingId(null);
-    setLogoName("");
-    setShowForm(false);
-  }
-
-  function handleSubmit(e) {
-    e.preventDefault();
-    if (!form.name.trim() || !form.email.trim() || !form.contact.trim()) {
-      toast.error("Please fill in name, email, and contact person.");
-      return;
-    }
-    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRe.test(form.email)) {
-      toast.error("Please enter a valid university email.");
-      return;
-    }
-    if (editingId !== null) {
-      setUniversities((list) => list.map((u) => u.id === editingId ? {
-        ...u, name: form.name, email: form.email, address: form.address,
-        contact: form.contact, contactEmail: form.contactEmail, phone: form.phone, status: form.status,
-      } : u));
-      toast.success(`Updated ${form.name}`);
-    } else {
-      const ts = Date.now();
-      const newU = {
-        id: ts, name: form.name,
-        city: form.address.split(",")[0]?.trim() || "—",
-        state: form.address.split(",")[1]?.trim() || "—",
-        address: form.address, email: form.email, contact: form.contact,
-        contactEmail: form.contactEmail, phone: form.phone, status: form.status,
-        added: formatDate(ts), addedTs: ts,
-        color: COLORS[universities.length % COLORS.length],
-      };
-      setUniversities((list) => [newU, ...list]);
-      toast.success(`Added ${form.name}`);
-    }
-    resetForm();
-  }
-
-  function handleEdit(u) {
-    setEditingId(u.id);
-    setForm({ name: u.name, email: u.email, address: u.address, contact: u.contact, contactEmail: u.contactEmail, phone: u.phone, status: u.status });
-    setShowForm(true);
-    setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50);
-  }
-
-  function confirmDelete() {
-    if (!deleting) return;
-    setUniversities((list) => list.filter((u) => u.id !== deleting.id));
-    toast.success(`Deleted ${deleting.name}`);
-    setDeleting(null);
-  }
-
-  function handleLogo(e) {
-    const f = e.target.files?.[0];
-    if (f) {
-      if (f.size > 2 * 1024 * 1024) { toast.error("File exceeds 2MB"); return; }
-      setLogoName(f.name);
-    }
-  }
-
-  const pageNumbers = (() => {
-    if (totalPages <= 5) return Array.from({ length: totalPages }, (_, i) => i + 1);
-    const arr = [1];
-    if (currentPage > 3) arr.push("...");
-    for (let p = Math.max(2, currentPage - 1); p <= Math.min(totalPages - 1, currentPage + 1); p++) arr.push(p);
-    if (currentPage < totalPages - 2) arr.push("...");
-    arr.push(totalPages);
-    return arr;
-  })();
-
-  const FormPanel = () => (
+function FormPanel({
+  editingId,
+  form,
+  setForm,
+  handleSubmit,
+  resetForm,
+  logoName,
+  handleLogo
+}) {
+  return (
     <div className="rounded-[24px] border border-white/60 bg-white/70 backdrop-blur-xl p-5 shadow-[0_10px_40px_rgba(0,0,0,0.05)]">
       <div className="flex items-center justify-between gap-3 mb-5">
         <div className="flex items-center gap-3">
@@ -340,6 +221,193 @@ export function UniversityDashboard() {
       </form>
     </div>
   );
+}
+
+export function UniversityDashboard() {
+  const { toasts, toast, removeToast } = useToast();
+
+  const [universities, setUniversities] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [globalSearch, setGlobalSearch] = useState("");
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [statusOpen, setStatusOpen] = useState(false);
+  const [sortBy, setSortBy] = useState("added");
+  const [sortDir, setSortDir] = useState("desc");
+  const [page, setPage] = useState(1);
+  const [showForm, setShowForm] = useState(false);
+
+  const [form, setForm] = useState(emptyForm);
+  const [editingId, setEditingId] = useState(null);
+  const [viewing, setViewing] = useState(null);
+  const [deleting, setDeleting] = useState(null);
+  const [logoName, setLogoName] = useState("");
+
+  const fetchUniversities = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const res = await universityService.adminListUniversities({ limit: 1000 });
+      const rawList = res.data?.data?.data || [];
+      const formatted = rawList.map((u, idx) => ({
+        id: u._id,
+        name: u.name,
+        email: u.email,
+        address: u.address || `${u.city || ""}, ${u.state || ""}`,
+        city: u.city || "—",
+        state: u.state || "—",
+        contact: u.contact || "—",
+        contactEmail: u.contactEmail || "—",
+        phone: u.phone || "—",
+        status: u.status || "Active",
+        added: u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }) : "—",
+        addedTs: u.createdAt ? new Date(u.createdAt).getTime() : Date.now(),
+        color: u.color || COLORS[idx % COLORS.length]
+      }));
+      setUniversities(formatted);
+    } catch (err) {
+      console.error("Error fetching universities:", err);
+      toast.error("Failed to fetch universities from backend.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    fetchUniversities();
+  }, [fetchUniversities]);
+
+  const effectiveSearch = (globalSearch || search).toLowerCase();
+
+  const filtered = useMemo(() => {
+    let list = universities.filter((u) => {
+      const matchesSearch =
+        !effectiveSearch ||
+        (u.name + " " + u.email + " " + u.contact + " " + u.city + " " + u.state).toLowerCase().includes(effectiveSearch);
+      const matchesStatus = statusFilter === "All" || u.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+    if (sortBy === "added") {
+      list = [...list].sort((a, b) => sortDir === "asc" ? a.addedTs - b.addedTs : b.addedTs - a.addedTs);
+    } else if (sortBy === "status") {
+      list = [...list].sort((a, b) => sortDir === "asc" ? a.status.localeCompare(b.status) : b.status.localeCompare(a.status));
+    }
+    return list;
+  }, [universities, effectiveSearch, statusFilter, sortBy, sortDir]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const paged = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  const stats = useMemo(() => {
+    const total = universities.length;
+    const active = universities.filter((u) => u.status === "Active").length;
+    const pending = universities.filter((u) => u.status === "Pending").length;
+    const inactive = universities.filter((u) => u.status === "Inactive").length;
+    return [
+      { title: "Total", value: String(total), change: "12.5%", trend: "up", icon: Building2, iconBg: "from-blue-400 to-blue-600", iconRing: "bg-blue-100" },
+      { title: "Active", value: String(active), change: "10.3%", trend: "up", icon: CheckCircle2, iconBg: "from-emerald-400 to-emerald-600", iconRing: "bg-emerald-100" },
+      { title: "Pending", value: String(pending), change: "2.1%", trend: "down", icon: Clock, iconBg: "from-amber-400 to-orange-500", iconRing: "bg-amber-100" },
+      { title: "Inactive", value: String(inactive), change: "14.3%", trend: "down", icon: XCircle, iconBg: "from-violet-400 to-purple-600", iconRing: "bg-violet-100" },
+    ];
+  }, [universities]);
+
+  function toggleSort(col) {
+    if (sortBy === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortBy(col); setSortDir("desc"); }
+  }
+
+  function resetForm() {
+    setForm(emptyForm);
+    setEditingId(null);
+    setLogoName("");
+    setShowForm(false);
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!form.name.trim() || !form.email.trim() || !form.contact.trim()) {
+      toast.error("Please fill in name, email, and contact person.");
+      return;
+    }
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRe.test(form.email)) {
+      toast.error("Please enter a valid university email.");
+      return;
+    }
+
+    const payload = {
+      name: form.name.trim(),
+      email: form.email.trim().toLowerCase(),
+      address: form.address.trim(),
+      contact: form.contact.trim(),
+      contactEmail: form.contactEmail.trim().toLowerCase() || undefined,
+      phone: form.phone.trim() || undefined,
+      status: form.status,
+      color: form.color || COLORS[universities.length % COLORS.length]
+    };
+
+    try {
+      if (editingId !== null) {
+        await universityService.adminUpdateUniversity(editingId, payload);
+        toast.success(`Updated ${form.name}`);
+      } else {
+        await universityService.adminCreateUniversity(payload);
+        toast.success(`Added ${form.name}`);
+      }
+      resetForm();
+      fetchUniversities();
+    } catch (err) {
+      console.error("Error saving university:", err);
+      toast.error(err.response?.data?.message || err.response?.data?.errors?.[0] || "Failed to save university.");
+    }
+  }
+
+  function handleEdit(u) {
+    setEditingId(u.id);
+    setForm({
+      name: u.name,
+      email: u.email,
+      address: u.address,
+      contact: u.contact === "—" ? "" : u.contact,
+      contactEmail: u.contactEmail === "—" ? "" : u.contactEmail,
+      phone: u.phone === "—" ? "" : u.phone,
+      status: u.status,
+      color: u.color
+    });
+    setShowForm(true);
+    setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50);
+  }
+
+  async function confirmDelete() {
+    if (!deleting) return;
+    try {
+      await universityService.adminDeleteUniversity(deleting.id);
+      toast.success(`Deleted ${deleting.name}`);
+      setDeleting(null);
+      fetchUniversities();
+    } catch (err) {
+      console.error("Error deleting university:", err);
+      toast.error(err.response?.data?.message || "Failed to delete university.");
+    }
+  }
+
+  function handleLogo(e) {
+    const f = e.target.files?.[0];
+    if (f) {
+      if (f.size > 2 * 1024 * 1024) { toast.error("File exceeds 2MB"); return; }
+      setLogoName(f.name);
+    }
+  }
+
+  const pageNumbers = (() => {
+    if (totalPages <= 5) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    const arr = [1];
+    if (currentPage > 3) arr.push("...");
+    for (let p = Math.max(2, currentPage - 1); p <= Math.min(totalPages - 1, currentPage + 1); p++) arr.push(p);
+    if (currentPage < totalPages - 2) arr.push("...");
+    arr.push(totalPages);
+    return arr;
+  })();
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-[#ecfcff] via-[#f5feff] to-[#dff4ff] font-sans text-[#0b1b52]">
@@ -405,7 +473,15 @@ export function UniversityDashboard() {
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.3 }}>
-              <FormPanel />
+              <FormPanel 
+                editingId={editingId}
+                form={form}
+                setForm={setForm}
+                handleSubmit={handleSubmit}
+                resetForm={resetForm}
+                logoName={logoName}
+                handleLogo={handleLogo}
+              />
             </motion.div>
           )}
         </AnimatePresence>
@@ -488,40 +564,51 @@ export function UniversityDashboard() {
                 </thead>
                 <tbody>
                   <AnimatePresence mode="popLayout">
-                    {paged.map((u, i) => (
-                      <motion.tr key={u.id} layout
-                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.25, delay: 0.02 * i }}
-                        className="bg-white/60 hover:bg-white/90 transition rounded-2xl shadow-sm">
-                        <td className="px-3 py-3 rounded-l-2xl">
-                          <div className="flex items-center gap-2.5">
-                            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${u.color} text-white text-xs font-bold shadow`}>
-                              {u.name.split(" ").slice(0, 2).map((w) => w[0]).join("")}
-                            </div>
-                            <div>
-                              <p className="text-xs font-semibold text-[#0b1b52] leading-tight">{u.name}</p>
-                              <p className="text-[10px] text-slate-500">{u.city}, {u.state}</p>
-                            </div>
+                    {isLoading ? (
+                      <tr>
+                        <td colSpan={6} className="py-10 text-center text-xs text-slate-400">
+                          <div className="flex items-center justify-center gap-2">
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+                            Loading universities...
                           </div>
                         </td>
-                        <td className="px-3 py-3 text-xs text-slate-600 max-w-[140px] truncate">{u.email}</td>
-                        <td className="px-3 py-3">
-                          <p className="text-xs font-medium text-[#0b1b52]">{u.contact}</p>
-                          <p className="text-[10px] text-slate-500">{u.phone}</p>
-                        </td>
-                        <td className="px-3 py-3"><StatusBadge status={u.status} /></td>
-                        <td className="px-3 py-3 text-xs text-slate-600 whitespace-nowrap">{u.added}</td>
-                        <td className="px-3 py-3 rounded-r-2xl">
-                          <div className="flex items-center gap-1.5">
-                            <ActionButton icon={Eye} color="text-blue-500" title="View" onClick={() => setViewing(u)} />
-                            <ActionButton icon={Pencil} color="text-amber-500" title="Edit" onClick={() => handleEdit(u)} />
-                            <ActionButton icon={Trash2} color="text-rose-500" title="Delete" onClick={() => setDeleting(u)} />
-                          </div>
-                        </td>
-                      </motion.tr>
-                    ))}
+                      </tr>
+                    ) : (
+                      paged.map((u, i) => (
+                        <motion.tr key={u.id} layout
+                          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: -20 }}
+                          transition={{ duration: 0.25, delay: 0.02 * i }}
+                          className="bg-white/60 hover:bg-white/90 transition rounded-2xl shadow-sm">
+                          <td className="px-3 py-3 rounded-l-2xl">
+                            <div className="flex items-center gap-2.5">
+                              <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${u.color} text-white text-xs font-bold shadow`}>
+                                {u.name.split(" ").slice(0, 2).map((w) => w[0]).join("")}
+                              </div>
+                              <div>
+                                <p className="text-xs font-semibold text-[#0b1b52] leading-tight">{u.name}</p>
+                                <p className="text-[10px] text-slate-500">{u.city}, {u.state}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-3 py-3 text-xs text-slate-600 max-w-[140px] truncate">{u.email}</td>
+                          <td className="px-3 py-3">
+                            <p className="text-xs font-medium text-[#0b1b52]">{u.contact}</p>
+                            <p className="text-[10px] text-slate-500">{u.phone}</p>
+                          </td>
+                          <td className="px-3 py-3"><StatusBadge status={u.status} /></td>
+                          <td className="px-3 py-3 text-xs text-slate-600 whitespace-nowrap">{u.added}</td>
+                          <td className="px-3 py-3 rounded-r-2xl">
+                            <div className="flex items-center gap-1.5">
+                              <ActionButton icon={Eye} color="text-blue-500" title="View" onClick={() => setViewing(u)} />
+                              <ActionButton icon={Pencil} color="text-amber-500" title="Edit" onClick={() => handleEdit(u)} />
+                              <ActionButton icon={Trash2} color="text-rose-500" title="Delete" onClick={() => setDeleting(u)} />
+                            </div>
+                          </td>
+                        </motion.tr>
+                      ))
+                    )}
                   </AnimatePresence>
-                  {paged.length === 0 && (
+                  {!isLoading && paged.length === 0 && (
                     <tr><td colSpan={6} className="py-10 text-center text-xs text-slate-400">No universities match your filters.</td></tr>
                   )}
                 </tbody>
@@ -529,44 +616,53 @@ export function UniversityDashboard() {
             </div>
             <div className="mt-4 md:hidden space-y-3">
               <AnimatePresence mode="popLayout">
-                {paged.map((u, i) => (
-                  <motion.div key={u.id} layout
-                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.25, delay: 0.03 * i }}
-                    className="bg-white/80 rounded-2xl shadow-sm p-3.5">
-                    <div className="flex items-center gap-3">
-                      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${u.color} text-white text-xs font-bold shadow`}>
-                        {u.name.split(" ").slice(0, 2).map((w) => w[0]).join("")}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-[#0b1b52] truncate">{u.name}</p>
-                        <p className="text-xs text-slate-500 truncate">{u.city}, {u.state}</p>
-                      </div>
-                      <StatusBadge status={u.status} />
+                {isLoading ? (
+                  <div className="py-10 text-center text-xs text-slate-400">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+                      Loading universities...
                     </div>
-                    <div className="mt-2.5 grid grid-cols-1 gap-1 text-xs text-slate-600">
-                      <div className="flex items-center gap-1.5 truncate">
-                        <span className="text-slate-400 shrink-0">Email:</span>
-                        <span className="truncate">{u.email}</span>
+                  </div>
+                ) : (
+                  paged.map((u, i) => (
+                    <motion.div key={u.id} layout
+                      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.25, delay: 0.03 * i }}
+                      className="bg-white/80 rounded-2xl shadow-sm p-3.5">
+                      <div className="flex items-center gap-3">
+                        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${u.color} text-white text-xs font-bold shadow`}>
+                          {u.name.split(" ").slice(0, 2).map((w) => w[0]).join("")}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-[#0b1b52] truncate">{u.name}</p>
+                          <p className="text-xs text-slate-500 truncate">{u.city}, {u.state}</p>
+                        </div>
+                        <StatusBadge status={u.status} />
                       </div>
-                      <div className="flex items-center gap-1.5 truncate">
-                        <span className="text-slate-400 shrink-0">Contact:</span>
-                        <span className="truncate">{u.contact} · {u.phone}</span>
+                      <div className="mt-2.5 grid grid-cols-1 gap-1 text-xs text-slate-600">
+                        <div className="flex items-center gap-1.5 truncate">
+                          <span className="text-slate-400 shrink-0">Email:</span>
+                          <span className="truncate">{u.email}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 truncate">
+                          <span className="text-slate-400 shrink-0">Contact:</span>
+                          <span className="truncate">{u.contact} · {u.phone}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-slate-400 shrink-0">Added:</span>
+                          <span>{u.added}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-slate-400 shrink-0">Added:</span>
-                        <span>{u.added}</span>
+                      <div className="mt-3 flex justify-end gap-2">
+                        <ActionButton icon={Eye} color="text-blue-500" title="View" onClick={() => setViewing(u)} />
+                        <ActionButton icon={Pencil} color="text-amber-500" title="Edit" onClick={() => handleEdit(u)} />
+                        <ActionButton icon={Trash2} color="text-rose-500" title="Delete" onClick={() => setDeleting(u)} />
                       </div>
-                    </div>
-                    <div className="mt-3 flex justify-end gap-2">
-                      <ActionButton icon={Eye} color="text-blue-500" title="View" onClick={() => setViewing(u)} />
-                      <ActionButton icon={Pencil} color="text-amber-500" title="Edit" onClick={() => handleEdit(u)} />
-                      <ActionButton icon={Trash2} color="text-rose-500" title="Delete" onClick={() => setDeleting(u)} />
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  ))
+                )}
               </AnimatePresence>
-              {paged.length === 0 && (
+              {!isLoading && paged.length === 0 && (
                 <div className="py-10 text-center text-xs text-slate-400">No universities match your filters.</div>
               )}
             </div>
@@ -598,7 +694,15 @@ export function UniversityDashboard() {
           </motion.section>
           <motion.aside initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, delay: 0.4 }}
             className="hidden lg:block lg:col-span-3 lg:sticky lg:top-6 h-fit">
-            <FormPanel />
+            <FormPanel 
+              editingId={editingId}
+              form={form}
+              setForm={setForm}
+              handleSubmit={handleSubmit}
+              resetForm={resetForm}
+              logoName={logoName}
+              handleLogo={handleLogo}
+            />
           </motion.aside>
         </div>
       </div>

@@ -15,13 +15,18 @@ export const universityIdValidation = Joi.object({
 
 export const createUniversityValidation = Joi.object({
   name: Joi.string().required().min(3).max(200),
-  code: Joi.string().required().min(2).max(10).uppercase(),
+  code: Joi.string().optional().min(2).max(10).uppercase().allow(''),
   email: Joi.string().email().required(),
-  phone: Joi.string().optional().min(10).max(15),
-  location: Joi.string().optional().max(200),
-  state: Joi.string().optional().max(100),
-  country: Joi.string().optional().max(100),
-  website: Joi.string().uri().optional()
+  phone: Joi.string().optional().min(10).max(15).allow(''),
+  address: Joi.string().optional().max(300).allow(''),
+  city: Joi.string().optional().max(100).allow(''),
+  state: Joi.string().optional().max(100).allow(''),
+  country: Joi.string().optional().max(100).allow(''),
+  website: Joi.string().optional().max(200).allow(''),
+  contact: Joi.string().optional().max(200).allow(''),
+  contactEmail: Joi.string().email().optional().allow(''),
+  status: Joi.string().valid('Active', 'Pending', 'Inactive', 'active', 'inactive', 'pending').optional(),
+  color: Joi.string().optional().allow('')
 })
 
 export const updateUniversityValidation = Joi.object({
@@ -32,14 +37,18 @@ export const updateUniversityValidation = Joi.object({
     return value
   }),
   name: Joi.string().optional().min(3).max(200),
-  code: Joi.string().optional().min(2).max(10).uppercase(),
+  code: Joi.string().optional().min(2).max(10).uppercase().allow(''),
   email: Joi.string().email().optional(),
-  phone: Joi.string().optional().min(10).max(15),
-  location: Joi.string().optional().max(200),
-  state: Joi.string().optional().max(100),
-  country: Joi.string().optional().max(100),
-  website: Joi.string().uri().optional(),
-  status: Joi.string().valid('active', 'inactive').optional()
+  phone: Joi.string().optional().min(10).max(15).allow(''),
+  address: Joi.string().optional().max(300).allow(''),
+  city: Joi.string().optional().max(100).allow(''),
+  state: Joi.string().optional().max(100).allow(''),
+  country: Joi.string().optional().max(100).allow(''),
+  website: Joi.string().optional().max(200).allow(''),
+  contact: Joi.string().optional().max(200).allow(''),
+  contactEmail: Joi.string().email().optional().allow(''),
+  status: Joi.string().valid('Active', 'Pending', 'Inactive', 'active', 'inactive', 'pending').optional(),
+  color: Joi.string().optional().allow('')
 })
 
 export const validate = (schema, source = 'body') => {
