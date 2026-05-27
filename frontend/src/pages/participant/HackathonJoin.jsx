@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { hackathons } from "../../data/hackathons";
+import { useSelector } from "react-redux";
 import Navbar from "../../components/common/Navbar";
+import { hackathonService } from "../../services/hackathonService";
+import api from "../../services/api";
 
 const STEPS = ["Your Info", "Team Setup", "Confirm"];
 
@@ -71,8 +73,12 @@ const C = {
 export default function HackathonJoin() {
   const { id } = useParams();
   const routerNavigate = useNavigate();
-  const h = hackathons.find((hk) => String(hk.id) === String(id));
+  const { user } = useSelector((state) => state.auth);
 
+  const [h, setH] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [loadingSubmit, setLoadingSubmit] = useState(false);
+  const [registrationResult, setRegistrationResult] = useState({});
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({
@@ -82,12 +88,94 @@ export default function HackathonJoin() {
     college: "",
     github: "",
     teamName: "",
-    teamMode: h?.mode === "solo" ? "solo" : "create",
+    teamMode: "create",
     inviteCode: "",
     teammates: [""],
     agreeTerms: false,
   });
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        setLoading(true);
+        const res = await hackathonService.getHackathonById(id);
+        if (res.data && res.data.data) {
+          const raw = res.data.data;
+          
+          const statusMap = { upcoming: 'upcoming', ongoing: 'ongoing', past: 'completed', judging: 'completed', draft: 'upcoming' };
+          const status = statusMap[raw.status] || 'upcoming';
+          const fee = raw.registrationFee === 0 ? 'Free' : `$${raw.registrationFee}`;
+          
+          const mapped = {
+            id: raw._id,
+            title: raw.title,
+            status,
+            fee,
+            feeNum: raw.registrationFee || 0,
+            mode: raw.allowedModes?.[0]?.toLowerCase() || 'team',
+            teamSize: { min: raw.minTeamSize || 2, max: raw.maxTeamSize || 4 },
+          };
+          if (mounted) {
+            setH(mapped);
+            setForm(f => ({
+              ...f,
+              teamMode: mapped.mode === "solo" ? "solo" : "create"
+            }));
+          }
+        }
+      } catch (err) {
+        
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [id]);
+
+  useEffect(() => {
+    if (user) {
+      setForm(f => ({
+        ...f,
+        name: user.fullName || user.name || "",
+        email: user.email || "",
+        college: user.university || user.college || "",
+      }));
+    }
+  }, [user]);
+
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: "100vh",
+        background: "linear-gradient(160deg, #0a1f6e 0%, #0e3a7a 50%, #0a2d6b 100%)",
+        fontFamily: "'Poppins',sans-serif",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center"
+      }}>
+        <div style={{
+          width: "56px",
+          height: "56px",
+          border: "4px solid rgba(255, 255, 255, 0.1)",
+          borderTopColor: "#90E0EF",
+          borderRadius: "50%",
+          animation: "joinSpin 1s linear infinite",
+          marginBottom: "20px"
+        }} />
+        <h3 style={{ margin: 0, fontFamily: "'Nunito',sans-serif", fontWeight: 800, fontSize: 18, color: "#fff", letterSpacing: -0.2 }}>
+          Preparing Registration Form...
+        </h3>
+        <style>{`
+          @keyframes joinSpin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   if (!h) {
     return (
@@ -131,10 +219,61 @@ export default function HackathonJoin() {
     return Object.keys(e).length === 0;
   };
 
-  const next = () => {
+  const next = async () => {
     if (!validateStep()) return;
-    if (step < STEPS.length - 1) setStep((s) => s + 1);
-    else setSubmitted(true);
+    if (step < STEPS.length - 1) {
+      setStep((s) => s + 1);
+      return;
+    }
+    
+    // Final step: submit to backend!
+    setLoadingSubmit(true);
+    setErrors({});
+    try {
+      if (form.teamMode === "solo") {
+        // Solo registration
+        const res = await hackathonService.register(id, { mode: "solo" });
+        setRegistrationResult(res?.data?.data || {});
+        setSubmitted(true);
+      } else if (form.teamMode === "create") {
+        // Create Team first
+        const teamRes = await api.post(`/teams/hackathons/${id}/teams`, {
+          teamName: form.teamName
+        });
+        const createdTeam = teamRes?.data?.data;
+        if (!createdTeam?._id) {
+          throw new Error("Failed to create team");
+        }
+        
+        // Invite members (if any)
+        const activeEmails = form.teammates.filter(tm => tm && tm.trim());
+        for (const email of activeEmails) {
+          try {
+            await api.post(`/teams/${createdTeam._id}/invitations`, { email });
+          } catch (e) {
+            
+          }
+        }
+        
+        // Register Team for Hackathon
+        const regRes = await hackathonService.register(id, {
+          mode: "team",
+          teamId: createdTeam._id
+        });
+        setRegistrationResult(regRes?.data?.data || {});
+        setSubmitted(true);
+      } else if (form.teamMode === "join") {
+        // Join Team with Invite Code
+        await api.post(`/teams/team-invitations/${form.inviteCode}/accept`);
+        setSubmitted(true);
+      }
+    } catch (err) {
+      
+      const msg = err?.response?.data?.message || err?.response?.data?.errors?.[0] || err.message || "Registration failed";
+      setErrors({ apiError: msg });
+    } finally {
+      setLoadingSubmit(false);
+    }
   };
 
   const back = () => {
@@ -185,7 +324,6 @@ export default function HackathonJoin() {
           flexDirection: "column",
         }}
       >
-        
         <div
           style={{
             flex: 1,
@@ -220,71 +358,63 @@ export default function HackathonJoin() {
             >
               You're Registered!
             </h2>
-            <p
-              style={{
-                color: C.mutedText,
-                fontSize: 14,
-                lineHeight: 1.7,
-                margin: "0 0 8px",
-              }}
-            >
-              Welcome to{" "}
-              <strong style={{ color: C.accentBlue }}>{h.title}</strong>. A
-              confirmation email has been sent to{" "}
-              <strong style={{ color: C.headingText }}>{form.email}</strong>.
-            </p>
-            <p
-              style={{
-                color: C.mutedText,
-                fontSize: 13,
-                margin: "0 0 36px",
-                opacity: 0.75,
-              }}
-            >
-              Check your inbox for next steps and event details.
-            </p>
-            <div
-              style={{
-                display: "flex",
-                gap: 12,
-                justifyContent: "center",
-                flexWrap: "wrap",
-              }}
-            >
-              <button
-                onClick={() => routerNavigate(`/hackathon/${id}`)}
-                style={{
-                  padding: "12px 28px",
-                  borderRadius: 12,
-                  background: C.pillActiveBg,
-                  color: "#fff",
-                  fontFamily: "'Nunito', sans-serif",
-                  fontWeight: 800,
-                  fontSize: 15,
-                  border: "none",
-                  cursor: "pointer",
-                  boxShadow: "0 4px 16px rgba(0,119,182,0.25)",
-                }}
-              >
-                View Event Details
-              </button>
-              <button
-                onClick={() => routerNavigate("/hackathons")}
-                style={{
-                  padding: "12px 28px",
-                  borderRadius: 12,
-                  background: C.pillIdleBg,
-                  color: C.labelText,
-                  fontFamily: "'Nunito', sans-serif",
-                  fontWeight: 700,
-                  fontSize: 15,
-                  border: `1px solid ${C.pillIdleBorder}`,
-                  cursor: "pointer",
-                }}
-              >
-                Browse More
-              </button>
-            </div>
+            
+            {registrationResult.requiresPayment ? (
+              <>
+                <p style={{ color: C.mutedText, fontSize: 14, lineHeight: 1.7, margin: "0 0 8px" }}>
+                  Your registration for <strong style={{ color: C.accentBlue }}>{h.title}</strong> is pending payment.
+                </p>
+                <p style={{ color: "#d97706", fontSize: 13, fontWeight: 600, margin: "0 0 36px" }}>
+                  Please complete the entry fee payment of ${h.feeNum} to secure your spot.
+                </p>
+                <button
+                  onClick={() => routerNavigate(`/payment/${registrationResult.registrationId}`)}
+                  style={{
+                    padding: "12px 28px", borderRadius: 12,
+                    background: "linear-gradient(135deg, #d97706, #f59e0b)", color: "#fff",
+                    fontFamily: "'Nunito', sans-serif", fontWeight: 800, fontSize: 15,
+                    border: "none", cursor: "pointer",
+                    boxShadow: "0 4px 16px rgba(217,119,6,0.25)",
+                  }}
+                >
+                  Proceed to Payment 💳
+                </button>
+              </>
+            ) : (
+              <>
+                <p style={{ color: C.mutedText, fontSize: 14, lineHeight: 1.7, margin: "0 0 8px" }}>
+                  Welcome to <strong style={{ color: C.accentBlue }}>{h.title}</strong>. A confirmation email has been sent to <strong style={{ color: C.headingText }}>{form.email}</strong>.
+                </p>
+                <p style={{ color: C.mutedText, fontSize: 13, margin: "0 0 36px", opacity: 0.75 }}>
+                  Check your inbox for next steps and event details.
+                </p>
+                <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+                  <button
+                    onClick={() => routerNavigate(`/hackathon/${id}`)}
+                    style={{
+                      padding: "12px 28px", borderRadius: 12,
+                      background: C.pillActiveBg, color: "#fff",
+                      fontFamily: "'Nunito', sans-serif", fontWeight: 800, fontSize: 15,
+                      border: "none", cursor: "pointer",
+                      boxShadow: "0 4px 16px rgba(0,119,182,0.25)",
+                    }}
+                  >
+                    View Event Details
+                  </button>
+                  <button
+                    onClick={() => routerNavigate("/dashboard")}
+                    style={{
+                      padding: "12px 28px", borderRadius: 12,
+                      background: C.pillIdleBg, color: C.labelText,
+                      fontFamily: "'Nunito', sans-serif", fontWeight: 700, fontSize: 15,
+                      border: `1px solid ${C.pillIdleBorder}`, cursor: "pointer",
+                    }}
+                  >
+                    Go to Dashboard
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -864,6 +994,22 @@ export default function HackathonJoin() {
             </div>
           )}
 
+          {errors.apiError && (
+            <div style={{
+              background: "#fef2f2",
+              border: "1.5px solid #fca5a5",
+              borderRadius: 12,
+              padding: "12px 16px",
+              color: "#dc2626",
+              fontSize: 13,
+              fontWeight: 500,
+              marginBottom: 20,
+              fontFamily: "'Poppins', sans-serif",
+            }}>
+              ⚠ {errors.apiError}
+            </div>
+          )}
+
           {/* ── Navigation Buttons ── */}
           <div
             style={{
@@ -877,6 +1023,7 @@ export default function HackathonJoin() {
             {step > 0 ? (
               <button
                 onClick={back}
+                disabled={loadingSubmit}
                 style={{
                   padding: "12px 24px",
                   borderRadius: 12,
@@ -886,7 +1033,7 @@ export default function HackathonJoin() {
                   fontFamily: "'Poppins', sans-serif",
                   fontWeight: 600,
                   fontSize: 14,
-                  cursor: "pointer",
+                  cursor: loadingSubmit ? "not-allowed" : "pointer",
                 }}
               >
                 ← Back
@@ -897,35 +1044,42 @@ export default function HackathonJoin() {
 
             <button
               onClick={next}
+              disabled={loadingSubmit}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "scale(1.03)";
-                e.currentTarget.style.boxShadow =
-                  "0 10px 28px rgba(0,119,182,0.38)";
+                if (!loadingSubmit) {
+                  e.currentTarget.style.transform = "scale(1.03)";
+                  e.currentTarget.style.boxShadow = "0 10px 28px rgba(0,119,182,0.38)";
+                }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "scale(1)";
-                e.currentTarget.style.boxShadow =
-                  "0 6px 20px rgba(0,119,182,0.28)";
+                if (!loadingSubmit) {
+                  e.currentTarget.style.transform = "scale(1)";
+                  e.currentTarget.style.boxShadow = "0 6px 20px rgba(0,119,182,0.28)";
+                }
               }}
               style={{
                 padding: "13px 32px",
                 borderRadius: 12,
-                background: C.pillActiveBg,
+                background: loadingSubmit ? "#94a3b8" : C.pillActiveBg,
                 color: "#fff",
                 fontFamily: "'Nunito', sans-serif",
                 fontWeight: 900,
                 fontSize: 15,
                 border: "none",
-                cursor: "pointer",
-                boxShadow: "0 6px 20px rgba(0,119,182,0.28)",
+                cursor: loadingSubmit ? "not-allowed" : "pointer",
+                boxShadow: loadingSubmit ? "none" : "0 6px 20px rgba(0,119,182,0.28)",
                 transition: "transform 0.15s, box-shadow 0.15s",
               }}
             >
-              {step === STEPS.length - 1
-                ? h.fee === 0
+              {loadingSubmit ? (
+                "Processing..."
+              ) : step === STEPS.length - 1 ? (
+                h.feeNum === 0
                   ? "Complete Registration 🚀"
-                  : `Pay $${h.fee} & Register 🚀`
-                : "Continue →"}
+                  : `Pay $${h.feeNum} & Register 🚀`
+              ) : (
+                "Continue →"
+              )}
             </button>
           </div>
         </div>

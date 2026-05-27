@@ -84,6 +84,12 @@ class JudgingController {
       .status(200)
       .json(new ApiResponse(200, updatedScore, "Score updated successfully"));
   }
+
+  async getHackathonJudges(req, res) {
+    const { hackathonId } = req.params;
+    const judges = await judgingService.getHackathonJudges(hackathonId);
+    return res.status(200).json(new ApiResponse(200, judges, "Hackathon judges fetched successfully"));
+  }
 }
 
 const judgingController = new JudgingController();

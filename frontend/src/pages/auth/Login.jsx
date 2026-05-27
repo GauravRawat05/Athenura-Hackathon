@@ -1,6 +1,8 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import { authService } from "../../services/authService";
+import { setCredentials } from "../../store/authSlice";
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Poppins:wght@400;500;600;700&display=swap');
@@ -522,6 +524,7 @@ export default function Login() {
   const [leaving, setLeaving]   = useState(false);
   const [errors, setErrors]     = useState({ email: "", password: "" });
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const goToSignUp = () => {
     setLeaving(true);
@@ -550,24 +553,22 @@ export default function Login() {
 
     setLoading(true);
     try {
-      console.log("Submitting login for:", email);
       const response = await authService.login({ email, password });
-      console.log("Login API response:", response);
       
       // The API returns response.data.data (because of the ApiResponse class)
       const { user } = response.data.data;
+      const token = response.data.data.accessToken;
 
-      localStorage.setItem("token", response.data.data.accessToken);
+      localStorage.setItem("token", token);
+      dispatch(setCredentials({ user, token }));
       
-      if (user.role === "admin") navigate("/admin/dashboard");
-      else if (user.role === "university") navigate("/university/dashboard");
+      const roleLower = user.role?.toLowerCase();
+      if (roleLower === "admin") navigate("/admin");
+      else if (roleLower === "university") navigate("/university");
+      else if (roleLower === "judge") navigate("/judge");
       else navigate("/dashboard");
       
     } catch (err) {
-      console.error("Login API error:", err);
-      if (err.response) {
-        console.error("Error data:", err.response.data);
-      }
       const msg = err.response?.data?.message || "Invalid credentials";
       setErrors({ password: msg });
     } finally {

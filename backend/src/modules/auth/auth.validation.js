@@ -58,7 +58,8 @@ export const registerUserValidation = Joi.object({
 
   gender: Joi.string().valid("Male", "Female", "Other").required().messages({
     "any.only": "Gender must be Male, Female, or Other"
-  })
+  }),
+  secretKey: Joi.string().allow("").optional()
 })
 
 // Login validation

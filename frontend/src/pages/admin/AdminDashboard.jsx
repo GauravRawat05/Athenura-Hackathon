@@ -1,11 +1,11 @@
-﻿import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   LineChart, Line, AreaChart, Area, PieChart, Pie, Cell
 } from 'recharts';
 import {
   Users, Trophy, DollarSign, Building2, TrendingUp,
-  Bell, User, ChevronDown, Check, Calendar, Activity, Zap, ArrowUpRight
+  Bell, User, ChevronDown, Check, Calendar, Activity, Zap, ArrowUpRight, RefreshCw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -510,14 +510,156 @@ const GlobalPeriodSelector = ({ value, onChange }) => {
   );
 };
 
+import { analyticsService } from '../../services/analyticsService';
+import { userService } from '../../services/userService';
+
 const Dashboard = () => {
   const windowWidth = useWindowSize();
   const [globalPeriod, setGlobalPeriod] = useState("This Month");
 
-  const stats = statsByPeriod[globalPeriod] || statsByPeriod["This Month"];
+  const [loading, setLoading] = useState(true);
+  const [overview, setOverview] = useState(null);
+  const [registrations, setRegistrations] = useState({ labels: [], data: [] });
+  const [hackathons, setHackathons] = useState({ byStatus: {}, popularHackathons: [], byMode: {}, prizePool: {}, registrationFee: {} });
+  const [revenue, setRevenue] = useState({ labels: [], data: [] });
+  const [universities, setUniversities] = useState({ labels: [], data: [] });
+  const [recentUsers, setRecentUsers] = useState([]);
+
+  const getDateRangeForPeriod = (period) => {
+    const now = new Date();
+    let fromDate = new Date();
+    let groupBy = 'monthly';
+
+    if (period === 'Today') {
+      fromDate.setHours(0, 0, 0, 0);
+      groupBy = 'daily';
+    } else if (period === 'This Week') {
+      const day = fromDate.getDay();
+      const diff = fromDate.getDate() - day + (day === 0 ? -6 : 1);
+      fromDate = new Date(fromDate.setDate(diff));
+      fromDate.setHours(0, 0, 0, 0);
+      groupBy = 'daily';
+    } else if (period === 'This Month') {
+      fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      groupBy = 'daily';
+    } else if (period === 'This Quarter') {
+      const currentQuarter = Math.floor(now.getMonth() / 3);
+      fromDate = new Date(now.getFullYear(), currentQuarter * 3, 1);
+      groupBy = 'weekly';
+    } else if (period === 'This Year') {
+      fromDate = new Date(now.getFullYear(), 0, 1);
+      groupBy = 'monthly';
+    }
+
+    return {
+      from: fromDate.toISOString(),
+      to: now.toISOString(),
+      groupBy
+    };
+  };
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const params = getDateRangeForPeriod(globalPeriod);
+
+      const [resOverview, resRegs, resHackStats, resRevenue, resUnis, resUsers] = await Promise.all([
+        analyticsService.getOverview(params),
+        analyticsService.getRegistrations(params),
+        analyticsService.getHackathonStats(params),
+        analyticsService.getRevenue(params),
+        analyticsService.getUniversities(params),
+        userService.adminListUsers(1, 5)
+      ]);
+
+      if (resOverview.data?.success) setOverview(resOverview.data.data);
+      if (resRegs.data?.success) setRegistrations(resRegs.data.data);
+      if (resHackStats.data?.success) setHackathons(resHackStats.data.data);
+      if (resRevenue.data?.success) setRevenue(resRevenue.data.data);
+      if (resUnis.data?.success) setUniversities(resUnis.data.data);
+      if (resUsers.data?.success && resUsers.data.data?.users) setRecentUsers(resUsers.data.data.users);
+
+    } catch (err) {
+      
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [globalPeriod]);
 
   const tickFontSize = windowWidth < 640 ? 9 : 11;
-  const xAngle = windowWidth < 640 ? -45 : -30; 
+  const xAngle = windowWidth < 640 ? -45 : -30;
+
+  const registrationsChartData = useMemo(() => {
+    if (!registrations || !registrations.labels) return [];
+    return registrations.labels.map((label, idx) => ({
+      date: label,
+      registrations: registrations.data[idx] || 0
+    }));
+  }, [registrations]);
+
+  const hackathonPopularityData = useMemo(() => {
+    if (!hackathons || !hackathons.popularHackathons) return [];
+    return hackathons.popularHackathons.map((h) => ({
+      name: h.title,
+      registrations: h.count
+    }));
+  }, [hackathons]);
+
+  const revenueChartData = useMemo(() => {
+    if (!revenue || !revenue.labels) return [];
+    return revenue.labels.map((label, idx) => ({
+      name: label,
+      revenue: revenue.data[idx] || 0
+    }));
+  }, [revenue]);
+
+  const distributionChartData = useMemo(() => {
+    if (!hackathons || !hackathons.byStatus) return [];
+    const total = Object.values(hackathons.byStatus).reduce((a, b) => a + b, 0) || 1;
+    return [
+      { name: "Draft", value: Math.round(((hackathons.byStatus.draft || 0) / total) * 100), amount: `${hackathons.byStatus.draft || 0} hackathons` },
+      { name: "Upcoming", value: Math.round(((hackathons.byStatus.upcoming || 0) / total) * 100), amount: `${hackathons.byStatus.upcoming || 0} hackathons` },
+      { name: "Ongoing", value: Math.round(((hackathons.byStatus.ongoing || 0) / total) * 100), amount: `${hackathons.byStatus.ongoing || 0} hackathons` },
+      { name: "Judging", value: Math.round(((hackathons.byStatus.judging || 0) / total) * 100), amount: `${hackathons.byStatus.judging || 0} hackathons` },
+      { name: "Past", value: Math.round(((hackathons.byStatus.past || 0) / total) * 100), amount: `${hackathons.byStatus.past || 0} hackathons` },
+    ].filter(item => item.value > 0);
+  }, [hackathons]);
+
+  const universitiesTableData = useMemo(() => {
+    if (!universities || !universities.labels) return [];
+    return universities.labels.map((label, idx) => ({
+      name: label,
+      participation: universities.data[idx] || 0
+    }));
+  }, [universities]);
+
+  const recentRegistrationsData = useMemo(() => {
+    if (!recentUsers) return [];
+    return recentUsers.map(u => ({
+      name: u.fullName || "N/A",
+      email: u.email || "N/A"
+    }));
+  }, [recentUsers]);
+
+  const activityLogsData = useMemo(() => {
+    const logs = [
+      { text: `System online with ${overview?.totalUsers || 0} total registered users.`, time: "Just now", isNew: true },
+      { text: `Currently hosting ${overview?.totalHackathons || 0} hackathons on the platform.`, time: "Active", isNew: true },
+      { text: `Total registration volume reached ${overview?.totalRegistrations || 0} entries.`, time: "Volume", isNew: false }
+    ];
+    recentUsers.slice(0, 2).forEach(u => {
+      logs.push({
+        text: `New user '${u.fullName}' onboarded successfully.`,
+        time: new Date(u.createdAt).toLocaleDateString(),
+        isNew: false
+      });
+    });
+    return logs;
+  }, [overview, recentUsers]);
 
   return (
     <>
@@ -532,36 +674,45 @@ const Dashboard = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
-            <StatCard icon={Users} title="Total Registrations" value={stats.registrations} growth={stats.registrationsGrowth} iconBg="bg-blue-100" iconColor="text-blue-600" index={0} />
-            <StatCard icon={Trophy} title="Active Hackathons" value={stats.hackathons} growth={stats.hackathonsGrowth} iconBg="bg-purple-100" iconColor="text-purple-600" index={1} />
-            <StatCard icon={DollarSign} title="Total Revenue" value={stats.revenue} growth={stats.revenueGrowth} iconBg="bg-emerald-100" iconColor="text-emerald-600" index={2} />
-            <StatCard icon={Building2} title="Universities" value={stats.universities} growth={stats.universitiesGrowth} iconBg="bg-orange-100" iconColor="text-orange-600" index={3} />
+            <StatCard icon={Users} title="Total Registrations" value={overview?.totalRegistrations ?? 0} growth="Live" iconBg="bg-blue-100" iconColor="text-blue-600" index={0} />
+            <StatCard icon={Trophy} title="Active Hackathons" value={overview?.totalHackathons ?? 0} growth="Live" iconBg="bg-purple-100" iconColor="text-purple-600" index={1} />
+            <StatCard icon={DollarSign} title="Total Revenue" value={`₹${(overview?.totalRevenue ?? 0).toLocaleString()}`} growth="Live" iconBg="bg-emerald-100" iconColor="text-emerald-600" index={2} />
+            <StatCard icon={Building2} title="Universities" value={universities.labels?.length ?? 0} growth="Live" iconBg="bg-orange-100" iconColor="text-orange-600" index={3} />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <ChartCard title="Total Registrations Over Time" filter={globalPeriod} delay={0.2}>
               {(period) => {
-                const data = registrationsDataMap[period] || registrationsDataMap["This Month"];
                 return (
                   <div className="w-full min-w-0 overflow-hidden">
-                    <ResponsiveContainer width="100%" height={280}>
-                      <AreaChart data={data}>
-                        <defs>
-                          <linearGradient id="registrationsGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                        <XAxis dataKey="date" tick={{ fontSize: tickFontSize }} tickLine={false} axisLine={{ stroke: "#cbd5e1" }} />
-                        <YAxis tick={{ fontSize: tickFontSize }} tickLine={false} axisLine={false} />
-                        <Tooltip
-                          contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                          formatter={(value) => [`${value.toLocaleString()}`, 'Registrations']}
-                        />
-                        <Area type="monotone" dataKey="registrations" stroke="#3b82f6" strokeWidth={2} fill="url(#registrationsGradient)" />
-                      </AreaChart>
-                    </ResponsiveContainer>
+                    {loading ? (
+                      <div className="h-[280px] flex items-center justify-center text-slate-500 font-medium">
+                        <RefreshCw className="h-6 w-6 text-blue-500 animate-spin mr-2" /> Loading chart...
+                      </div>
+                    ) : registrationsChartData.length === 0 ? (
+                      <div className="h-[280px] flex items-center justify-center text-slate-400">
+                        No registration data for this period
+                      </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={280}>
+                        <AreaChart data={registrationsChartData}>
+                          <defs>
+                            <linearGradient id="registrationsGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                          <XAxis dataKey="date" tick={{ fontSize: tickFontSize }} tickLine={false} axisLine={{ stroke: "#cbd5e1" }} />
+                          <YAxis tick={{ fontSize: tickFontSize }} tickLine={false} axisLine={false} />
+                          <Tooltip
+                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                            formatter={(value) => [`${value.toLocaleString()}`, 'Registrations']}
+                          />
+                          <Area type="monotone" dataKey="registrations" stroke="#3b82f6" strokeWidth={2} fill="url(#registrationsGradient)" />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    )}
                   </div>
                 );
               }}
@@ -569,21 +720,30 @@ const Dashboard = () => {
 
             <ChartCard title="Hackathon Popularity" filter={globalPeriod} delay={0.25}>
               {(period) => {
-                const data = hackathonPopularityDataMap[period] || hackathonPopularityDataMap["This Month"];
                 return (
                   <div className="w-full min-w-0 overflow-hidden">
-                    <ResponsiveContainer width="100%" height={280}>
-                      <BarChart data={data} layout="vertical" margin={{ left: 20 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
-                        <XAxis type="number" tick={{ fontSize: tickFontSize }} tickLine={false} axisLine={{ stroke: "#cbd5e1" }} />
-                        <YAxis type="category" dataKey="name" tick={{ fontSize: tickFontSize }} tickLine={false} axisLine={false} width={100} />
-                        <Tooltip
-                          contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                          formatter={(value) => [`${value.toLocaleString()}`, 'Registrations']}
-                        />
-                        <Bar dataKey="registrations" fill="#60a5fa" radius={[0, 8, 8, 0]} barSize={28} />
-                      </BarChart>
-                    </ResponsiveContainer>
+                    {loading ? (
+                      <div className="h-[280px] flex items-center justify-center text-slate-500 font-medium">
+                        <RefreshCw className="h-6 w-6 text-blue-500 animate-spin mr-2" /> Loading chart...
+                      </div>
+                    ) : hackathonPopularityData.length === 0 ? (
+                      <div className="h-[280px] flex items-center justify-center text-slate-400">
+                        No popularity metrics available
+                      </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={280}>
+                        <BarChart data={hackathonPopularityData} layout="vertical" margin={{ left: 20 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
+                          <XAxis type="number" tick={{ fontSize: tickFontSize }} tickLine={false} axisLine={{ stroke: "#cbd5e1" }} />
+                          <YAxis type="category" dataKey="name" tick={{ fontSize: tickFontSize }} tickLine={false} axisLine={false} width={100} />
+                          <Tooltip
+                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                            formatter={(value) => [`${value.toLocaleString()}`, 'Registrations']}
+                          />
+                          <Bar dataKey="registrations" fill="#60a5fa" radius={[0, 8, 8, 0]} barSize={28} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
                   </div>
                 );
               }}
@@ -593,73 +753,93 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <ChartCard title="Registration Fee Revenue" filter={globalPeriod} delay={0.3}>
               {(period) => {
-                const data = revenueDataMap[period] || revenueDataMap["This Month"];
                 return (
                   <div className="w-full min-w-0 overflow-hidden">
-                    <ResponsiveContainer width="100%" height={280}>
-                      <BarChart data={data}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                        <XAxis dataKey="name" tick={{ fontSize: tickFontSize, angle: xAngle, textAnchor: 'end', dy: 5 }} tickLine={false} axisLine={{ stroke: "#cbd5e1" }} height={70} />
-                        <YAxis tick={{ fontSize: tickFontSize }} tickLine={false} axisLine={false} tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`} />
-                        <Tooltip
-                          contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                          formatter={(value) => [`₹${value.toLocaleString()}`, 'Revenue']}
-                        />
-                        <Bar dataKey="revenue" radius={[8, 8, 0, 0]} barSize={40}>
-                          {data.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
+                    {loading ? (
+                      <div className="h-[280px] flex items-center justify-center text-slate-500 font-medium">
+                        <RefreshCw className="h-6 w-6 text-blue-500 animate-spin mr-2" /> Loading chart...
+                      </div>
+                    ) : revenueChartData.length === 0 ? (
+                      <div className="h-[280px] flex items-center justify-center text-slate-400">
+                        No revenue recorded for this period
+                      </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={280}>
+                        <BarChart data={revenueChartData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                          <XAxis dataKey="name" tick={{ fontSize: tickFontSize, angle: xAngle, textAnchor: 'end', dy: 5 }} tickLine={false} axisLine={{ stroke: "#cbd5e1" }} height={70} />
+                          <YAxis tick={{ fontSize: tickFontSize }} tickLine={false} axisLine={false} tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`} />
+                          <Tooltip
+                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                            formatter={(value) => [`₹${value.toLocaleString()}`, 'Revenue']}
+                          />
+                          <Bar dataKey="revenue" radius={[8, 8, 0, 0]} barSize={40}>
+                            {revenueChartData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
                   </div>
                 );
               }}
             </ChartCard>
 
-            <ChartCard title="Revenue Distribution" filter={globalPeriod} delay={0.35}>
+            <ChartCard title="Hackathon Status Distribution" filter={globalPeriod} delay={0.35}>
               {(period) => {
-                const data = thisMonthDataMap[period] || thisMonthDataMap["This Month"];
                 return (
                   <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-4 w-full min-w-0 overflow-hidden">
-                    <div className="w-full max-w-[220px] mx-auto sm:mx-0">
-                      <ResponsiveContainer width="100%" height={200}>
-                        <PieChart>
-                          <Pie
-                            data={data}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={60}
-                            outerRadius={80}
-                            paddingAngle={2}
-                            dataKey="value"
-                            stroke="none"
-                          >
-                            {data.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Tooltip
-                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                            formatter={(value, name, props) => [`${value}%`, props.payload.name]}
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-                    <div className="flex-1 space-y-2 min-w-0 w-full">
-                      {data.map((item, idx) => (
-                        <div key={idx} className="flex items-center justify-between gap-2 flex-wrap min-w-0">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: COLORS[idx] }} />
-                            <span className="text-sm text-gray-700 truncate">{item.name}</span>
-                          </div>
-                          <div className="flex gap-4 flex-shrink-0">
-                            <span className="text-sm font-semibold text-gray-900">{item.value}%</span>
-                            <span className="text-sm text-gray-500">{item.amount}</span>
-                          </div>
+                    {loading ? (
+                      <div className="h-[200px] w-full flex items-center justify-center text-slate-500 font-medium">
+                        <RefreshCw className="h-6 w-6 text-blue-500 animate-spin mr-2" /> Loading data...
+                      </div>
+                    ) : distributionChartData.length === 0 ? (
+                      <div className="h-[200px] w-full flex items-center justify-center text-slate-400">
+                        No hackathons found
+                      </div>
+                    ) : (
+                      <>
+                        <div className="w-full max-w-[220px] mx-auto sm:mx-0">
+                          <ResponsiveContainer width="100%" height={200}>
+                            <PieChart>
+                              <Pie
+                                data={distributionChartData}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={60}
+                                outerRadius={80}
+                                paddingAngle={2}
+                                dataKey="value"
+                                stroke="none"
+                              >
+                                {distributionChartData.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                ))}
+                              </Pie>
+                              <Tooltip
+                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                                formatter={(value, name, props) => [`${value}%`, props.payload.name]}
+                              />
+                            </PieChart>
+                          </ResponsiveContainer>
                         </div>
-                      ))}
-                    </div>
+                        <div className="flex-1 space-y-2 min-w-0 w-full">
+                          {distributionChartData.map((item, idx) => (
+                            <div key={idx} className="flex items-center justify-between gap-2 flex-wrap min-w-0">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: COLORS[idx % COLORS.length] }} />
+                                <span className="text-sm text-gray-700 truncate">{item.name}</span>
+                              </div>
+                              <div className="flex gap-4 flex-shrink-0">
+                                <span className="text-sm font-semibold text-gray-900">{item.value}%</span>
+                                <span className="text-sm text-gray-500">{item.amount}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
                   </div>
                 );
               }}
@@ -669,25 +849,34 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <ChartCard title="Top Universities by Participation" filter={globalPeriod} delay={0.4}>
               {(period) => {
-                const data = universitiesDataMap[period] || universitiesDataMap["This Month"];
                 return (
                   <div className="w-full overflow-x-auto">
-                    <table className="w-full min-w-[480px]">
-                      <thead>
-                        <tr className="border-b border-gray-100">
-                          <th className="text-left py-3 text-xs font-semibold text-gray-400">University</th>
-                          <th className="text-right py-3 text-xs font-semibold text-gray-400">Participation</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {data.map((uni, idx) => (
-                          <tr key={idx} className="border-b border-gray-50 hover:bg-blue-50/30 transition-colors">
-                            <td className="py-3 text-sm font-medium text-gray-800 truncate">{uni.name}</td>
-                            <td className="py-3 text-sm text-right text-gray-600">{uni.participation.toLocaleString()}</td>
+                    {loading ? (
+                      <div className="py-12 flex items-center justify-center text-slate-500 font-medium">
+                        <RefreshCw className="h-6 w-6 text-blue-500 animate-spin mr-2" /> Loading list...
+                      </div>
+                    ) : universitiesTableData.length === 0 ? (
+                      <div className="py-12 text-center text-slate-400">
+                        No university participation data available
+                      </div>
+                    ) : (
+                      <table className="w-full min-w-[480px]">
+                        <thead>
+                          <tr className="border-b border-gray-100">
+                            <th className="text-left py-3 text-xs font-semibold text-gray-400">University</th>
+                            <th className="text-right py-3 text-xs font-semibold text-gray-400">Participation</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {universitiesTableData.map((uni, idx) => (
+                            <tr key={idx} className="border-b border-gray-50 hover:bg-blue-50/30 transition-colors">
+                              <td className="py-3 text-sm font-medium text-gray-800 truncate">{uni.name}</td>
+                              <td className="py-3 text-sm text-right text-gray-600">{uni.participation.toLocaleString()}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
                   </div>
                 );
               }}
@@ -695,31 +884,32 @@ const Dashboard = () => {
 
             <ChartCard title="Recent Registrations" filter={globalPeriod} delay={0.45}>
               {(period) => {
-                const data = recentRegistrationsMap[period] || recentRegistrationsMap["This Month"];
                 return (
                   <div className="space-y-3">
-                    {data.map((user, idx) => (
-                      <div key={idx} className="flex items-center gap-3 p-2 rounded-xl hover:bg-blue-50/30 transition-colors min-w-0">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full overflow-hidden ring-2 ring-white shadow flex-shrink-0">
-                          {USER_AVATARS[user.name] ? (
-                            <img
-                              src={USER_AVATARS[user.name]}
-                              alt={user.name}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
+                    {loading ? (
+                      <div className="py-12 flex items-center justify-center text-slate-500 font-medium">
+                        <RefreshCw className="h-6 w-6 text-blue-500 animate-spin mr-2" /> Loading users...
+                      </div>
+                    ) : recentRegistrationsData.length === 0 ? (
+                      <div className="py-12 text-center text-slate-400">
+                        No registrations recorded recently
+                      </div>
+                    ) : (
+                      recentRegistrationsData.map((user, idx) => (
+                        <div key={idx} className="flex items-center gap-3 p-2 rounded-xl hover:bg-blue-50/30 transition-colors min-w-0">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full overflow-hidden ring-2 ring-white shadow flex-shrink-0">
                             <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-blue-100 to-blue-200 text-blue-700 font-semibold text-sm">
                               {user.name.split(' ').map(n => n[0]).join('')}
                             </div>
-                          )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-800 truncate">{user.name}</p>
+                            <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                          </div>
+                          <ArrowUpRight className="h-4 w-4 text-gray-300 flex-shrink-0" />
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-800 truncate">{user.name}</p>
-                          <p className="text-xs text-gray-400 truncate">{user.email}</p>
-                        </div>
-                        <ArrowUpRight className="h-4 w-4 text-gray-300 flex-shrink-0" />
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
                 );
               }}
@@ -728,18 +918,23 @@ const Dashboard = () => {
 
           <ChartCard title="Platform Activity" filter={globalPeriod} delay={0.5}>
             {(period) => {
-              const data = activitiesMap[period] || activitiesMap["This Month"];
               return (
                 <div className="space-y-3">
-                  {data.map((activity, idx) => (
-                    <div key={idx} className="flex items-start gap-3 p-3 rounded-xl hover:bg-blue-50/20 transition-colors border-b border-gray-50 last:border-0 min-w-0">
-                      <div className={`h-2 w-2 rounded-full mt-2 flex-shrink-0 ${activity.isNew ? 'bg-blue-500' : 'bg-gray-300'}`} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-700 break-words">{activity.text}</p>
-                        <p className="text-xs text-gray-400 mt-1">{activity.time}</p>
-                      </div>
+                  {loading ? (
+                    <div className="py-8 flex items-center justify-center text-slate-500 font-medium">
+                      <RefreshCw className="h-6 w-6 text-blue-500 animate-spin mr-2" /> Loading activities...
                     </div>
-                  ))}
+                  ) : (
+                    activityLogsData.map((activity, idx) => (
+                      <div key={idx} className="flex items-start gap-3 p-3 rounded-xl hover:bg-blue-50/20 transition-colors border-b border-gray-50 last:border-0 min-w-0">
+                        <div className={`h-2 w-2 rounded-full mt-2 flex-shrink-0 ${activity.isNew ? 'bg-blue-500' : 'bg-gray-300'}`} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-gray-700 break-words">{activity.text}</p>
+                          <p className="text-xs text-gray-400 mt-1">{activity.time}</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               );
             }}

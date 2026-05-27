@@ -1,5 +1,6 @@
-﻿import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useRef, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { hackathonService } from "../../services/hackathonService";
 const Icon = ({ d, size = 18, className = "" }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className}>
     {Array.isArray(d) ? d.map((path, i) => <path key={i} d={path} />) : <path d={d} />}
@@ -519,12 +520,15 @@ function ThemedSelect({ value, onChange, options, placeholder }) {
 
 export default function CreateHackathonPage() {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const isEdit = !!id;
+
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [desc, setDesc] = useState("");
-  const [status, setStatus] = useState("");
-  const [mode, setMode] = useState("");
-  const [allowedModes, setAllowedModes] = useState([]);
+  const [status, setStatus] = useState("Draft");
+  const [mode, setMode] = useState("Online");
+  const [allowedModes, setAllowedModes] = useState(["Solo", "Team"]);
   const [minTeam, setMinTeam] = useState(1);
   const [maxTeam, setMaxTeam] = useState(4);
   const [startDate, setStartDate] = useState("");
@@ -532,45 +536,145 @@ export default function CreateHackathonPage() {
   const [regDeadline, setRegDeadline] = useState("");
   const [subDeadline, setSubDeadline] = useState("");
   const [prizePool, setPrizePool] = useState("");
-  const [regFee, setRegFee] = useState("");
-  const [currency, setCurrency] = useState("");
+  const [regFee, setRegFee] = useState("free");
+  const [currency, setCurrency] = useState("INR");
   const [domains, setDomains] = useState([]);
   const [domainInput, setDomainInput] = useState("");
   const [problem, setProblem] = useState("");
   const [criteria, setCriteria] = useState([]);
   const [rules, setRules] = useState([]);
-  const [studentOnly, setStudentOnly] = useState(false);
+  const [studentOnly, setStudentOnly] = useState(true);
   const [years, setYears] = useState([]);
   const [uploadedFile, setUploadedFile] = useState(null);
   const fileRef = useRef();
 
+  // Load Hackathon Details in Edit Mode
   useEffect(() => {
-    try {
-      const draft = JSON.parse(localStorage.getItem("hackathonDraft") || "null");
-      if (!draft) return;
-      if (draft.title) setTitle(draft.title);
-      if (draft.slug) setSlug(draft.slug);
-      if (draft.desc) setDesc(draft.desc);
-      if (draft.status) setStatus(draft.status);
-      if (draft.mode) setMode(draft.mode);
-      if (draft.allowedModes) setAllowedModes(draft.allowedModes);
-      if (draft.minTeam) setMinTeam(draft.minTeam);
-      if (draft.maxTeam) setMaxTeam(draft.maxTeam);
-      if (draft.startDate) setStartDate(draft.startDate);
-      if (draft.endDate) setEndDate(draft.endDate);
-      if (draft.regDeadline) setRegDeadline(draft.regDeadline);
-      if (draft.subDeadline) setSubDeadline(draft.subDeadline);
-      if (draft.prizePool) setPrizePool(draft.prizePool);
-      if (draft.regFee) setRegFee(draft.regFee);
-      if (draft.currency) setCurrency(draft.currency);
-      if (draft.domains) setDomains(draft.domains);
-      if (draft.problem) setProblem(draft.problem);
-      if (draft.criteria) setCriteria(draft.criteria);
-      if (draft.rules) setRules(draft.rules);
-      if (draft.studentOnly !== undefined) setStudentOnly(draft.studentOnly);
-      if (draft.years) setYears(draft.years);
-    } catch {}
-  }, []);
+    if (!isEdit) {
+      // If creating new, try loading draft
+      try {
+        const draft = JSON.parse(localStorage.getItem("hackathonDraft") || "null");
+        if (!draft) return;
+        if (draft.title) setTitle(draft.title);
+        if (draft.slug) setSlug(draft.slug);
+        if (draft.desc) setDesc(draft.desc);
+        if (draft.status) setStatus(draft.status);
+        if (draft.mode) setMode(draft.mode);
+        if (draft.allowedModes) setAllowedModes(draft.allowedModes);
+        if (draft.minTeam) setMinTeam(draft.minTeam);
+        if (draft.maxTeam) setMaxTeam(draft.maxTeam);
+        if (draft.startDate) setStartDate(draft.startDate);
+        if (draft.endDate) setEndDate(draft.endDate);
+        if (draft.regDeadline) setRegDeadline(draft.regDeadline);
+        if (draft.subDeadline) setSubDeadline(draft.subDeadline);
+        if (draft.prizePool) setPrizePool(draft.prizePool);
+        if (draft.regFee) setRegFee(draft.regFee);
+        if (draft.currency) setCurrency(draft.currency);
+        if (draft.domains) setDomains(draft.domains);
+        if (draft.problem) setProblem(draft.problem);
+        if (draft.criteria) setCriteria(draft.criteria);
+        if (draft.rules) setRules(draft.rules);
+        if (draft.studentOnly !== undefined) setStudentOnly(draft.studentOnly);
+        if (draft.years) setYears(draft.years);
+      } catch (err) {
+        
+      }
+      return;
+    }
+
+    const fetchDetails = async () => {
+      try {
+        const res = await hackathonService.adminGetHackathonById(id);
+        const data = res.data?.data || res.data;
+        if (!data) return;
+
+        setTitle(data.title || "");
+        setSlug(data.slug || "");
+        setDesc(data.description || "");
+
+        // Map status
+        const statusMap = {
+          draft: "Draft",
+          upcoming: "Upcoming",
+          ongoing: "Ongoing",
+          judging: "Ongoing",
+          past: "Completed"
+        };
+        setStatus(statusMap[data.status] || "Draft");
+
+        // Map mode (Online/Offline/Hybrid)
+        let frontendMode = "Online";
+        if (data.allowedModes && data.allowedModes.length > 0) {
+          const m = data.allowedModes[0];
+          if (["Online", "Offline", "Hybrid"].includes(m)) {
+            frontendMode = m;
+          } else if (["online", "offline", "hybrid"].includes(m.toLowerCase())) {
+            frontendMode = m.charAt(0).toUpperCase() + m.slice(1).toLowerCase();
+          }
+        }
+        setMode(frontendMode);
+
+        // Map allowedModes (Solo/Team)
+        let frontendAllowedModes = [];
+        if (data.mode) {
+          if (data.mode.includes("Solo") && data.mode.includes("Team")) {
+            frontendAllowedModes = ["Solo", "Team", "Solo & Team"];
+          } else if (data.mode.includes("Solo")) {
+            frontendAllowedModes = ["Solo"];
+          } else if (data.mode.includes("Team")) {
+            frontendAllowedModes = ["Team"];
+          }
+        }
+        setAllowedModes(frontendAllowedModes);
+
+        setMinTeam(data.minTeamSize || 1);
+        setMaxTeam(data.maxTeamSize || 4);
+
+        // Map Dates to local input datetime string
+        const toLocalDatetimeString = (dateStr) => {
+          if (!dateStr) return "";
+          const d = new Date(dateStr);
+          if (isNaN(d.getTime())) return "";
+          const pad = (num) => String(num).padStart(2, "0");
+          return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        };
+        setStartDate(toLocalDatetimeString(data.startDate));
+        setEndDate(toLocalDatetimeString(data.endDate));
+        setRegDeadline(toLocalDatetimeString(data.registrationDeadline));
+        setSubDeadline(toLocalDatetimeString(data.submissionDeadline));
+
+        setPrizePool(data.prizePool || "");
+        setRegFee(data.registrationFee === 0 ? "free" : (data.registrationFee || ""));
+
+        // Map currency
+        const currencyMap = {
+          INR: "INR",
+          DOLLAR: "USD"
+        };
+        setCurrency(currencyMap[data.currency] || "INR");
+
+        setDomains(data.technologyDomains || []);
+        setProblem(data.problemStatement || "");
+        setCriteria(data.judgingCriteria || []);
+        setRules(data.rules || []);
+
+        if (data.eligibility) {
+          setStudentOnly(!!data.eligibility.studentOnly);
+          setYears(data.eligibility.allowedGraduationYears || []);
+        }
+
+        if (data.detailsPdfUrl) {
+          const filename = data.detailsPdfUrl.split("/").pop();
+          setUploadedFile(filename || "details.pdf");
+        }
+      } catch (err) {
+        
+        alert("Error loading hackathon details: " + (err.response?.data?.message || err.message));
+      }
+    };
+
+    fetchDetails();
+  }, [id, isEdit]);
 
   const toggleMode = (m) => setAllowedModes((prev) => prev.includes(m) ? prev.filter((x) => x !== m) : [...prev, m]);
   const totalWeight = criteria.reduce((s, c) => s + Number(c.weight || 0), 0);
@@ -578,6 +682,7 @@ export default function CreateHackathonPage() {
   const handleFileChange = (e) => { const f = e.target.files[0]; if (f) setUploadedFile(f.name); };
   const handleDragOver = (e) => e.preventDefault();
   const handleDrop = (e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f && f.type === "application/pdf") setUploadedFile(f.name); };
+  
   const handleTitleChange = (e) => {
     const val = e.target.value;
     setTitle(val);
@@ -590,35 +695,118 @@ export default function CreateHackathonPage() {
     alert("Draft saved!");
   };
 
- const handleCreate = () => {
-    if (!title || !status || !mode) { alert("Please fill in all required fields."); return; }
+  const handleCreate = async () => {
+    if (!title || !status || !mode) { alert("Please fill in all required fields (Title, Status, Mode)."); return; }
+    if (!startDate || !endDate || !regDeadline || !subDeadline) { alert("Please fill in all date fields."); return; }
 
-    const newHackathon = {
-      id: crypto.randomUUID(),
-      name: title,
-      subtitle: desc.slice(0, 60) || "No description",
-      status: status,
-      regFrom: startDate ? new Date(startDate).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }) : "TBD",
-      regTo: regDeadline ? new Date(regDeadline).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }) : "TBD",
-      eventFrom: startDate ? new Date(startDate).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }) : "TBD",
-      eventTo: endDate ? new Date(endDate).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }) : "TBD",
-      submissionDeadline: subDeadline || "",
-      resultsDate: "",
-      prize: Number(prizePool) || 0,
-      mode: mode,
-      teamSize: `${minTeam} - ${maxTeam} Members`,
-      eligibility: studentOnly ? "Students Only" : "All Students",
-      organizedBy: "",
-      description: desc,
-      iconKey: "ai",
-      iconBg: "from-blue-500 to-indigo-600",
-      settings: { publiclyVisible: true, registrationOpen: true, allowTeamChanges: false, requireApproval: false, sendEmailUpdates: true, showLeaderboard: true },
+    const backendCurrency = currency === "USD" || currency === "EUR" ? "DOLLAR" : "INR";
+
+    let backendMode = [];
+    if (allowedModes.includes("Solo & Team")) {
+      backendMode = ["Solo", "Team"];
+    } else {
+      if (allowedModes.includes("Solo")) backendMode.push("Solo");
+      if (allowedModes.includes("Team")) backendMode.push("Team");
+    }
+    if (backendMode.length === 0) {
+      backendMode = ["Solo"];
+    }
+
+    const backendAllowedModes = backendMode.map(m => m.toLowerCase());
+
+    const statusMap = {
+      Draft: "draft",
+      Upcoming: "upcoming",
+      Ongoing: "ongoing",
+      Completed: "past",
+      Cancelled: "draft"
+    };
+    const backendStatus = statusMap[status] || "draft";
+
+    const backendEligibility = {
+      studentOnly: Boolean(studentOnly),
+      allowedGraduationYears: years.map(Number)
     };
 
-    const existing = JSON.parse(sessionStorage.getItem("tempHackathons") || "[]");
-    sessionStorage.setItem("tempHackathons", JSON.stringify([newHackathon, ...existing]));
-    localStorage.removeItem("hackathonDraft");
-    navigate("/admin/hackathons");
+    let backendRegFee = 0;
+    if (regFee && regFee.trim().toLowerCase() !== "free") {
+      backendRegFee = Number(regFee) || 0;
+    }
+
+    if (criteria.length > 0) {
+      const totalWeight = criteria.reduce((sum, c) => sum + Number(c.weight || 0), 0);
+      if (totalWeight !== 100) {
+        alert(`Total judging criteria weight must equal 100%. Currently it is ${totalWeight}%.`);
+        return;
+      }
+    }
+
+    let payload;
+    const fileInput = fileRef.current;
+    const selectedFile = fileInput?.files?.[0];
+
+    if (selectedFile) {
+      payload = new FormData();
+      payload.append("pdf", selectedFile);
+      payload.append("title", title);
+      payload.append("slug", slug);
+      payload.append("description", desc);
+      payload.append("problemStatement", problem);
+      payload.append("mode", JSON.stringify(backendMode));
+      payload.append("allowedModes", JSON.stringify(backendAllowedModes));
+      payload.append("startDate", new Date(startDate).toISOString());
+      payload.append("endDate", new Date(endDate).toISOString());
+      payload.append("registrationDeadline", new Date(regDeadline).toISOString());
+      payload.append("submissionDeadline", new Date(subDeadline).toISOString());
+      payload.append("prizePool", Number(prizePool) || 0);
+      payload.append("registrationFee", backendRegFee);
+      payload.append("currency", backendCurrency);
+      payload.append("minTeamSize", Number(minTeam) || 1);
+      payload.append("maxTeamSize", Number(maxTeam) || 4);
+      payload.append("technologyDomains", JSON.stringify(domains));
+      payload.append("rules", JSON.stringify(rules.filter(r => r.trim())));
+      payload.append("judgingCriteria", JSON.stringify(criteria.map(c => ({ name: c.name, weight: Number(c.weight) }))));
+      payload.append("status", backendStatus);
+      payload.append("eligibility", JSON.stringify(backendEligibility));
+    } else {
+      payload = {
+        title,
+        slug,
+        description: desc,
+        problemStatement: problem,
+        mode: backendMode,
+        allowedModes: backendAllowedModes,
+        startDate: new Date(startDate).toISOString(),
+        endDate: new Date(endDate).toISOString(),
+        registrationDeadline: new Date(regDeadline).toISOString(),
+        submissionDeadline: new Date(subDeadline).toISOString(),
+        prizePool: Number(prizePool) || 0,
+        registrationFee: backendRegFee,
+        currency: backendCurrency,
+        minTeamSize: Number(minTeam) || 1,
+        maxTeamSize: Number(maxTeam) || 4,
+        technologyDomains: domains,
+        rules: rules.filter(r => r.trim()),
+        judgingCriteria: criteria.map(c => ({ name: c.name, weight: Number(c.weight) })),
+        status: backendStatus,
+        eligibility: backendEligibility
+      };
+    }
+
+    try {
+      if (isEdit) {
+        await hackathonService.adminUpdateHackathon(id, payload);
+        alert("Hackathon updated successfully!");
+      } else {
+        await hackathonService.adminCreateHackathon(payload);
+        alert("Hackathon created successfully!");
+      }
+      localStorage.removeItem("hackathonDraft");
+      navigate("/admin/hackathons");
+    } catch (err) {
+      
+      alert("Failed to save hackathon: " + (err.response?.data?.message || err.message));
+    }
   };
 
   return (
@@ -627,7 +815,7 @@ export default function CreateHackathonPage() {
       <div className="page-wrapper">
         <nav className="topbar">
           <div className="topbar-title">
-            <h1>Create Hackathon</h1>
+            <h1>{isEdit ? "Edit Hackathon" : "Create Hackathon"}</h1>
           </div>
           <div className="topbar-actions">
             <button className="btn-draft" onClick={handleSaveDraft}>
@@ -636,13 +824,14 @@ export default function CreateHackathonPage() {
             </button>
             <button className="btn-create" onClick={handleCreate}>
               <Icons.PlusCircle size={15} />
-              <span className="btn-text">Create</span>
+              <span className="btn-text">{isEdit ? "Save Changes" : "Create"}</span>
             </button>
             <div className="avatar">
               <img src="https://i.pravatar.cc/80" alt="Account" />
             </div>
           </div>
         </nav>
+
 
         <main className="main">
           <div className="grid">

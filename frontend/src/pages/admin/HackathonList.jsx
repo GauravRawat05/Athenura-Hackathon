@@ -1,5 +1,6 @@
-﻿import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { hackathonService } from "../../services/hackathonService";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, Plus, FileEdit, CalendarDays, PlayCircle,
@@ -790,15 +791,8 @@ function DetailPanel({ selected, activeTab, setActiveTab, openEdit, onUpdateSett
 }
 
 export default function HackathonDashboard() {
-const [hackathons, setHackathons] = useState(() => {
-    try {
-      const temp = JSON.parse(sessionStorage.getItem("tempHackathons") || "[]");
-      return [...temp, ...initialData];
-    } catch {
-      return initialData;
-    }
-  });
-  const [selectedId, setSelectedId] = useState("1");
+  const [hackathons, setHackathons] = useState([]);
+  const [selectedId, setSelectedId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [activeTab, setActiveTab] = useState("Overview");
@@ -809,6 +803,123 @@ const [hackathons, setHackathons] = useState(() => {
   const [editTarget, setEditTarget] = useState(null);
   const toast = useToast();
   const navigate = useNavigate();
+
+  // Mapper function to map backend Mongoose model to frontend expected layout
+  const mapBackendToFrontend = (h) => {
+    if (!h) return null;
+
+    const formatDateStr = (dateStr) => {
+      if (!dateStr) return "TBD";
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return "TBD";
+      return d.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+    };
+
+    const formatDateWithTime = (dateStr) => {
+      if (!dateStr) return "TBD";
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return "TBD";
+      return d.toLocaleString("en-US", {
+        month: "short",
+        day: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    };
+
+    const statusMap = {
+      draft: "Upcoming",
+      upcoming: "Upcoming",
+      ongoing: "Ongoing",
+      judging: "Ongoing",
+      past: "Completed"
+    };
+
+    let frontendMode = "Online";
+    if (h.allowedModes && h.allowedModes.length > 0) {
+      const m = h.allowedModes[0];
+      if (["Online", "Offline", "Hybrid"].includes(m)) {
+        frontendMode = m;
+      } else if (["online", "offline", "hybrid"].includes(m.toLowerCase())) {
+        frontendMode = m.charAt(0).toUpperCase() + m.slice(1).toLowerCase();
+      }
+    }
+
+    const currencyMap = {
+      INR: "INR",
+      DOLLAR: "USD"
+    };
+
+    return {
+      id: h._id || h.id,
+      name: h.title || "",
+      subtitle: h.description ? (h.description.slice(0, 60) + (h.description.length > 60 ? "..." : "")) : "No description",
+      status: statusMap[h.status] || "Upcoming",
+      regFrom: formatDateStr(h.registrationDeadline),
+      regTo: formatDateStr(h.startDate),
+      eventFrom: formatDateStr(h.startDate),
+      eventTo: formatDateStr(h.endDate),
+      submissionDeadline: formatDateWithTime(h.submissionDeadline),
+      resultsDate: formatDateStr(h.endDate),
+      prize: h.prizePool || 0,
+      mode: frontendMode,
+      teamSize: `${h.minTeamSize || 1} - ${h.maxTeamSize || 4} Members`,
+      eligibility: h.eligibility?.studentOnly ? "Students Only" : "Open to All",
+      organizedBy: "Athenura",
+      description: h.description || "",
+      iconKey: "ai",
+      iconBg: "from-blue-500 to-indigo-600",
+      
+      title: h.title,
+      slug: h.slug,
+      problemStatement: h.problemStatement,
+      minTeamSize: h.minTeamSize,
+      maxTeamSize: h.maxTeamSize,
+      technologyDomains: h.technologyDomains || [],
+      rules: h.rules || [],
+      judgingCriteria: h.judgingCriteria || [],
+      currency: currencyMap[h.currency] || "INR",
+      registrationFee: h.registrationFee,
+      eligibilityObj: h.eligibility,
+      statusRaw: h.status,
+
+      settings: {
+        publiclyVisible: true,
+        registrationOpen: h.status !== 'past',
+        allowTeamChanges: false,
+        requireApproval: false,
+        sendEmailUpdates: true,
+        showLeaderboard: true,
+        ...(h.settings || {})
+      }
+    };
+  };
+
+  const loadHackathons = async () => {
+    try {
+      const res = await hackathonService.adminGetHackathons();
+      const rawList = res.data?.data || res.data || [];
+      const mappedList = rawList.map(mapBackendToFrontend);
+      setHackathons(mappedList);
+
+      if (mappedList.length > 0) {
+        setSelectedId((prev) => {
+          if (prev && mappedList.some(item => item.id === prev)) {
+            return prev;
+          }
+          return mappedList[0].id;
+        });
+      }
+    } catch (err) {
+      
+      toast.error("Error loading hackathons: " + (err.response?.data?.message || err.message));
+    }
+  };
+
+  useEffect(() => {
+    loadHackathons();
+  }, []);
 
   const filtered = useMemo(() => hackathons.filter((h) => {
     const matchSearch = h.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -830,43 +941,116 @@ const [hackathons, setHackathons] = useState(() => {
     ];
   }, [hackathons]);
 
-  const handleDelete = (id) => {
-    setHackathons((prev) => prev.filter((h) => h.id !== id));
-    if (selectedId === id) {
-      const next = hackathons.find((h) => h.id !== id);
-      if (next) setSelectedId(next.id);
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this hackathon?")) return;
+    try {
+      await hackathonService.adminDeleteHackathon(id);
+      toast.success("Hackathon deleted");
+      loadHackathons();
+    } catch (err) {
+      
+      toast.error("Failed to delete: " + (err.response?.data?.message || err.message));
     }
-    toast.success("Hackathon deleted");
   };
 
-  const handleDuplicate = (h) => {
-    const copy = { ...h, id: crypto.randomUUID(), name: `${h.name} (Copy)`, settings: { ...h.settings } };
-    setHackathons((prev) => [copy, ...prev]);
-    toast.success("Hackathon duplicated");
+  const handleDuplicate = async (h) => {
+    try {
+      const res = await hackathonService.adminGetHackathonById(h.id);
+      const data = res.data?.data || res.data;
+      if (!data) return;
+
+      const duplicatedData = {
+        ...data,
+        title: `${data.title} (Copy)`,
+        slug: `${data.slug}-copy-${Math.floor(Math.random() * 1000)}`,
+        status: "draft"
+      };
+
+      delete duplicatedData._id;
+      delete duplicatedData.id;
+      delete duplicatedData.createdAt;
+      delete duplicatedData.updatedAt;
+      delete duplicatedData.__v;
+
+      await hackathonService.adminCreateHackathon(duplicatedData);
+      toast.success("Hackathon duplicated");
+      loadHackathons();
+    } catch (err) {
+      
+      toast.error("Failed to duplicate: " + (err.response?.data?.message || err.message));
+    }
   };
 
-  const openEdit = (h) => { setEditTarget({ ...h, settings: { ...h.settings } }); setEditOpen(true); };
+  const openEdit = (h) => {
+    navigate(`/admin/hackathons/edit/${h.id}`);
+  };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editTarget) return;
-    setHackathons((prev) => prev.map((h) => (h.id === editTarget.id ? editTarget : h)));
-    setEditOpen(false);
-    toast.success("Hackathon updated");
+    try {
+      const backendCurrency = editTarget.currency === "USD" || editTarget.currency === "EUR" ? "DOLLAR" : "INR";
+      const payload = {
+        title: editTarget.name,
+        description: editTarget.description,
+        status: editTarget.status === "Upcoming" ? "upcoming" : editTarget.status === "Ongoing" ? "ongoing" : "past",
+        prizePool: Number(editTarget.prize) || 0,
+        currency: backendCurrency
+      };
+
+      await hackathonService.adminUpdateHackathon(editTarget.id, payload);
+      setEditOpen(false);
+      toast.success("Hackathon updated");
+      loadHackathons();
+    } catch (err) {
+      
+      toast.error("Failed to update: " + (err.response?.data?.message || err.message));
+    }
   };
 
-  const createHackathon = () => {
+  const createHackathon = async () => {
     if (!createData.name) return;
-    const newH = { ...createData, id: crypto.randomUUID(), iconKey: "ai", iconBg: "from-blue-500 to-indigo-600", settings: { ...DEFAULT_SETTINGS } };
-    setHackathons((prev) => [newH, ...prev]);
-    setCreateOpen(false);
-    setCreateData({ ...emptyHackathon });
-    toast.success("Hackathon created");
+    try {
+      const payload = {
+        title: createData.name,
+        description: createData.description,
+        slug: createData.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
+        status: "draft",
+        mode: ["Solo"],
+        allowedModes: ["Online"],
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        registrationDeadline: new Date().toISOString(),
+        submissionDeadline: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString(),
+        prizePool: Number(createData.prize) || 0,
+        registrationFee: 0,
+        currency: "INR",
+        technologyDomains: ["AI", "Web"],
+        rules: ["Rules"],
+        eligibility: { studentOnly: true, allowedGraduationYears: [] }
+      };
+
+      await hackathonService.adminCreateHackathon(payload);
+      setCreateOpen(false);
+      setCreateData({ ...emptyHackathon });
+      toast.success("Hackathon created");
+      loadHackathons();
+    } catch (err) {
+      
+      toast.error("Failed to create: " + (err.response?.data?.message || err.message));
+    }
   };
 
-  const handleUpdateSettings = (newSettings) => {
-    setHackathons((prev) =>
-      prev.map((h) => h.id === selectedId ? { ...h, settings: newSettings } : h)
-    );
+  const handleUpdateSettings = async (newSettings) => {
+    try {
+      await hackathonService.adminUpdateHackathon(selectedId, { settings: newSettings });
+      setHackathons((prev) =>
+        prev.map((h) => h.id === selectedId ? { ...h, settings: newSettings } : h)
+      );
+      toast.success("Settings updated");
+    } catch (err) {
+      
+      toast.error("Failed to update settings");
+    }
   };
 
   const btnBlue  = "bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-medium rounded-xl px-4 py-2 text-sm transition-all";

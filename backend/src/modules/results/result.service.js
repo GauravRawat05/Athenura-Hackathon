@@ -29,7 +29,24 @@ class ResultService {
       { $unwind: { path: '$team', preserveNullAndEmptyArrays: true } },
       { $lookup: { from: 'submissions', localField: 'submissionId', foreignField: '_id', as: 'submission' } },
       { $unwind: { path: '$submission', preserveNullAndEmptyArrays: true } },
-      { $sort: { rank: 1 } }
+      { $sort: { rank: 1 } },
+      {
+        $project: {
+          _id: 1,
+          awardCategory: 1,
+          award: 1,
+          rank: 1,
+          score: 1,
+          date: 1,
+          certificateUrl: 1,
+          "user.fullName": 1,
+          "team.teamName": 1,
+          "submission.title": 1,
+          "submission.description": 1,
+          "submission.githubLink": 1,
+          "submission.videoLink": 1,
+        }
+      }
     ];
 
     if (typeof limit === 'number' && limit > 0) {

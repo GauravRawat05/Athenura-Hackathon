@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../../components/common/Navbar";
 import { hackathons } from "../../data/hackathons";
+import { hackathonService } from "../../services/hackathonService";
 
 const statusConfig = {
   upcoming: { label: "Upcoming", color: "#0077B6", bg: "rgba(0,119,182,0.12)" },
@@ -21,15 +22,138 @@ const TAB_ICONS = {
   judging: "◉",
 };
 
+const domainImages = {
+  "AI/ML": "https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?w=800&q=80",
+  "Blockchain": "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&q=80",
+  "HealthTech": "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&q=80",
+  "Cybersecurity": "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80",
+  "Web3": "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&q=80",
+  "IoT": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&q=80"
+};
+
+const mapDbHackathon = (h) => {
+  try {
+    if (!h) return null;
+    const domain = (h.technologyDomains && h.technologyDomains[0]) || "AI/ML";
+    const image = domainImages[domain] || "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&q=80";
+    
+    const formatYMD = (dateStr) => {
+      if (!dateStr) return "";
+      const parsed = new Date(dateStr);
+      if (isNaN(parsed.getTime())) return "";
+      return parsed.toISOString().split('T')[0];
+    };
+
+    const prizePoolNum = Number(h.prizePool) || 0;
+
+    return {
+      id: h._id,
+      title: h.title || "Untitled Hackathon",
+      tagline: h.description ? (h.description.length > 80 ? h.description.substring(0, 77) + "..." : h.description) : "Innovative hackathon challenge",
+      status: h.status === "draft" ? "upcoming" : (h.status === "judging" ? "ongoing" : h.status || "upcoming"),
+      mode: h.allowedModes?.[0]?.toLowerCase() || "team",
+      prize: prizePoolNum,
+      fee: Number(h.registrationFee) || 0,
+      domain: domain,
+      deadline: formatYMD(h.registrationDeadline || h.submissionDeadline || h.startDate),
+      startDate: formatYMD(h.startDate),
+      endDate: formatYMD(h.endDate),
+      teamSize: { min: Number(h.minTeamSize) || 2, max: Number(h.maxTeamSize) || 4 },
+      participants: 120,
+      image: image,
+      sponsors: Array.isArray(h.sponsors) ? h.sponsors.map(s => typeof s === 'string' ? s : s?.name || "Sponsor").filter(Boolean) : ["Athenura"],
+      tags: Array.isArray(h.technologyDomains) ? h.technologyDomains : [],
+      description: h.description || "No description provided.",
+      rules: Array.isArray(h.rules) && h.rules.length > 0 ? h.rules : [
+        "All code must be original and created during the hackathon period",
+        "Open-source libraries are permitted",
+        "Submissions must include a working demo and GitHub repo"
+      ],
+      timeline: [
+        { date: formatYMD(h.startDate), event: "Hackathon Kickoff" },
+        { date: formatYMD(h.registrationDeadline || h.startDate), event: "Registration Deadline" },
+        { date: formatYMD(h.submissionDeadline || h.endDate), event: "Submissions Deadline" },
+        { date: formatYMD(h.endDate), event: "Winners Announced" }
+      ],
+      prizes: [
+        { place: "1st", amount: `$${(prizePoolNum * 0.6).toLocaleString()}`, perks: "Incubation Support" },
+        { place: "2nd", amount: `$${(prizePoolNum * 0.3).toLocaleString()}`, perks: "Cloud Credits" },
+        { place: "3rd", amount: `$${(prizePoolNum * 0.1).toLocaleString()}`, perks: "Swag Pack" }
+      ],
+      judging: Array.isArray(h.judgingCriteria) ? h.judgingCriteria.map(c => ({
+        criterion: c?.name || "Criteria",
+        weight: Number(c?.weight) || 0
+      })) : [
+        { criterion: "Innovation", weight: 30 },
+        { criterion: "Technical Execution", weight: 30 },
+        { criterion: "Impact & Scalability", weight: 25 },
+        { criterion: "Presentation", weight: 15 }
+      ]
+    };
+  } catch (error) {
+    
+    return null;
+  }
+};
+
 export default function HackathonDetail() {
   const { id } = useParams();
   const routerNavigate = useNavigate();
-  const h = hackathons.find((hk) => String(hk.id) === String(id));
-  if (!h)
-    return (
-      <div style={{ color: "#0077B6", padding: 40 }}>Hackathon not found.</div>
-    );
+  const [h, setH] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
+
+  useEffect(() => {
+    const loadDetails = async () => {
+      const localMock = hackathons.find((hk) => String(hk.id) === String(id));
+      if (localMock) {
+        setH(localMock);
+        setLoading(false);
+        return;
+      }
+      try {
+        setLoading(true);
+        setErrorMsg("");
+        const res = await hackathonService.getHackathonById(id);
+        if (res.data && res.data.data) {
+          const mapped = mapDbHackathon(res.data.data);
+          if (mapped) {
+            setH(mapped);
+          } else {
+            setErrorMsg("Failed to map hackathon data model correctly.");
+          }
+        } else {
+          setErrorMsg(res.data?.message || "Failed to retrieve hackathon details.");
+        }
+      } catch (err) {
+        
+        setErrorMsg(err.response?.data?.message || err.message || "Failed to fetch event data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadDetails();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(160deg, #e8f4fd 0%, #f0f8ff 50%, #e0f2fe 100%)" }}>
+        <div style={{ color: "#0077B6", fontFamily: "Poppins, sans-serif", fontSize: 16, fontWeight: 600 }}>Loading hackathon details...</div>
+      </div>
+    );
+  }
+
+  if (errorMsg || !h) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "linear-gradient(160deg, #e8f4fd 0%, #f0f8ff 50%, #e0f2fe 100%)", fontFamily: "Poppins, sans-serif" }}>
+        <div style={{ color: "#ef4444", fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Hackathon not found.</div>
+        {errorMsg && <div style={{ color: "#475569", fontSize: 13, background: "rgba(239, 68, 68, 0.08)", border: "1px solid rgba(239, 68, 68, 0.2)", borderRadius: 10, padding: "10px 20px" }}>Error: {errorMsg}</div>}
+        <button onClick={() => routerNavigate("/hackathons")} style={{ marginTop: 20, padding: "8px 20px", borderRadius: 10, border: "none", background: "#0077B6", color: "#fff", fontWeight: 600, cursor: "pointer" }}>Back to Hackathons</button>
+      </div>
+    );
+  }
+
   const s = statusConfig[h.status];
   const daysLeft = Math.max(
     0,

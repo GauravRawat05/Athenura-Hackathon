@@ -101,7 +101,8 @@ class JudgingService {
       scoredSubmissions.push({
         ...sub.toObject(),
         scored: !!score,
-        scoreId: score ? score._id : null
+        scoreId: score ? score._id : null,
+        existingScore: score ? score : null
       });
     }
     return scoredSubmissions;
@@ -277,6 +278,13 @@ class JudgingService {
     emitScoreUpdated(savedScore.hackathonId.toString(), payload);
 
     return savedScore;
+  }
+
+  async getHackathonJudges(hackathonId) {
+    const assignments = await JudgeAssignment.find({ hackathonId })
+      .populate("judgeId", "fullName email _id isSuspended profilePhoto")
+      .lean();
+    return assignments.map(a => a.judgeId).filter(Boolean);
   }
 }
 

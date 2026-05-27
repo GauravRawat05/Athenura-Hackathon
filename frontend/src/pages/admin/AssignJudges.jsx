@@ -1,13 +1,16 @@
-﻿import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, Bell, User, Users, ClipboardList, Award, Trophy,
   UserPlus, ChevronDown, Pencil, Plus, ChevronLeft, ChevronRight,
   Briefcase, GraduationCap, CheckCircle2, Clock, Star, Sparkles,
   Scale, Zap, X, Check, AlertTriangle, BarChart2, Settings,
-  LogOut, FileText, Activity,
+  LogOut, FileText, Activity, Lock, Unlock
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { judgingService } from "../../services/judgingService";
+import { hackathonService } from "../../services/hackathonService";
 
 const styleTag = document.createElement('style');
 styleTag.textContent = '.scrollbar-hide::-webkit-scrollbar{display:none}.scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none}';
@@ -123,13 +126,20 @@ function Modal({ title, children, onClose }) {
 }
 
 export default function Dashboard() {
+  const { id: routeHackathonId } = useParams();
+  const navigate = useNavigate();
+
   const [activeTab, setActiveTab] = useState(0);
-  const [hackathon, setHackathon] = useState(HACKATHONS[0]);
+  const [hackathonsList, setHackathonsList] = useState([]);
+  const [activeHackathon, setActiveHackathon] = useState(null);
   const [hackDropdown, setHackDropdown] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedJudge, setSelectedJudge] = useState(ALL_JUDGES[0]);
-  const [teams, setTeams] = useState(ALL_TEAMS);
+  const [selectedJudge, setSelectedJudge] = useState(null);
+  const [allJudges, setAllJudges] = useState([]);
+  const [assignedJudges, setAssignedJudges] = useState([]);
+  const [teams, setTeams] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState(null);
   const [modal, setModal] = useState(null);
   const [notifications, setNotifications] = useState(3);
@@ -141,103 +151,304 @@ export default function Dashboard() {
   const [tieWinner, setTieWinner] = useState(null);
   const [winners, setWinners] = useState([]);
   const [scores, setScores] = useState({});
+  const [manageSelectedJudgeIds, setManageSelectedJudgeIds] = useState([]);
 
   const ITEMS_PER_PAGE = 6;
-
-  const filteredTeams = teams.filter(t =>
-    t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.desc.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  const totalPages = Math.max(1, Math.ceil(filteredTeams.length / ITEMS_PER_PAGE));
-  const pagedTeams = filteredTeams.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-
-  const totalJudges = ALL_JUDGES.length;
-  const assignedJudges = teams.reduce((acc, team) => acc + team.judges.length, 0);
-  const totalEvaluations = ALL_JUDGES.reduce((acc, judge) => acc + judge.completed, 0);
-  const pendingScoresCount = teams.filter(t => t.pendingScores).length;
-
-  const stats = [
-    { label: "Total Judges", value: totalJudges.toString(), delta: "↑ 9.1% from last month", deltaColor: "text-emerald-500", icon: Users, iconBg: "bg-blue-100/80", iconColor: "text-blue-600" },
-    { label: "Assigned Judges", value: assignedJudges.toString(), delta: "↑ 12.5% from last month", deltaColor: "text-emerald-500", icon: ClipboardList, iconBg: "bg-indigo-100/80", iconColor: "text-indigo-600" },
-    { label: "Evaluations Completed", value: totalEvaluations.toString(), delta: "↑ 18.7% from last month", deltaColor: "text-emerald-500", icon: Award, iconBg: "bg-purple-100/80", iconColor: "text-purple-600" },
-    { label: "Pending Scores", value: pendingScoresCount.toString(), delta: "Needs Review", deltaColor: "text-amber-600", icon: Trophy, iconBg: "bg-amber-100/80", iconColor: "text-amber-600" },
-  ];
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
-  const handleQuickAction = (action) => {
-    if (action === "autoAssign") {
-      const unassignedJudges = ALL_JUDGES.filter(j =>
-        !teams.some(t => t.judges.includes(j.name))
-      );
-      if (unassignedJudges.length === 0) {
-        showToast("All judges are already assigned!", "info");
+
+  const isValidHexId = (str) => /^[0-9a-fA-F]{24}$/.test(str);
+
+  const fetchHackathons = async () => {
+  try {
+    setLoading(true);
+
+    const res = await hackathonService.adminGetHackathons();
+
+    
+
+    const hacks =
+      res?.data?.data?.hackathons ||
+      res?.data?.data ||
+      res?.data?.hackathons ||
+      [];
+
+    
+
+    if (Array.isArray(hacks)) {
+      setHackathonsList(hacks);
+
+      let initialHack = null;
+
+      if (routeHackathonId) {
+        initialHack = hacks.find(
+          (h) =>
+            h._id === routeHackathonId ||
+            h.slug === routeHackathonId
+        );
+      }
+
+      if (!initialHack && hacks.length > 0) {
+        initialHack = hacks[0];
+      }
+
+      setActiveHackathon(initialHack);
+    } else {
+      setHackathonsList([]);
+    }
+  } catch (err) {
+    
+    showToast("Failed to load hackathons", "error");
+  } finally {
+    setLoading(false);
+  }
+};
+
+  const fetchHackathonData = async () => {
+    let hackId = activeHackathon?._id;
+    if (!hackId && hackathonsList.length > 0) {
+      hackId = hackathonsList[0]._id;
+    }
+    if (!hackId) {
+      if (routeHackathonId && /^[0-9a-fA-F]{24}$/.test(routeHackathonId)) {
+        hackId = routeHackathonId;
+      } else {
         return;
       }
-      setTeams(prev => prev.map(t =>
-        t.judges.length < 2 && unassignedJudges.length > 0
-          ? { ...t, judges: [...t.judges, unassignedJudges[Math.floor(Math.random() * unassignedJudges.length)].name] }
-          : t
-      ));
-      showToast("Judges auto-assigned successfully!", "success");
-    } else if (action === "balance") {
-      const judgeCounts = {};
-      teams.forEach(team => {
-        team.judges.forEach(judge => {
-          judgeCounts[judge] = (judgeCounts[judge] || 0) + 1;
+    }
+    try {
+      setLoading(true);
+      
+      const [resJudges, resAssigned, resRegs] = await Promise.all([
+        judgingService.adminGetJudges(),
+        judgingService.adminGetHackathonJudges(hackId),
+        hackathonService.adminListRegistrations(hackId, { limit: 100 })
+      ]);
+
+      
+      
+      
+
+      const colors = [
+        "from-pink-400 to-purple-500",
+        "from-blue-400 to-indigo-500",
+        "from-emerald-400 to-teal-500",
+        "from-amber-400 to-orange-500",
+        "from-rose-400 to-pink-500",
+        "from-cyan-400 to-blue-500",
+        "from-green-400 to-emerald-500"
+      ];
+
+      // Map all system judges
+      let mappedAllJudges = [];
+      const judgesData =
+  resJudges?.data?.data?.judges ||
+  resJudges?.data?.judges ||
+  resJudges?.data?.data ||
+  [];
+      if (Array.isArray(judgesData)) {
+        mappedAllJudges = judgesData.map((u, index) => {
+          const name = u.fullName || "N/A";
+          const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+          return {
+            _realId: u._id,
+            initials,
+            name,
+            email: u.email || "N/A",
+            expertise: u.skills?.join(', ') || "AI/ML, Web Development",
+            affiliation: u.collegeOrUniversity || "Independent Affiliation",
+            total: 15,
+            completed: 12,
+            pending: 3,
+            avg: "8.6 / 10",
+            active: !u.isSuspended,
+            color: colors[index % colors.length],
+            avatar: u.profilePhoto?.url || `https://i.pravatar.cc/120?img=${(index % 50) + 1}`
+          };
         });
-      });
-      const maxLoad = Math.max(...Object.values(judgeCounts));
-      const minLoad = Math.min(...Object.values(judgeCounts));
-      if (maxLoad - minLoad <= 1) {
-        showToast("Workload is already balanced!", "info");
-      } else {
-        showToast("Workload balanced across all judges!", "success");
+        setAllJudges(mappedAllJudges);
       }
-    } else if (action === "reassign") {
-      setModal({ type: "reassign" });
-    } else if (action === "notify") {
-      const activeJudges = ALL_JUDGES.filter(j => j.active);
-      showToast(`Reminder sent to ${activeJudges.length} active judges!`, "info");
+
+      // Map assigned judges
+      let mappedAssigned = [];
+      const assignedData =
+  resAssigned?.data?.data?.judges ||
+  resAssigned?.data?.judges ||
+  resAssigned?.data?.data ||
+  [];
+      if (Array.isArray(assignedData)) {
+        mappedAssigned = assignedData.map((u, index) => {
+          const name = u.fullName || "N/A";
+          const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+          return {
+            _realId: u._id,
+            initials,
+            name,
+            email: u.email || "N/A",
+            expertise: u.skills?.join(', ') || "AI/ML, Web Development",
+            affiliation: u.collegeOrUniversity || "Independent Affiliation",
+            total: 15,
+            completed: 12,
+            pending: 3,
+            avg: "8.6 / 10",
+            active: !u.isSuspended,
+            color: colors[index % colors.length],
+            avatar: u.profilePhoto?.url || `https://i.pravatar.cc/120?img=${(index % 50) + 1}`
+          };
+        });
+        setAssignedJudges(mappedAssigned);
+        if (mappedAssigned.length > 0) {
+          setSelectedJudge(mappedAssigned[0]);
+        }
+      }
+
+      const regsData = resRegs.data?.data?.registrations || resRegs.data?.registrations || resRegs.data?.data || [];
+      if (Array.isArray(regsData)) {
+        const mappedTeams = regsData.map((reg, index) => {
+  const teamName =
+    reg?.teamId?.teamName ||
+    reg?.userId?.fullName ||
+    reg?.projectTitle ||
+    `Team ${index + 1}`;
+
+  const desc =
+    reg?.teamId?.description ||
+    reg?.projectDescription ||
+    "Project submission";
+
+  const code = teamName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .substring(0, 2)
+    .toUpperCase();
+
+  return {
+    code,
+    name: teamName,
+    desc,
+    color: colors[index % colors.length],
+
+    // IMPORTANT
+    judges: mappedAssigned.map((j) => j.name),
+
+    pendingScores: reg?.status !== "confirmed",
+  };
+});
+        setTeams(mappedTeams);
+      } else {
+        setTeams([]);
+      }
+
+    } catch (err) {
+      
+      showToast("Error loading judge/team data", "error");
+    } finally {
+      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchHackathons();
+  }, []);
+
+  useEffect(() => {
+    fetchHackathonData();
+  }, [activeHackathon, routeHackathonId, hackathonsList]);
+
+  const filteredTeams = useMemo(() => {
+    return teams.filter(t =>
+      t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.desc.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [teams, searchQuery]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredTeams.length / ITEMS_PER_PAGE));
+  const pagedTeams = useMemo(() => {
+    return filteredTeams.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  }, [filteredTeams, currentPage]);
+
+  const totalJudgesCount = allJudges.length;
+  const assignedJudgesCount = assignedJudges.length;
+  const totalEvaluations = assignedJudges.reduce((acc, judge) => acc + judge.completed, 0);
+  const pendingScoresCount = teams.filter(t => t.pendingScores).length;
+
+  const pendingEvaluations = assignedJudges.reduce((acc, j) => acc + j.pending, 0);
+  const totalEvalCount = totalEvaluations + pendingEvaluations;
+  const completionRateNum = totalEvalCount === 0 ? 0 : Math.round((totalEvaluations / totalEvalCount) * 100);
+  const pendingRateNum = totalEvalCount === 0 ? 0 : 100 - completionRateNum;
+
+  const dynamicDonutData = [
+    { name: "Completed", value: completionRateNum, color: "#22c55e" },
+    { name: "Pending", value: pendingRateNum, color: "#f59e0b" },
+  ];
+
+  const stats = [
+    { label: "Total Judges", value: totalJudgesCount.toString(), delta: "Live System Judges", deltaColor: "text-emerald-600", icon: Users, iconBg: "bg-blue-100/80", iconColor: "text-blue-600" },
+    { label: "Assigned Judges", value: assignedJudgesCount.toString(), delta: "Assigned to Hackathon", deltaColor: "text-emerald-600", icon: ClipboardList, iconBg: "bg-indigo-100/80", iconColor: "text-indigo-600" },
+    { label: "Evaluations Completed", value: totalEvaluations.toString(), delta: "Submitted Scores", deltaColor: "text-emerald-600", icon: Award, iconBg: "bg-purple-100/80", iconColor: "text-purple-600" },
+    { label: "Pending Scores", value: pendingScoresCount.toString(), delta: "Awaiting Evaluation", deltaColor: "text-amber-600", icon: Trophy, iconBg: "bg-amber-100/80", iconColor: "text-amber-600" },
+  ];
+
+  const handleQuickAction = (action) => {
+    if (action === "autoAssign") {
+      setManageSelectedJudgeIds(allJudges.map(j => j._realId));
+      setModal({ type: "manageJudges" });
+      showToast("Pre-selected all system judges for assignment!", "info");
+    } else if (action === "balance") {
+      showToast("Workload balanced successfully across all assigned judges!", "success");
+    } else if (action === "reassign") {
+      setManageSelectedJudgeIds(assignedJudges.map(j => j._realId));
+      setModal({ type: "manageJudges" });
+    } else if (action === "notify") {
+      showToast(`Reminder notifications sent to all ${assignedJudgesCount} assigned judges!`, "success");
+    }
+  };
+
   const openEditModal = (team) => {
-    setEditingTeam({ ...team, judges: [...team.judges] });
-    setNewJudgeName("");
-    setModal({ type: "editTeam" });
+    setManageSelectedJudgeIds(assignedJudges.map(j => j._realId));
+    setModal({ type: "manageJudges" });
   };
 
-  const saveTeamEdit = () => {
-    setTeams(prev => prev.map(t => t.code === editingTeam.code ? editingTeam : t));
-    setModal(null);
-    showToast(`${editingTeam.name} judges updated!`, "success");
-  };
-
-  const removeJudgeFromEdit = (idx) => {
-    setEditingTeam(prev => ({ ...prev, judges: prev.judges.filter((_, i) => i !== idx) }));
-  };
   const openAddJudge = (team) => {
-    setAddJudgeTeam(team);
-    setNewJudgeName("");
-    setModal({ type: "addJudge" });
+    setManageSelectedJudgeIds(assignedJudges.map(j => j._realId));
+    setModal({ type: "manageJudges" });
   };
 
-  const saveAddJudge = () => {
-    if (!newJudgeName.trim()) { showToast("Enter a judge name", "error"); return; }
-    setTeams(prev => prev.map(t =>
-      t.code === addJudgeTeam.code ? { ...t, judges: [...t.judges, newJudgeName.trim()] } : t
-    ));
-    setModal(null);
-    showToast(`Judge added to ${addJudgeTeam.name}!`, "success");
+  const saveManageJudges = async () => {
+    if (!activeHackathon?._id) return;
+    try {
+      setLoading(true);
+      await judgingService.adminAssignJudges(activeHackathon._id, manageSelectedJudgeIds);
+      showToast("Hackathon judge assignments updated successfully!", "success");
+      setModal(null);
+      await fetchHackathonData();
+    } catch (err) {
+      showToast(err.response?.data?.message || "Failed to assign judges", "error");
+    } finally {
+      setLoading(false);
+    }
   };
-  const removeJudgeFromTeam = (teamCode, judgeName) => {
-    setTeams(prev => prev.map(t =>
-      t.code === teamCode ? { ...t, judges: t.judges.filter(j => j !== judgeName) } : t
-    ));
-    showToast("Judge removed from team.", "warning");
+
+  const removeJudgeFromTeam = async (teamCode, judgeName) => {
+    const judgeToRemove = assignedJudges.find(j => j.name === judgeName);
+    if (!judgeToRemove) return;
+    const nextJudgeIds = assignedJudges.filter(j => j.name !== judgeName).map(j => j._realId);
+    try {
+      setLoading(true);
+      await judgingService.adminAssignJudges(activeHackathon._id, nextJudgeIds);
+      showToast(`${judgeName} removed from hackathon judging panel`, "warning");
+      await fetchHackathonData();
+    } catch (err) {
+      showToast("Failed to remove judge", "error");
+    } finally {
+      setLoading(false);
+    }
   };
+
   const submitScore = (teamCode, score) => {
     setScores(prev => ({ ...prev, [teamCode]: score }));
     setTeams(prev => prev.map(t =>
@@ -266,21 +477,26 @@ export default function Dashboard() {
     }
     showToast(`Results published! Winners: ${winners.join(", ")}`, "success");
   };
+
   const goToPage = (p) => {
     if (p < 1 || p > totalPages) return;
     setCurrentPage(p);
   };
 
-  const judgeInfo = [
-    { icon: Briefcase, label: "Expertise", value: selectedJudge.expertise },
-    { icon: GraduationCap, label: "Affiliation", value: selectedJudge.affiliation },
-    { icon: ClipboardList, label: "Total Evaluations", value: selectedJudge.total },
-    { icon: CheckCircle2, label: "Completed", value: selectedJudge.completed },
-    { icon: Clock, label: "Pending", value: selectedJudge.pending },
-    { icon: Star, label: "Average Score Given", value: selectedJudge.avg },
-  ];
+  const judgeInfo = useMemo(() => {
+    if (!selectedJudge) return [];
+    return [
+      { icon: Briefcase, label: "Expertise", value: selectedJudge.expertise },
+      { icon: GraduationCap, label: "Affiliation", value: selectedJudge.affiliation },
+      { icon: ClipboardList, label: "Total Evaluations", value: selectedJudge.total },
+      { icon: CheckCircle2, label: "Completed", value: selectedJudge.completed },
+      { icon: Clock, label: "Pending", value: selectedJudge.pending },
+      { icon: Star, label: "Average Score Given", value: selectedJudge.avg },
+    ];
+  }, [selectedJudge]);
 
   const pageNums = Array.from({ length: Math.min(totalPages, 4) }, (_, i) => i + 1);
+
 
   return (
     <div style={fontStack} className="min-h-screen bg-gradient-to-br from-[#ecfcff] via-[#f8ffff] to-[#dff7ff] text-slate-800">
@@ -354,20 +570,25 @@ export default function Dashboard() {
                       <Trophy className="w-4 h-4 text-amber-500" />
                       <div className="text-left">
                         <p className="text-[10px] uppercase tracking-wider text-slate-400">Hackathon</p>
-                        <p className="text-sm font-semibold text-[#0b1b52]">{hackathon}</p>
+                        <p className="text-sm font-semibold text-[#0b1b52]">{activeHackathon?.title || "Select Hackathon"}</p>
                       </div>
                       <ChevronDown className={`w-4 h-4 text-slate-400 ml-2 transition-transform ${hackDropdown ? "rotate-180" : ""}`} />
                     </button>
                     {hackDropdown && (
                       <div className="absolute top-14 left-0 z-20 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden">
-                        {HACKATHONS.map(h => (
+                        {hackathonsList.map(h => (
                           <button
-                            key={h}
-                            onClick={() => { setHackathon(h); setHackDropdown(false); showToast(`Switched to ${h}`, "info"); }}
-                            className={`w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-blue-50 transition ${h === hackathon ? "text-blue-600 font-semibold bg-blue-50/50" : "text-slate-700"}`}
+                            key={h._id}
+                            onClick={() => {
+                              setActiveHackathon(h);
+                              setHackDropdown(false);
+                              navigate(`/admin/hackathons/${h._id}/judges`);
+                              showToast(`Switched to ${h.title}`, "info");
+                            }}
+                            className={`w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-blue-50 transition ${h._id === activeHackathon?._id ? "text-blue-600 font-semibold bg-blue-50/50" : "text-slate-700"}`}
                           >
-                            {h === hackathon ? <Check className="w-3.5 h-3.5" /> : <span className="w-3.5" />}
-                            {h}
+                            {h._id === activeHackathon?._id ? <Check className="w-3.5 h-3.5" /> : <span className="w-3.5" />}
+                            {h.title}
                           </button>
                         ))}
                       </div>
@@ -375,7 +596,10 @@ export default function Dashboard() {
                   </div>
 
                   <button
-                    onClick={() => setModal({ type: "manageJudges" })}
+                    onClick={() => {
+                      setManageSelectedJudgeIds(assignedJudges.map(j => j._realId));
+                      setModal({ type: "manageJudges" });
+                    }}
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-blue-700 text-white text-sm font-medium shadow-lg shadow-blue-500/30 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition"
                   >
                     <UserPlus className="w-4 h-4" />
@@ -631,7 +855,12 @@ export default function Dashboard() {
                       <div className="py-6">
                         <p className="text-slate-600 font-medium mb-4">Evaluation Summary</p>
                         <div className="grid grid-cols-3 gap-4 text-center">
-                          {[[totalEvaluations, "Evaluations Total"], [Math.round((totalEvaluations / (totalEvaluations + ALL_JUDGES.reduce((a, j) => a + j.pending, 0))) * 100) + "%", "Completion Rate"], ["8.6", "Avg Score"]].map(([v, l]) => (
+                          {[[totalEvaluations, "Evaluations Total"], [
+                            (totalEvaluations + assignedJudges.reduce((a, j) => a + j.pending, 0)) === 0 
+                              ? "0%" 
+                              : Math.round((totalEvaluations / (totalEvaluations + assignedJudges.reduce((a, j) => a + j.pending, 0))) * 100) + "%", 
+                            "Completion Rate"
+                          ], ["8.6", "Avg Score"]].map(([v, l]) => (
                             <div key={l} className="p-4 rounded-2xl bg-white/60 border border-white/60">
                               <p className="text-2xl font-bold text-[#0b1b52]">{v}</p>
                               <p className="text-xs text-slate-500 mt-1">{l}</p>
@@ -639,10 +868,10 @@ export default function Dashboard() {
                           ))}
                         </div>
                         <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {ALL_JUDGES.map(j => (
-                            <div key={j.initials} className="flex items-center justify-between p-3 rounded-xl bg-white/60 border border-white/60">
+                          {assignedJudges.map(j => (
+                            <div key={j._realId} className="flex items-center justify-between p-3 rounded-xl bg-white/60 border border-white/60">
                               <div className="flex items-center gap-2">
-                                <img src={`https://picsum.photos/seed/${j.initials}/28/28`} alt={j.name} className="w-7 h-7 rounded-lg object-cover" />
+                                <img src={j.avatar} alt={j.initials} className="w-7 h-7 rounded-lg object-cover" />
                                 <div>
                                   <p className="text-xs font-semibold text-[#0b1b52]">{j.name}</p>
                                   <p className="text-[10px] text-slate-400">{j.completed}/{j.total} done</p>
@@ -651,6 +880,9 @@ export default function Dashboard() {
                               <span className="text-xs font-bold text-[#0b1b52]">{j.avg}</span>
                             </div>
                           ))}
+                          {assignedJudges.length === 0 && (
+                            <p className="text-xs text-slate-400 text-center py-4 sm:col-span-2">No judges assigned to this hackathon.</p>
+                          )}
                         </div>
                         <button
                           onClick={() => showToast("Summary exported!", "success")}
@@ -673,79 +905,95 @@ export default function Dashboard() {
               <GlassCard className="p-6">
                 <div className="flex items-start justify-between">
                   <h3 className="text-base font-semibold text-[#0b1b52]">Judge Details</h3>
-                  <button
-                    onClick={() => setModal({ type: "judgeProfile" })}
-                    className="text-xs px-3 py-1.5 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50 transition"
-                  >
-                    View Profile
-                  </button>
-                </div>
-                <div className="mt-4 flex flex-wrap gap-1.5">
-                  {ALL_JUDGES.map(j => (
+                  {assignedJudges.length > 0 && (
                     <button
-                      key={j.initials}
-                      onClick={() => setSelectedJudge(j)}
-                      className={`w-8 h-8 rounded-xl overflow-hidden transition ${selectedJudge.initials === j.initials ? "ring-2 ring-offset-1 ring-blue-500 scale-110" : "opacity-60 hover:opacity-100 hover:scale-105"}`}
+                      onClick={() => setModal({ type: "judgeProfile" })}
+                      className="text-xs px-3 py-1.5 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50 transition"
                     >
-                      <img src={j.avatar} alt={j.initials} className="w-full h-full object-cover" />
+                      View Profile
                     </button>
-                  ))}
+                  )}
                 </div>
 
-                <div className="mt-4 flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-lg">
-                    <img src={selectedJudge.avatar} alt={selectedJudge.initials} className="w-full h-full object-cover" />
+                {assignedJudges.length === 0 ? (
+                  <div className="mt-6 py-8 text-center text-slate-400 text-sm border border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+                    No judges assigned yet.<br />
+                    Click "Manage Judges" to start.
                   </div>
-                  <div>
-                    <p className="text-base font-semibold text-[#0b1b52]">{selectedJudge.name}</p>
-                    <p className="text-xs text-slate-500">{selectedJudge.email}</p>
-                    <span className={`inline-block mt-1.5 text-[10px] px-2 py-0.5 rounded-full font-medium ${selectedJudge.active ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
-                      {selectedJudge.active ? "Active" : "Inactive"}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-6 space-y-1">
-                  {judgeInfo.map((row, i) => (
-                    <div
-                      key={row.label}
-                      className={`flex items-center justify-between py-2.5 ${i !== judgeInfo.length - 1 ? "border-b border-slate-100" : ""}`}
-                    >
-                      <div className="flex items-center gap-2.5 text-slate-500 text-sm">
-                        <row.icon className="w-4 h-4" />
-                        <span>{row.label}</span>
-                      </div>
-                      <span className="text-sm font-medium text-[#0b1b52]">{row.value}</span>
+                ) : (
+                  <>
+                    <div className="mt-4 flex flex-wrap gap-1.5">
+                      {assignedJudges.map(j => (
+                        <button
+                          key={j._realId}
+                          onClick={() => setSelectedJudge(j)}
+                          className={`w-8 h-8 rounded-xl overflow-hidden transition ${selectedJudge?._realId === j._realId ? "ring-2 ring-offset-1 ring-blue-500 scale-110" : "opacity-60 hover:opacity-100 hover:scale-105"}`}
+                        >
+                          <img src={j.avatar} alt={j.initials} className="w-full h-full object-cover" />
+                        </button>
+                      ))}
                     </div>
-                  ))}
-                </div>
 
-                <div className="mt-6">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Actions</p>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={() => showToast(`Viewing evaluations for ${selectedJudge.name}`, "info")}
-                      className="px-4 py-2 rounded-2xl bg-gradient-to-r from-blue-500 to-blue-700 text-white text-xs font-medium shadow-md shadow-blue-500/30 hover:scale-[1.03] active:scale-[0.97] transition"
-                    >
-                      View Evaluations
-                    </button>
-                    <button
-                      onClick={() => setModal({ type: "editAssignment" })}
-                      className="px-4 py-2 rounded-2xl border border-slate-200 text-xs font-medium text-slate-600 hover:bg-white/70 transition hover:scale-[1.03]"
-                    >
-                      Edit Assignment
-                    </button>
-                    <button
-                      onClick={() => {
-                        setTeams(prev => prev.map(t => ({ ...t, judges: t.judges.filter(j => j !== selectedJudge.name) })));
-                        showToast(`${selectedJudge.name} removed from all teams!`, "warning");
-                      }}
-                      className="px-4 py-2 rounded-2xl bg-rose-50 text-rose-600 text-xs font-medium hover:bg-rose-100 transition hover:scale-[1.03]"
-                    >
-                      Remove from All
-                    </button>
-                  </div>
-                </div>
+                    {selectedJudge && (
+                      <>
+                        <div className="mt-4 flex items-center gap-4">
+                          <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-lg">
+                            <img src={selectedJudge.avatar} alt={selectedJudge.initials} className="w-full h-full object-cover" />
+                          </div>
+                          <div>
+                            <p className="text-base font-semibold text-[#0b1b52]">{selectedJudge.name}</p>
+                            <p className="text-xs text-slate-500">{selectedJudge.email}</p>
+                            <span className={`inline-block mt-1.5 text-[10px] px-2 py-0.5 rounded-full font-medium ${selectedJudge.active ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
+                              {selectedJudge.active ? "Active" : "Inactive"}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="mt-6 space-y-1">
+                          {judgeInfo.map((row, i) => (
+                            <div
+                              key={row.label}
+                              className={`flex items-center justify-between py-2.5 ${i !== judgeInfo.length - 1 ? "border-b border-slate-100" : ""}`}
+                            >
+                              <div className="flex items-center gap-2.5 text-slate-500 text-sm">
+                                <row.icon className="w-4 h-4" />
+                                <span>{row.label}</span>
+                              </div>
+                              <span className="text-sm font-medium text-[#0b1b52]">{row.value}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="mt-6">
+                          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Actions</p>
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              onClick={() => showToast(`Viewing evaluations for ${selectedJudge.name}`, "info")}
+                              className="px-4 py-2 rounded-2xl bg-gradient-to-r from-blue-500 to-blue-700 text-white text-xs font-medium shadow-md shadow-blue-500/30 hover:scale-[1.03] active:scale-[0.97] transition"
+                            >
+                              View Evaluations
+                            </button>
+                            <button
+                              onClick={() => {
+                                setManageSelectedJudgeIds(assignedJudges.map(j => j._realId));
+                                setModal({ type: "manageJudges" });
+                              }}
+                              className="px-4 py-2 rounded-2xl border border-slate-200 text-xs font-medium text-slate-600 hover:bg-white/70 transition hover:scale-[1.03]"
+                            >
+                              Edit Assignment
+                            </button>
+                            <button
+                              onClick={() => removeJudgeFromTeam(null, selectedJudge.name)}
+                              className="px-4 py-2 rounded-2xl bg-rose-50 text-rose-600 text-xs font-medium hover:bg-rose-100 transition hover:scale-[1.03]"
+                            >
+                              Remove from All
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
               </GlassCard>
             </motion.div>
           </div>
@@ -762,8 +1010,8 @@ export default function Dashboard() {
                   <div className="relative w-32 h-32 shrink-0">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                        <Pie data={donutData} innerRadius={42} outerRadius={60} paddingAngle={3} dataKey="value" stroke="none">
-                          {donutData.map((d) => <Cell key={d.name} fill={d.color} />)}
+                        <Pie data={dynamicDonutData} innerRadius={42} outerRadius={60} paddingAngle={3} dataKey="value" stroke="none">
+                          {dynamicDonutData.map((d) => <Cell key={d.name} fill={d.color} />)}
                         </Pie>
                         <Tooltip formatter={(v) => `${v}%`} />
                       </PieChart>
@@ -774,7 +1022,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                   <div className="flex-1 space-y-3">
-                    {[{ label: "Completed", color: "bg-emerald-500", val: `${totalEvaluations} (72%)` }, { label: "Pending", color: "bg-amber-500", val: `${ALL_JUDGES.reduce((a, j) => a + j.pending, 0)} (28%)` }].map(r => (
+                    {[{ label: "Completed", color: "bg-emerald-500", val: `${totalEvaluations} (${completionRateNum}%)` }, { label: "Pending", color: "bg-amber-500", val: `${pendingEvaluations} (${pendingRateNum}%)` }].map(r => (
                       <div key={r.label} className="flex items-center justify-between">
                         <span className="flex items-center gap-2 text-sm text-slate-600">
                           <span className={`w-2.5 h-2.5 rounded-full ${r.color}`} />{r.label}
@@ -855,77 +1103,7 @@ export default function Dashboard() {
           </div>
         </main>
       </div>
-      {modal?.type === "editTeam" && editingTeam && (
-        <Modal title={`Edit Judges — ${editingTeam.name}`} onClose={() => setModal(null)}>
-          <p className="text-xs text-slate-500 mb-4">Remove or add judges for this team.</p>
-          <div className="flex flex-wrap gap-2 mb-4 min-h-[40px]">
-            {editingTeam.judges.map((j, i) => (
-              <JudgeBadge key={i} name={j} onRemove={() => removeJudgeFromEdit(i)} />
-            ))}
-            {editingTeam.judges.length === 0 && <p className="text-xs text-slate-400">No judges assigned.</p>}
-          </div>
-          <div className="flex gap-2 mb-4">
-            <input
-              className="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-blue-400"
-              placeholder="Add judge name..."
-              value={newJudgeName}
-              onChange={e => setNewJudgeName(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === "Enter" && newJudgeName.trim()) {
-                  setEditingTeam(prev => ({ ...prev, judges: [...prev.judges, newJudgeName.trim()] }));
-                  setNewJudgeName("");
-                }
-              }}
-            />
-            <button
-              onClick={() => {
-                if (newJudgeName.trim()) {
-                  setEditingTeam(prev => ({ ...prev, judges: [...prev.judges, newJudgeName.trim()] }));
-                  setNewJudgeName("");
-                }
-              }}
-              className="px-4 py-2 rounded-xl bg-blue-50 text-blue-600 text-sm font-medium hover:bg-blue-100 transition"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="flex gap-3 justify-end">
-            <button onClick={() => setModal(null)} className="px-4 py-2 rounded-xl border border-slate-200 text-sm text-slate-600 hover:bg-slate-50">Cancel</button>
-            <button onClick={saveTeamEdit} className="px-5 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-700 text-white text-sm font-medium shadow hover:shadow-lg transition">Save Changes</button>
-          </div>
-        </Modal>
-      )}
 
-      {modal?.type === "addJudge" && addJudgeTeam && (
-        <Modal title={`Add Judge to ${addJudgeTeam.name}`} onClose={() => setModal(null)}>
-          <input
-            className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-blue-400 mb-4"
-            placeholder="Enter judge name..."
-            value={newJudgeName}
-            autoFocus
-            onChange={e => setNewJudgeName(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && saveAddJudge()}
-          />
-          <div className="mb-4">
-            <p className="text-xs font-medium text-slate-500 mb-2">Or pick from existing:</p>
-            <div className="flex flex-wrap gap-2">
-              {ALL_JUDGES.filter(j => !addJudgeTeam.judges.includes(j.name)).map(j => (
-                <button
-                  key={j.initials}
-                  onClick={() => setNewJudgeName(j.name)}
-                  className={`text-xs px-3 py-1.5 rounded-full border transition ${newJudgeName === j.name ? "bg-blue-500 text-white border-blue-500" : "border-slate-200 text-slate-600 hover:border-blue-300"}`}
-                >
-                  {j.name}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="flex gap-3 justify-end">
-            <button onClick={() => setModal(null)} className="px-4 py-2 rounded-xl border border-slate-200 text-sm text-slate-600 hover:bg-slate-50">Cancel</button>
-            <button onClick={saveAddJudge} className="px-5 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-700 text-white text-sm font-medium shadow hover:shadow-lg transition">Add Judge</button>
-          </div>
-        </Modal>
-      )}
       {modal?.type === "tie" && (
         <Modal title="Resolve Tie" onClose={() => setModal(null)}>
           <p className="text-sm text-slate-500 mb-4">Select a winner to resolve the tie between Code Infinity and HackX 5.0.</p>
@@ -948,32 +1126,67 @@ export default function Dashboard() {
 
       {modal?.type === "manageJudges" && (
         <Modal title="Manage Judges" onClose={() => setModal(null)}>
+          <p className="text-xs text-slate-500 mb-4">Select or deselect system judges to assign them to this hackathon.</p>
           <div className="space-y-2 max-h-80 overflow-y-auto scrollbar-hide pr-1">
-            {ALL_JUDGES.map(j => (
-              <div key={j.initials} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
-                <div className="flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${j.color} text-white text-xs font-bold flex items-center justify-center`}>{j.initials}</div>
-                  <div>
-                    <p className="text-sm font-semibold text-[#0b1b52]">{j.name}</p>
-                    <p className="text-xs text-slate-400">{j.expertise}</p>
+            {allJudges.map(j => {
+              const isSelected = manageSelectedJudgeIds.includes(j._realId);
+              return (
+                <div 
+                  key={j._realId} 
+                  onClick={() => {
+                    setManageSelectedJudgeIds(prev => 
+                      prev.includes(j._realId)
+                        ? prev.filter(id => id !== j._realId)
+                        : [...prev, j._realId]
+                    );
+                  }}
+                  className={`flex items-center justify-between p-3 rounded-xl border transition cursor-pointer ${
+                    isSelected 
+                      ? "bg-blue-50/70 border-blue-200" 
+                      : "bg-slate-50 border-slate-100 hover:bg-slate-100/50"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${j.color} text-white text-xs font-bold flex items-center justify-center shrink-0`}>
+                      {j.initials}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-[#0b1b52]">{j.name}</p>
+                      <p className="text-xs text-slate-400">{j.expertise}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${j.active ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
+                      {j.active ? "Active" : "Inactive"}
+                    </span>
+                    <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all ${
+                      isSelected 
+                        ? "bg-blue-600 border-blue-600 text-white" 
+                        : "border-slate-300 bg-white"
+                    }`}>
+                      {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${j.active ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
-                    {j.active ? "Active" : "Inactive"}
-                  </span>
-                  <button
-                    onClick={() => { setSelectedJudge(j); setModal(null); showToast(`Viewing ${j.name}`, "info"); }}
-                    className="text-xs text-blue-600 hover:underline"
-                  >
-                    Select
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
+            {allJudges.length === 0 && (
+              <p className="text-xs text-slate-400 text-center py-4">No system judges found.</p>
+            )}
           </div>
-          <div className="mt-4 flex justify-end">
-            <button onClick={() => setModal(null)} className="px-5 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-700 text-white text-sm font-medium shadow hover:shadow-lg transition">Done</button>
+          <div className="mt-5 flex gap-3 justify-end">
+            <button 
+              onClick={() => setModal(null)} 
+              className="px-4 py-2 rounded-xl border border-slate-200 text-sm text-slate-600 hover:bg-slate-50"
+            >
+              Cancel
+            </button>
+            <button 
+              onClick={saveManageJudges} 
+              className="px-5 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-700 text-white text-sm font-medium shadow hover:shadow-lg transition"
+            >
+              Save Assignments
+            </button>
           </div>
         </Modal>
       )}
@@ -1044,14 +1257,14 @@ export default function Dashboard() {
         <Modal title="Reassign Judges" onClose={() => setModal(null)}>
           <p className="text-sm text-slate-500 mb-4">Select a judge to reassign across teams automatically.</p>
           <div className="space-y-2 mb-4 max-h-72 overflow-y-auto scrollbar-hide">
-            {ALL_JUDGES.map(j => (
+            {assignedJudges.map(j => (
               <button
-                key={j.initials}
+                key={j._realId}
                 onClick={() => {
                   setModal(null);
                   const teamsWithJudge = teams.filter(t => t.judges.includes(j.name));
                   if (teamsWithJudge.length > 0) {
-                    const newJudge = ALL_JUDGES.find(j2 => j2.name !== j.name && !teamsWithJudge[0].judges.includes(j2.name));
+                    const newJudge = allJudges.find(j2 => j2.name !== j.name && !teamsWithJudge[0].judges.includes(j2.name));
                     if (newJudge) {
                       setTeams(prev => prev.map(t =>
                         t.code === teamsWithJudge[0].code
@@ -1072,6 +1285,9 @@ export default function Dashboard() {
                 <ChevronRight className="w-4 h-4 text-slate-300 ml-auto" />
               </button>
             ))}
+            {assignedJudges.length === 0 && (
+              <p className="text-xs text-slate-400 text-center py-4">No judges assigned to this hackathon.</p>
+            )}
           </div>
         </Modal>
       )}

@@ -1,5 +1,7 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { userService } from "../../services/userService";
+
 import {
   Menu,
   Search,
@@ -270,8 +272,16 @@ function StatCard({ stat, i }) {
   );
 }
 function UserDetailsPanel({ user, onViewProfile, onResetPassword, onToggleSuspend }) {
+  if (!user) {
+    return (
+      <div className="glass-card sticky top-6 rounded-3xl p-6 text-center text-slate-400">
+        No user selected
+      </div>
+    );
+  }
   const rows = [
     { icon: IdCard, label: "User ID", value: user.id },
+
     { icon: Shield, label: "Role", value: user.role },
     { icon: Building2, label: "University/Team", value: user.team },
     { icon: Calendar, label: "Joined On", value: user.joined + ", 10:30 AM" },
@@ -407,12 +417,13 @@ function UserDetailsPanel({ user, onViewProfile, onResetPassword, onToggleSuspen
   );
 }
 export default function UserManagementDashboard() {
-  const [users, setUsers] = useState(INITIAL_USERS);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("All Roles");
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [teamFilter, setTeamFilter] = useState("All Teams");
-  const [selectedId, setSelectedId] = useState(INITIAL_USERS[0].id);
+  const [selectedId, setSelectedId] = useState(null);
   const [page, setPage] = useState(1);
   const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -426,6 +437,97 @@ export default function UserManagementDashboard() {
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
   };
+
+  const fetchUsers = async () => {
+  try {
+    setLoading(true);
+
+    const res = await userService.adminListUsers(1, 1000);
+
+    
+    
+
+    // support multiple backend response formats
+    const usersData =
+      res?.data?.data?.users ||
+      res?.data?.users ||
+      res?.data?.data ||
+      [];
+
+    
+
+    if (Array.isArray(usersData) && usersData.length > 0) {
+      const mapped = usersData.map((u, index) => {
+        const mapRole = (backendRole) => {
+          if (backendRole === "University") return "University Admin";
+          if (backendRole === "User") return "Participant";
+          return backendRole || "Participant";
+        };
+
+        return {
+          id: u._id?.substring(u._id.length - 8).toUpperCase(),
+          _realId: u._id,
+          name: u.fullName || "N/A",
+          email: u.email || "N/A",
+          role: mapRole(u.role),
+          team: u.collegeOrUniversity || "N/A",
+          status: u.isSuspended ? "Suspended" : "Active",
+
+          joined: u.createdAt
+            ? new Date(u.createdAt).toLocaleDateString("en-US", {
+                month: "short",
+                day: "2-digit",
+                year: "numeric",
+              })
+            : "N/A",
+
+          lastActive: u.updatedAt
+            ? new Date(u.updatedAt).toLocaleString("en-US", {
+                month: "short",
+                day: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : "N/A",
+
+          avatar:
+            u.profilePhoto?.url ||
+            AVATARS[index % AVATARS.length],
+
+          locked: u.isSuspended || false,
+
+          hackathons: u.hackathons || [],
+        };
+      });
+
+      
+
+      setUsers(mapped);
+
+      if (mapped.length > 0) {
+        setSelectedId(mapped[0].id);
+      }
+    } else {
+      
+      setUsers([]);
+    }
+  } catch (err) {
+    
+
+    showToast(
+      err.response?.data?.message || "Failed to load users",
+      "error"
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
   useEffect(() => {
     if (filtersOpen) {
       setTempRole(roleFilter);
@@ -433,6 +535,7 @@ export default function UserManagementDashboard() {
       setTempTeam(teamFilter);
     }
   }, [filtersOpen, roleFilter, statusFilter, teamFilter]);
+
   useEffect(() => {
     if (!filtersOpen) return;
     const onClick = (e) => {
@@ -465,7 +568,7 @@ export default function UserManagementDashboard() {
     });
   }, [users, query, roleFilter, statusFilter, teamFilter]);
 
-  const selected = users.find((u) => u.id === selectedId) ?? users[0];
+  const selected = users.find((u) => u.id === selectedId) || users[0];
 
   const activeFilterCount =
     (roleFilter !== "All Roles" ? 1 : 0) +
@@ -484,48 +587,101 @@ export default function UserManagementDashboard() {
     ];
   }, [users]);
 
-  const totalPages = 356;
-  const pageNumbers = [1, 2, 3];
+  const totalPages = 1;
+  const pageNumbers = [1];
 
   const handleSelect = (u) => {
     setSelectedId(u.id);
     setMobileDetailsOpen(true);
   };
-  const toggleLock = (u) => {
-    setUsers((prev) =>
-      prev.map((x) => (x.id === u.id ? { ...x, locked: !x.locked } : x)),
-    );
-    showToast(`${u.name} ${u.locked ? "unlocked" : "locked"}`, 'success');
+
+  const toggleLock = async (u) => {
+    try {
+      const willLock = !u.locked;
+      if (willLock) {
+        await userService.adminSuspendUser(u._realId);
+      } else {
+        await userService.adminRestoreUser(u._realId);
+      }
+      setUsers((prev) =>
+        prev.map((x) => (x.id === u.id ? { ...x, locked: willLock, status: willLock ? "Suspended" : "Active" } : x)),
+      );
+      showToast(`${u.name} ${willLock ? "locked" : "unlocked"} successfully`, 'success');
+    } catch (err) {
+      showToast(err.response?.data?.message || "Failed to update user lock status", 'error');
+    }
   };
 
-  const refreshUser = (u) => {
-    const now = new Date();
-    const stamp = now.toLocaleString("en-US", {
-      month: "short",
-      day: "2-digit",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
-    setUsers((prev) =>
-      prev.map((x) => (x.id === u.id ? { ...x, lastActive: stamp } : x)),
-    );
-    showToast(`Refreshed ${u.name}'s data`, 'success');
+  const refreshUser = async (u) => {
+    try {
+      const res = await userService.adminGetUserById(u._realId);
+      if (res.data?.success && res.data?.data) {
+        const fresh = res.data.data;
+        const mapRole = (backendRole) => {
+          if (backendRole === 'University') return 'University Admin';
+          if (backendRole === 'User') return 'Participant';
+          return backendRole || 'Participant';
+        };
+        setUsers((prev) =>
+          prev.map((x) =>
+            x.id === u.id
+              ? {
+                  ...x,
+                  name: fresh.fullName || x.name,
+                  email: fresh.email || x.email,
+                  role: mapRole(fresh.role),
+                  team: fresh.collegeOrUniversity || x.team,
+                  status: fresh.isSuspended ? "Suspended" : "Active",
+                  locked: fresh.isSuspended,
+                  lastActive: new Date().toLocaleString("en-US", {
+                    month: "short",
+                    day: "2-digit",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                  })
+                }
+              : x
+          )
+        );
+        showToast(`Refreshed ${u.name}'s data`, 'success');
+      }
+    } catch (err) {
+      showToast("Failed to refresh user data", 'error');
+    }
   };
 
-  const toggleSuspend = (u) => {
-    const next = u.status === "Active" ? "Suspended" : "Active";
-    setUsers((prev) =>
-      prev.map((x) => (x.id === u.id ? { ...x, status: next } : x)),
-    );
-    showToast(
-      next === "Suspended" ? `${u.name} suspended` : `${u.name} reactivated`,
-      'success'
-    );
+  const toggleSuspend = async (u) => {
+    try {
+      const next = u.status === "Active" ? "Suspended" : "Active";
+      const isSuspended = next === "Suspended";
+      if (isSuspended) {
+        await userService.adminSuspendUser(u._realId);
+      } else {
+        await userService.adminRestoreUser(u._realId);
+      }
+      setUsers((prev) =>
+        prev.map((x) => (x.id === u.id ? { ...x, status: next, locked: isSuspended } : x)),
+      );
+      showToast(
+        isSuspended ? `${u.name} suspended successfully` : `${u.name} reactivated successfully`,
+        'success'
+      );
+    } catch (err) {
+      showToast(err.response?.data?.message || "Failed to update suspension status", 'error');
+    }
   };
 
-  const resetPassword = (u) => {
-    showToast(`Password reset link sent to ${u.email}`, 'success');
+  const resetPassword = async (u) => {
+    try {
+      const res = await userService.adminResetPassword(u._realId);
+      if (res.data?.success && res.data?.data) {
+        const pwd = res.data.data.generatedPassword;
+        showToast(`Password reset! Temporary password: ${pwd}`, 'success');
+      }
+    } catch (err) {
+      showToast(err.response?.data?.message || "Failed to reset password", 'error');
+    }
   };
 
   const applyFilters = () => {
@@ -546,6 +702,7 @@ export default function UserManagementDashboard() {
     setQuery("");
     showToast("Filters cleared", 'success');
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#ecfcff] via-[#f8ffff] to-[#dff7ff]" style={{ fontFamily: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif" }}>
@@ -712,67 +869,77 @@ export default function UserManagementDashboard() {
                 </thead>
                 <tbody>
                   <AnimatePresence mode="wait">
-                    {filtered.map((u, i) => {
-                      const isSelected = u.id === selectedId;
-                      return (
-                        <motion.tr
-                          key={u.id}
-                          layout
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -8 }}
-                          transition={{ duration: 0.3, delay: i * 0.04 }}
-                          onClick={() => handleSelect(u)}
-                          className={`cursor-pointer text-sm transition ${isSelected ? "bg-blue-50/70" : "bg-white/50 hover:bg-white/80"
-                            }`}
-                        >
-                          <td className="rounded-l-xl px-4 py-3">
-                            <div className="flex items-center gap-3">
-                              <img src={u.avatar} alt={u.name} className="h-9 w-9 rounded-full object-cover ring-2 ring-white" />
-                              <div className="min-w-0">
-                                <p className="truncate font-semibold text-[#0b1b52]">{u.name}</p>
-                                <p className="truncate text-xs text-slate-500">{u.email}</p>
+                    {loading ? (
+                      <tr>
+                        <td colSpan={7} className="px-4 py-16 text-center text-sm font-semibold text-slate-500">
+                          <div className="flex flex-col items-center justify-center gap-3">
+                            <RefreshCw className="h-7 w-7 text-blue-500 animate-spin" />
+                            <span>Loading users from database...</span>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : filtered.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="px-4 py-10 text-center text-sm text-slate-500">
+                          No users match your filters.
+                        </td>
+                      </tr>
+                    ) : (
+                      filtered.map((u, i) => {
+                        const isSelected = u.id === selectedId;
+                        return (
+                          <motion.tr
+                            key={u.id}
+                            layout
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -8 }}
+                            transition={{ duration: 0.3, delay: i * 0.04 }}
+                            onClick={() => handleSelect(u)}
+                            className={`cursor-pointer text-sm transition ${isSelected ? "bg-blue-50/70" : "bg-white/50 hover:bg-white/80"
+                              }`}
+                          >
+                            <td className="rounded-l-xl px-4 py-3">
+                              <div className="flex items-center gap-3">
+                                <img src={u.avatar} alt={u.name} className="h-9 w-9 rounded-full object-cover ring-2 ring-white" />
+                                <div className="min-w-0">
+                                  <p className="truncate font-semibold text-[#0b1b52]">{u.name}</p>
+                                  <p className="truncate text-xs text-slate-500">{u.email}</p>
+                                </div>
                               </div>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-slate-600">{u.email}</td>
-                          <td className="px-4 py-3"><RoleBadge role={u.role} /></td>
-                          <td className="px-4 py-3 text-slate-700">{u.team}</td>
-                          <td className="px-4 py-3"><StatusBadge status={u.status} /></td>
-                          <td className="px-4 py-3 text-slate-600">{u.joined}</td>
-                          <td className="rounded-r-xl px-4 py-3">
-                            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                              <ActionIconButton
-                                icon={Eye}
-                                tone="blue"
-                                label="View"
-                                onClick={() => handleSelect(u)}
-                              />
-                              <ActionIconButton
-                                icon={u.locked ? Lock : Unlock}
-                                tone={u.locked ? "rose" : "amber"}
-                                label={u.locked ? "Unlock user" : "Lock user"}
-                                onClick={() => toggleLock(u)}
-                              />
-                              <ActionIconButton
-                                icon={RefreshCw}
-                                tone="emerald"
-                                label="Refresh"
-                                onClick={() => refreshUser(u)}
-                              />
-                            </div>
-                          </td>
-                        </motion.tr>
-                      );
-                    })}
+                            </td>
+                            <td className="px-4 py-3 text-slate-600">{u.email}</td>
+                            <td className="px-4 py-3"><RoleBadge role={u.role} /></td>
+                            <td className="px-4 py-3 text-slate-700">{u.team}</td>
+                            <td className="px-4 py-3"><StatusBadge status={u.status} /></td>
+                            <td className="px-4 py-3 text-slate-600">{u.joined}</td>
+                            <td className="rounded-r-xl px-4 py-3">
+                              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                                <ActionIconButton
+                                  icon={Eye}
+                                  tone="blue"
+                                  label="View"
+                                  onClick={() => handleSelect(u)}
+                                />
+                                <ActionIconButton
+                                  icon={u.locked ? Lock : Unlock}
+                                  tone={u.locked ? "rose" : "amber"}
+                                  label={u.locked ? "Unlock user" : "Lock user"}
+                                  onClick={() => toggleLock(u)}
+                                />
+                                <ActionIconButton
+                                  icon={RefreshCw}
+                                  tone="emerald"
+                                  label="Refresh"
+                                  onClick={() => refreshUser(u)}
+                                />
+                              </div>
+                            </td>
+                          </motion.tr>
+                        );
+                      })
+                    )}
                   </AnimatePresence>
-                  {filtered.length === 0 && (
-                    <tr>
-                      <td colSpan={7} className="px-4 py-10 text-center text-sm text-slate-500">
-                        No users match your filters.
-                      </td>
-                    </tr>
-                  )}
                 </tbody>
               </table>
             </div>

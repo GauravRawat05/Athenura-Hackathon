@@ -1,0 +1,12 @@
+{
+  "name": "hackathon-athenura-root",
+  "version": "1.0.0",
+  "description": "Hackathon Athenura platform workspace root",
+  "main": "dev.js",
+  "scripts": {
+    "dev": "node dev.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

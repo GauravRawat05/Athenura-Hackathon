@@ -323,7 +323,7 @@ export default function Profile() {
         dispatch(setCredentials({ user: { ...user, ...mappedProfile }, token }));
       }
     } catch (err) {
-      console.error(err);
+      
       setError(err.response?.data?.message || "Unable to load profile. Please refresh.");
     } finally {
       setLoading(false);
@@ -340,7 +340,7 @@ export default function Profile() {
         { label: "Certificates", value: result.certificates ?? 0, icon: <Icons.Award size={20} /> },
       ]);
     } catch (err) {
-      console.warn("Dashboard stats unavailable", err);
+      
     }
   };
 
@@ -377,7 +377,7 @@ export default function Profile() {
         dispatch(setCredentials({ user: { ...user, ...updatedProfile }, token }));
       }
     } catch (err) {
-      console.error(err);
+      
       setError(err.response?.data?.message || err.message || "Failed to save profile.");
     } finally {
       setSaving(false);

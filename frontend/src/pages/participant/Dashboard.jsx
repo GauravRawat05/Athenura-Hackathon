@@ -226,8 +226,8 @@ export default function Dashboard() {
           userService.getUserCertificates(6),
         ]);
 
-        console.log("Stats response:", statsRes);
-        console.log("Hackathons response:", hackathonsRes);
+        
+        
 
         // Process stats into the format expected by the component
         const processedStats = [
@@ -237,7 +237,7 @@ export default function Dashboard() {
           { id: 4, label: "Certificates", value: statsRes?.data?.certificates || 0, suffix: "" },
         ];
 
-        console.log("Processed stats:", processedStats);
+        
 
         setStats(processedStats);
         setActiveHackathons(hackathonsRes?.data || []);
@@ -245,7 +245,7 @@ export default function Dashboard() {
         setResults(resultsRes?.data || []);
         setCertificates(certificatesRes?.data || []);
       } catch (err) {
-        console.error("Dashboard data fetch error:", err);
+        
         setError("Failed to load dashboard data");
       } finally {
         setLoading(false);

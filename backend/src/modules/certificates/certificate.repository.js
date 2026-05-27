@@ -47,7 +47,9 @@ class CertificateRepository {
    * Find a certificate by its unique public verification code.
    */
   async findByCode(certificateCode) {
-    return await Certificate.findOne({ certificateCode });
+    return await Certificate.findOne({ certificateCode })
+      .populate('userId', 'fullName')
+      .populate('hackathonId', 'title');
   }
 
   /**

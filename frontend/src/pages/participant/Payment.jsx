@@ -1,5 +1,7 @@
-﻿import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { hackathonService } from "../../services/hackathonService";
+import { paymentService } from "../../services/paymentService";
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Poppins:wght@400;500;600;700&display=swap');
@@ -594,15 +596,17 @@ const styles = `
 export default function Payment() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { registrationId } = useParams();
 
-  // Hackathon info (normally from route state/props)
-  const hackathon = location.state?.hackathon || {
-    name: "TechBurst 2025",
-    mode: "Team",
-    fee: 499,
-    deadline: "30 Jan 2025",
-    teamName: "Code Ninjas",
-  };
+  const [registration, setRegistration] = useState(null);
+  const [sdkLoaded, setSdkLoaded] = useState(false);
+  const [hackathon, setHackathon] = useState(location.state?.hackathon || {
+    name: "Loading...",
+    mode: "Solo",
+    fee: 0,
+    deadline: "",
+    teamName: "",
+  });
 
   const [leaving, setLeaving] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -613,6 +617,49 @@ export default function Payment() {
   });
   const [upiId, setUpiId] = useState("");
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => setSdkLoaded(true);
+    script.onerror = () => 
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchReg = async () => {
+      try {
+        const res = await hackathonService.getMyRegistrations();
+        const list = res.data && (res.data.data || res.data);
+        if (list && Array.isArray(list)) {
+          const match = list.find(r => r._id === registrationId);
+          if (match && mounted) {
+            setRegistration(match);
+            const h = match.hackathonId || {};
+            setHackathon({
+              name: h.title || "Hackathon",
+              mode: match.mode === "team" ? "Team" : "Solo",
+              fee: h.registrationFee || 0,
+              deadline: h.registrationDeadline ? new Date(h.registrationDeadline).toLocaleDateString() : "",
+              teamName: match.teamId?.teamName || "",
+            });
+          }
+        }
+      } catch (err) {
+        
+      }
+    };
+    if (registrationId) {
+      fetchReg();
+    }
+    return () => { mounted = false; };
+  }, [registrationId]);
 
  const goBack = () => {
     setLeaving(true);
@@ -646,19 +693,78 @@ export default function Payment() {
     return e;
   };
 
-  const handlePay = () => {
+  const handlePay = async () => {
     const e = validate();
     if (Object.keys(e).length) { setErrors(e); return; }
     setErrors({});
+
+    if (!sdkLoaded) {
+      alert("Razorpay payment gateway is still loading. Please try again in a moment.");
+      return;
+    }
+
     setLoading(true);
-    // Simulate payment processing
-    setTimeout(() => {
+
+    try {
+      const feeAmount = hackathon.fee;
+      const orderRes = await paymentService.createOrder(feeAmount, "INR", registrationId);
+      const orderData = orderRes.data && (orderRes.data.data || orderRes.data);
+
+      if (!orderData || !orderData.orderId) {
+        throw new Error("Failed to create payment order on server");
+      }
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_SokmKPc76a4dtb",
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "Athenura Hackathons",
+        description: `Registration fee for ${hackathon.name}`,
+        order_id: orderData.orderId,
+        handler: async function (response) {
+          try {
+            setLoading(true);
+            await paymentService.verifyPayment(
+              orderData.orderId,
+              response.razorpay_payment_id,
+              response.razorpay_signature
+            );
+            
+            setLoading(false);
+            setLeaving(true);
+            setTimeout(() => navigate("/payment/status", {
+              state: { status: "success", hackathon }
+            }), 420);
+          } catch (verifyErr) {
+            
+            setLoading(false);
+            navigate("/payment/status", {
+              state: { status: "failed", hackathon }
+            });
+          }
+        },
+        prefill: {
+          name: registration?.userId?.fullName || "",
+          email: registration?.userId?.email || "",
+          contact: "",
+        },
+        theme: {
+          color: "#03045E"
+        },
+        modal: {
+          ondismiss: function () {
+            setLoading(false);
+          }
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      
       setLoading(false);
-      setLeaving(true);
-      setTimeout(() => navigate("/payment/status", {
-        state: { status: "success", hackathon }
-      }), 420);
-    }, 2200);
+      setErrors({ apiError: err?.response?.data?.message || err.message || "Failed to initialize payment gateway." });
+    }
   };
 
   const cardPreview = card.number
@@ -1005,6 +1111,13 @@ export default function Payment() {
                 <p style={{fontSize:"11px",color:"#90a4ae",fontFamily:"Poppins",marginBottom:"14px"}}>
                   You will be redirected to your bank's secure portal
                 </p>
+              </div>
+            )}
+
+            {/* API ERROR DISPLAY */}
+            {errors.apiError && (
+              <div className="error-msg" style={{ justifyContent: "center", marginBottom: "14px" }}>
+                <span>❌ {errors.apiError}</span>
               </div>
             )}
 

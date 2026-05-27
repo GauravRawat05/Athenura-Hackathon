@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { hackathonService } from "../../services/hackathonService";
+import { userService } from "../../services/userService";
 
 // ── Mock Data ──────────────────────────────────────────────
 const mockHackathons = [
@@ -198,15 +199,45 @@ function StatCard({ icon, value, label, delay }) {
 // ── Submission Modal ───────────────────────────────────────
 function SubmissionModal({ hackathon, onClose, onSubmitted }) {
   const [form, setForm] = useState({ title: "", description: "", github: "", demo: "", video: "", notes: "" });
+  const [submissionId, setSubmissionId] = useState(null);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  // Lock body scroll
+  // Lock body scroll and load existing submission details if any
   useEffect(() => {
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = ""; };
-  }, []);
+    
+    let mounted = true;
+    const hid = hackathon.hackathonId || hackathon.id;
+    
+    if (hackathon.submitted) {
+      (async () => {
+        try {
+          const res = await hackathonService.getMySubmission(hid);
+          if (res.data?.data && mounted) {
+            const s = res.data.data;
+            setForm({
+              title: s.title || "",
+              description: s.description || "",
+              github: s.repoUrl || "",
+              demo: s.demoUrl || "",
+              video: s.videoUrl || "",
+              notes: (s.techStack && s.techStack[0]) || ""
+            });
+            setSubmissionId(s._id);
+          }
+        } catch (err) {
+          
+        }
+      })();
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+      mounted = false;
+    };
+  }, [hackathon]);
 
   const validate = () => {
     const e = {};
@@ -229,10 +260,14 @@ function SubmissionModal({ hackathon, onClose, onSubmitted }) {
         description: form.description,
         repoUrl: form.github,
         demoUrl: form.demo,
-        techStack: [],
+        techStack: form.notes ? [form.notes] : [],
       };
       const hid = hackathon.hackathonId || hackathon.id;
-      await hackathonService.createSubmission(hid, payload);
+      if (submissionId) {
+        await hackathonService.updateSubmission(submissionId, payload);
+      } else {
+        await hackathonService.createSubmission(hid, payload);
+      }
       setSubmitting(false);
       setSuccess(true);
       setTimeout(() => {
@@ -498,12 +533,372 @@ function SubmissionModal({ hackathon, onClose, onSubmitted }) {
   );
 }
 
+// ── Result Modal ───────────────────────────────────────────
+function DownloadButton() {
+  const [dlState, setDlState] = useState("idle"); // idle | loading | done
+  const handleClick = () => {
+    if (dlState !== "idle") return;
+    setDlState("loading");
+    setTimeout(() => {
+      setDlState("done");
+      setTimeout(() => setDlState("idle"), 2500);
+    }, 2200);
+  };
+  const configs = {
+    idle:    { bg: "#03045e", text: "Download Certificate", icon: <svg width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>, hover: "#0077b6" },
+    loading: { bg: "#0077b6", text: "Preparing...",         icon: null,               hover: "#0077b6" },
+    done:    { bg: "#0096c7", text: "Downloaded!",          icon: <IconCheck />,    hover: "#0096c7" },
+  };
+  const cfg = configs[dlState];
+  return (
+    <button
+      onClick={handleClick}
+      style={{
+        marginTop: 8,
+        display: "flex", alignItems: "center", gap: 7,
+        background: cfg.bg, color: "#fff",
+        border: "none", borderRadius: 10,
+        padding: "10px 20px", cursor: dlState === "idle" ? "pointer" : "default",
+        fontFamily: "Nunito,sans-serif", fontWeight: 800, fontSize: 13,
+        boxShadow: "0 4px 14px rgba(3,4,94,0.22)",
+        transition: "all 0.3s cubic-bezier(0.22,1,0.36,1)",
+        minWidth: 200, justifyContent: "center",
+        position: "relative", overflow: "hidden",
+      }}
+      onMouseEnter={e => { if (dlState === "idle") { e.currentTarget.style.background = cfg.hover; e.currentTarget.style.transform = "translateY(-2px)"; }}}
+      onMouseLeave={e => { e.currentTarget.style.background = cfg.bg; e.currentTarget.style.transform = ""; }}
+    >
+      {dlState === "loading" ? (
+        <>
+          <span style={{ display: "inline-block", animation: "mhSpin 0.8s linear infinite", width: 14, height: 14, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%" }}>
+          </span>
+          &nbsp;&nbsp;{cfg.text}
+        </>
+      ) : (
+        <>
+          {cfg.icon}
+          {cfg.text}
+        </>
+      )}
+    </button>
+  );
+}
+
+function ResultModal({ hackathon, onClose }) {
+  const [loading, setLoading] = useState(true);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await userService.getMyResults();
+        const responseData = res?.data;
+        const data = Array.isArray(responseData)
+          ? responseData
+          : Array.isArray(responseData?.data)
+            ? responseData.data
+            : [];
+        
+        // Find matching result
+        const normalized = data.map(r => {
+          const isWinner = r.isWinner || r.status === "Winner";
+          const rank = r.rank ?? null;
+          const score = r.score ?? r.totalScore ?? 0;
+          const criteria = r.criteria || [{ name: "Final Score", score, weight: 100, maxScore: 100 }];
+          return {
+            id: r._id || r.id,
+            hackathonId: r.hackathonId?._id || r.hackathonId,
+            hackathon: r.hackathonId?.title || r.hackathon || "Untitled Hackathon",
+            domain: r.awardCategory || r.domain || "General",
+            mode: r.teamId ? "Team" : r.mode || "Solo",
+            teamName: r.teamId?.name || r.teamName || null,
+            submittedAt: r.date ? new Date(r.date).toLocaleString() : r.submittedAt || "Unknown date",
+            rank,
+            totalParticipants: r.totalParticipants || "-",
+            status: r.status || (isWinner ? "Winner" : rank ? "Ranked" : "Participated"),
+            totalScore: score,
+            cardTheme: r.cardTheme || (isWinner ? "light" : "default"),
+            criteria,
+            judgeComment: r.judgeComment || r.feedback || r.award || "Judge feedback not available.",
+            prize: r.prize || r.award || r.awardCategory || null,
+            certificateReady: r.certificateStatus === "completed" || r.certificateReady || false,
+          };
+        });
+
+        const found = normalized.find(r => 
+          (r.id === hackathon.id || r.id === hackathon.hackathonId || r.hackathonId === hackathon.id || r.hackathonId === hackathon.hackathonId) ||
+          (r.hackathon.toLowerCase().trim() === hackathon.name.toLowerCase().trim())
+        );
+
+        if (mounted) {
+          if (found) {
+            setResult(found);
+          } else {
+            if (hackathon.rank || hackathon.score) {
+              setResult({
+                id: hackathon.id,
+                hackathon: hackathon.name,
+                domain: hackathon.domain,
+                mode: hackathon.mode === "team" ? "Team" : "Solo",
+                teamName: hackathon.teamName,
+                submittedAt: formatDate(hackathon.registrationDate),
+                rank: hackathon.rank,
+                totalParticipants: "N/A",
+                status: hackathon.rank === 1 ? "Winner" : hackathon.rank ? "Ranked" : "Participated",
+                totalScore: hackathon.score || 0,
+                cardTheme: hackathon.rank === 1 ? "light" : "default",
+                criteria: [{ name: "Final Score", score: hackathon.score || 0, weight: 100, maxScore: 100 }],
+                judgeComment: "Excellent work! Your contribution is highly appreciated.",
+                prize: hackathon.prize || null,
+                certificateReady: true,
+              });
+            } else {
+              setError("Result details not available yet.");
+            }
+          }
+        }
+      } catch (err) {
+        if (mounted) {
+          setError(err?.response?.data?.message || err.message || "Failed to load result.");
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [hackathon]);
+
+  const sc = result ? (result.status === "Winner" ? { color: "#0077b6", bg: "#e8f4fd", border: "#90cdf4" } : result.status === "Ranked" ? { color: "#0096c7", bg: "#e0f4ff", border: "#7dd3f0" } : { color: "#6b7280", bg: "#f3f4f6", border: "#d1d5db" }) : null;
+  const isWinner = result?.status === "Winner";
+  
+  const tc = result ? (result.cardTheme === "light" ? {
+    border: "#7dd3f0",
+    ribbon: "linear-gradient(90deg,#0096c7,#48cae4)",
+    scoreBg: "linear-gradient(135deg,#0096c7,#48cae4)",
+    scoreShadow: "0 4px 14px rgba(0,150,199,0.35)",
+    barColor: "#0096c7",
+    accentColor: "#0096c7",
+    feedbackBg: "linear-gradient(120deg,#e0f4ff,#caf0f8)",
+    feedbackBorder: "#0096c7",
+  } : result.cardTheme === "dark" ? {
+    border: "#03045e",
+    ribbon: "linear-gradient(90deg,#023e8a,#03045e)",
+    scoreBg: "linear-gradient(135deg,#023e8a,#03045e)",
+    scoreShadow: "0 4px 14px rgba(2,62,138,0.4)",
+    barColor: "#023e8a",
+    accentColor: "#023e8a",
+    feedbackBg: "linear-gradient(120deg,#eef0f8,#dbe4f5)",
+    feedbackBorder: "#023e8a",
+  } : {
+    border: "#90cdf4",
+    ribbon: "linear-gradient(90deg,#03045e,#0077b6)",
+    scoreBg: "linear-gradient(135deg,#03045e,#0077b6)",
+    scoreShadow: "0 4px 14px rgba(3,4,94,0.28)",
+    barColor: "#0077b6",
+    accentColor: "#0077b6",
+    feedbackBg: "linear-gradient(120deg,#eef0f8,#e8f4fd)",
+    feedbackBorder: "#0077b6",
+  }) : null;
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 1000,
+      background: "rgba(15,23,42,0.45)", backdropFilter: "blur(12px)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      padding: 20, animation: "mhFadeIn 0.3s ease-out",
+    }}>
+      <div style={{
+        background: "#fff", width: "100%", maxWidth: 640,
+        borderRadius: 24, overflow: "hidden",
+        boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
+        border: "1px solid rgba(255,255,255,0.8)",
+        animation: "mhSlideUp 0.45s cubic-bezier(0.34,1.56,0.64,1)",
+        position: "relative",
+      }}>
+        {/* Header Gradient */}
+        <div style={{
+          background: isWinner ? (tc?.ribbon || "linear-gradient(90deg,#0096c7,#48cae4)") : "linear-gradient(135deg,#03045e,#1d4ed8)",
+          padding: "24px 28px", display: "flex", alignItems: "center", justifyContent: "space-between",
+          color: "#fff", position: "relative",
+        }}>
+          <div>
+            <h2 style={{ margin: 0, fontFamily: "'Nunito',sans-serif", fontWeight: 900, fontSize: 20, letterSpacing: -0.3 }}>
+              Hackathon Performance
+            </h2>
+            <p style={{ margin: "4px 0 0", fontSize: 12, opacity: 0.85, fontWeight: 500 }}>
+              {hackathon.name}
+            </p>
+          </div>
+          <button onClick={onClose} style={{
+            position: "absolute", top: 22, right: 22,
+            background: "rgba(255,255,255,0.15)", border: "none",
+            borderRadius: "50%", width: 32, height: 32,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: "#fff", cursor: "pointer", transition: "all 0.2s",
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.25)"}
+          onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.15)"}
+          >
+            <IconClose />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div style={{ padding: "28px", maxHeight: "calc(85vh - 120px)", overflowY: "auto" }}>
+          {loading ? (
+            <div style={{ textAlign: "center", padding: "40px 0" }}>
+              <div style={{
+                width: 42, height: 42, border: "3.5px solid rgba(3, 4, 94, 0.1)",
+                borderTopColor: "#03045E", borderRadius: "50%",
+                animation: "mhSpin 0.9s linear infinite", margin: "0 auto 16px",
+              }} />
+              <div style={{ fontFamily: "'Nunito',sans-serif", fontWeight: 800, color: "#03045E", fontSize: 16 }}>Loading performance details...</div>
+            </div>
+          ) : error ? (
+            <div style={{ textAlign: "center", padding: "32px 16px" }}>
+              <div style={{ fontSize: 36, marginBottom: 12 }}>🔍</div>
+              <div style={{ fontFamily: "'Nunito',sans-serif", fontWeight: 800, color: "#03045E", fontSize: 16, marginBottom: 6 }}>{error}</div>
+              <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>The detailed scorecard will be updated as soon as the evaluation is complete.</p>
+            </div>
+          ) : result ? (
+            <div>
+              {/* Top Summary */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16, marginBottom: 24, borderBottom: "1.5px solid #f1f5f9", paddingBottom: 20 }}>
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                    <span style={{
+                      fontSize: 10.5, fontWeight: 800, fontFamily: "Nunito,sans-serif",
+                      padding: "2px 10px", borderRadius: 20,
+                      color: sc.color, background: sc.bg, border: `1px solid ${sc.border}`,
+                    }}>{result.status}</span>
+                    <span style={{ fontSize: 11, color: "#64748b" }}>
+                      {result.domain} · {result.mode}
+                    </span>
+                  </div>
+                  {result.teamName && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "#475569", fontWeight: 500 }}>
+                      <IconUsers /> Team: <strong style={{ color: "#0f172a" }}>{result.teamName}</strong>
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontFamily: "Nunito,sans-serif", fontWeight: 900, fontSize: 24, color: "#03045e", lineHeight: 1 }}>
+                      {result.rank === 1 ? "🥇 1st" : result.rank === 2 ? "🥈 2nd" : result.rank === 3 ? "🥉 3rd" : `#${result.rank}`}
+                    </div>
+                    <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 2, fontWeight: 600 }}>
+                      Rank out of {result.totalParticipants}
+                    </div>
+                  </div>
+                  <div style={{
+                    width: 60, height: 60, borderRadius: "50%",
+                    background: tc.scoreBg,
+                    display: "flex", flexDirection: "column",
+                    alignItems: "center", justifyContent: "center",
+                    boxShadow: tc.scoreShadow,
+                  }}>
+                    <span style={{ fontFamily: "Nunito,sans-serif", fontWeight: 900, fontSize: 16, color: "#fff", lineHeight: 1 }}>
+                      {result.totalScore}
+                    </span>
+                    <span style={{ fontSize: 8.5, color: "rgba(255,255,255,0.75)" }}>/ 100</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Prize & Certificate chips */}
+              {(result.prize || result.certificateReady) && (
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 24 }}>
+                  {result.prize && (
+                    <span style={{
+                      display: "flex", alignItems: "center", gap: 5,
+                      fontSize: 12, fontFamily: "Nunito,sans-serif", fontWeight: 800,
+                      color: tc.accentColor, background: "#eff6ff",
+                      padding: "6px 14px", borderRadius: 20, border: "1px dashed #bfdbfe",
+                    }}>
+                      🏆 Prize Winner: {result.prize}
+                    </span>
+                  )}
+                  {result.certificateReady && (
+                    <span style={{
+                      display: "flex", alignItems: "center", gap: 4,
+                      fontSize: 12, fontWeight: 600,
+                      color: "#16a34a", background: "#f0fdf4",
+                      padding: "6px 14px", borderRadius: 20, border: "1px dashed #bbf7d0",
+                    }}>
+                      ✓ Performance Certificate Issued
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Criteria details */}
+              <div style={{ marginBottom: 24 }}>
+                <h4 style={{ fontFamily: "Nunito,sans-serif", fontWeight: 800, fontSize: 13.5, color: "#03045e", margin: "0 0 16px" }}>
+                  Criteria Evaluation Breakdown
+                </h4>
+                {result.criteria.map((c, ci) => (
+                  <div key={ci} style={{ marginBottom: 14 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>
+                        {c.name}
+                        <span style={{ color: "#94a3b8", fontWeight: 400, marginLeft: 4 }}>({c.weight}% weight)</span>
+                      </span>
+                      <span style={{ fontFamily: "Nunito,sans-serif", fontWeight: 800, fontSize: 12.5, color: "#03045e" }}>
+                        {c.score} / {c.maxScore}
+                      </span>
+                    </div>
+                    {/* Score bar */}
+                    <div style={{ background: "#eef2f6", borderRadius: 99, height: 6, overflow: "hidden" }}>
+                      <div style={{
+                        height: "100%", borderRadius: 99,
+                        background: tc.barColor,
+                        width: `${c.score}%`,
+                        boxShadow: `0 0 6px ${tc.barColor}44`,
+                      }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Judge Feedback */}
+              <div style={{
+                background: tc.feedbackBg,
+                borderRadius: 16, padding: "16px 20px",
+                borderLeft: `4px solid ${tc.feedbackBorder}`,
+                marginBottom: 20,
+              }}>
+                <div style={{ fontFamily: "Nunito,sans-serif", fontWeight: 800, fontSize: 12, color: tc.accentColor, marginBottom: 5 }}>
+                  Evaluation Feedback & Suggestions
+                </div>
+                <p style={{ fontSize: 13, color: "#334155", margin: 0, lineHeight: 1.6, fontStyle: "italic" }}>
+                  "{result.judgeComment}"
+                </p>
+              </div>
+
+              {/* Download Certificate */}
+              {result.certificateReady && (
+                <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
+                  <DownloadButton />
+                </div>
+              )}
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Hackathon Card ─────────────────────────────────────────
 function HackathonCard({ h, index, onViewResult, onOpenSubmit }) {
   const [ref, inView] = useInView();
   const [hovered, setHovered] = useState(false);
   const st = statusConfig[h.status];
   const dl = daysLeft(h.submissionDeadline);
+  const isEnded = h.status === "completed" || (h.endDate && new Date(h.endDate) < new Date());
 
   return (
     <div ref={ref} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
@@ -634,18 +1029,20 @@ function HackathonCard({ h, index, onViewResult, onOpenSubmit }) {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
 
           {/* Submitted status badge */}
-          <div style={{
-            display: "inline-flex", alignItems: "center", gap: 6,
-            padding: "7px 14px", borderRadius: 20,
-            background: h.submitted ? "#dcfce7" : "#f1f5f9",
-            color: h.submitted ? "#16a34a" : "#94a3b8",
-            fontSize: 11.5, fontWeight: 700,
-          }}>
-            {h.submitted ? <><IconCheck /> Submitted</> : <><IconUpload /> Not Submitted</>}
-          </div>
+          {h.submitted && (
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "7px 14px", borderRadius: 20,
+              background: "#dcfce7",
+              color: "#16a34a",
+              fontSize: 11.5, fontWeight: 700,
+            }}>
+              <IconCheck /> Submitted
+            </div>
+          )}
 
           {/* Action button */}
-          {h.status === "ongoing" && !h.submitted && (
+          {!isEnded && !h.submitted && (
             <button onClick={() => onOpenSubmit(h)} style={{
               background: "linear-gradient(135deg,#1e3a8a,#1d4ed8)",
               border: "none", borderRadius: 12, padding: "8px 18px", color: "#fff",
@@ -661,7 +1058,7 @@ function HackathonCard({ h, index, onViewResult, onOpenSubmit }) {
             </button>
           )}
 
-          {h.status === "ongoing" && h.submitted && (
+          {!isEnded && h.submitted && (
             <button onClick={() => onOpenSubmit(h)} style={{
               background: "linear-gradient(135deg,#16a34a,#15803d)",
               border: "none", borderRadius: 12, padding: "8px 18px", color: "#fff",
@@ -677,7 +1074,7 @@ function HackathonCard({ h, index, onViewResult, onOpenSubmit }) {
             </button>
           )}
 
-          {h.status === "upcoming" && (
+          {!isEnded && h.status === "upcoming" && (
             <span style={{
               fontSize: 11.5, color: "#1d4ed8", fontWeight: 700,
               background: "#dbeafe", padding: "6px 12px", borderRadius: 20,
@@ -686,7 +1083,7 @@ function HackathonCard({ h, index, onViewResult, onOpenSubmit }) {
             </span>
           )}
 
-          {h.status === "completed" && (
+          {isEnded && (
             <button onClick={() => onViewResult(h)} style={{
               background: "linear-gradient(135deg,#1e3a8a,#1d4ed8)",
               border: "none", borderRadius: 12, padding: "8px 18px", color: "#fff",
@@ -711,8 +1108,9 @@ function HackathonCard({ h, index, onViewResult, onOpenSubmit }) {
 export default function MyHackathons() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [domainFilter, setDomainFilter] = useState("All");
-  const [hackathons, setHackathons] = useState(mockHackathons);
+  const [hackathons, setHackathons] = useState([]);
   const [modalHackathon, setModalHackathon] = useState(null);
+  const [resultModalHackathon, setResultModalHackathon] = useState(null);
   const [headerRef, headerInView] = useInView();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -763,10 +1161,10 @@ export default function MyHackathons() {
         }));
 
         if (mounted) {
-          setHackathons(withSubmission.length ? withSubmission : mockHackathons);
+          setHackathons(withSubmission);
         }
       } catch (err) {
-        console.error('Failed to fetch registrations', err);
+        
       } finally {
         if (mounted) setLoading(false);
       }
@@ -802,6 +1200,42 @@ export default function MyHackathons() {
     setHackathons(prev => prev.map(h => h.id === id ? { ...h, submitted: true } : h));
   };
 
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: "100vh",
+        background: "#f8fafc",
+        fontFamily: "'Poppins',sans-serif",
+        padding: "36px 32px 72px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center"
+      }}>
+        <div style={{
+          width: "56px",
+          height: "56px",
+          border: "4px solid rgba(3, 4, 94, 0.1)",
+          borderTopColor: "#03045E",
+          borderRadius: "50%",
+          animation: "mhSpin 1s linear infinite",
+          marginBottom: "20px"
+        }} />
+        <h3 style={{ margin: 0, fontFamily: "'Nunito',sans-serif", fontWeight: 800, fontSize: 18, color: "#03045E", letterSpacing: -0.2 }}>
+          Loading your hackathons...
+        </h3>
+        <p style={{ margin: "6px 0 0", fontSize: 13, color: "#94a3b8", fontWeight: 500 }}>
+          Fetching your personalized registrations from the server
+        </p>
+        <style>{`
+          @keyframes mhSpin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
   return (
     <div style={{ minHeight: "100vh", background: "#f8fafc", fontFamily: "'Poppins',sans-serif", padding: "36px 32px 72px" }}>
       <style>{`
@@ -826,8 +1260,15 @@ export default function MyHackathons() {
         />
       )}
 
+      {resultModalHackathon && (
+        <ResultModal
+          hackathon={resultModalHackathon}
+          onClose={() => setResultModalHackathon(null)}
+        />
+      )}
+
       {/* Header */}
-      <div ref={headerRef} style={{ marginBottom: 32, opacity: headerInView ? 1 : 0, transform: headerInView ? "translateY(0)" : "translateY(-20px)", transition: "opacity 0.6s ease, transform 0.6s ease" }}>
+      <div style={{ marginBottom: 32 }}>
         <div className="hackathon-header" style={{ display: "flex", alignItems: "center" }}>
           <div>
             <h1 style={{ margin: 0, fontFamily: "'Nunito',sans-serif", fontWeight: 900, fontSize: 32, color: "#03045E", lineHeight: 1.1, letterSpacing: -0.5 }}>
@@ -845,7 +1286,7 @@ export default function MyHackathons() {
         <StatCard icon={<IconBolt />}   value={stats.total}          label="Total Joined" delay={0}   />
         <StatCard icon={<IconStar />}   value={stats.ongoing}        label="Ongoing"      delay={80}  />
         <StatCard icon={<IconCheck />}  value={stats.completed}      label="Completed"    delay={160} />
-        <StatCard icon={<IconTrophy />} value={`#${stats.bestRank}`} label="Best Rank"    delay={240} />
+        <StatCard icon={<IconTrophy />} value={stats.bestRank ? `#${stats.bestRank}` : "N/A"} label="Best Rank"    delay={240} />
       </div>
 
       {/* Status Filters */}
@@ -888,11 +1329,82 @@ export default function MyHackathons() {
       </div>
 
       {/* Cards */}
-      {filtered.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "80px 20px", color: "#94a3b8", background: "#fff", borderRadius: 20, border: "1.5px dashed #e2e8f0" }}>
-          <div style={{ marginBottom: 12 }}><IconBarChart /></div>
-          <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "#64748b" }}>No hackathons found</p>
-          <p style={{ margin: "6px 0 0", fontSize: 13, color: "#94a3b8" }}>Try changing your filters</p>
+      {hackathons.length === 0 ? (
+        <div style={{
+          textAlign: "center",
+          padding: "60px 40px",
+          background: "#fff",
+          borderRadius: 24,
+          border: "1.5px solid #e2e8f0",
+          boxShadow: "0 10px 30px rgba(0,0,0,0.03)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          maxWidth: 620,
+          margin: "0 auto",
+          animation: "mhSlideUp 0.6s cubic-bezier(.34,1.56,.64,1)"
+        }}>
+          <div style={{
+            width: 80,
+            height: 80,
+            borderRadius: "50%",
+            background: "linear-gradient(135deg, #eff6ff, #dbeafe)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#1e3a8a",
+            marginBottom: 20,
+            boxShadow: "0 8px 24px rgba(30,58,138,0.1)"
+          }}>
+            <IconTrophy />
+          </div>
+          <h2 style={{ margin: 0, fontFamily: "'Nunito',sans-serif", fontWeight: 900, fontSize: 24, color: "#03045E" }}>
+            Start Your Hackathon Journey!
+          </h2>
+          <p style={{ margin: "10px 0 24px", fontSize: 14, color: "#64748b", lineHeight: 1.6, maxWidth: 460 }}>
+            You have not participated in any hackathons yet. Register for upcoming events, build innovative projects, and earn certificates!
+          </p>
+          <button
+            onClick={() => navigate("/hackathons")}
+            style={{
+              background: "linear-gradient(135deg,#03045E,#1d4ed8)",
+              border: "none",
+              borderRadius: 14,
+              padding: "12px 28px",
+              color: "#fff",
+              fontSize: 14,
+              fontWeight: 700,
+              cursor: "pointer",
+              fontFamily: "'Poppins',sans-serif",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              boxShadow: "0 4px 16px rgba(3,4,94,0.3)",
+              transition: "transform 0.2s, box-shadow 0.2s"
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.transform = "translateY(-2px)";
+              e.currentTarget.style.boxShadow = "0 8px 24px rgba(3,4,94,0.4)";
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 16px rgba(3,4,94,0.3)";
+            }}
+          >
+            <IconBolt /> Browse Hackathons
+          </button>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div style={{
+          textAlign: "center",
+          padding: "80px 20px",
+          background: "#fff",
+          borderRadius: 20,
+          border: "1.5px dashed #e2e8f0"
+        }}>
+          <div style={{ marginBottom: 12, color: "#94a3b8" }}><IconBarChart /></div>
+          <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "#64748b" }}>No hackathons match the filters</p>
+          <p style={{ margin: "6px 0 0", fontSize: 13, color: "#94a3b8" }}>Try changing your status or domain selection</p>
         </div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(320px,1fr))", gap: 20 }}>
@@ -901,7 +1413,7 @@ export default function MyHackathons() {
               key={h.id}
               h={h}
               index={i}
-              onViewResult={(h) => navigate("/my-results", { state: { hackathon: h } })}
+              onViewResult={(h) => setResultModalHackathon(h)}
               onOpenSubmit={(h) => setModalHackathon(h)}
             />
           ))}

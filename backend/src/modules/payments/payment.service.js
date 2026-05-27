@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import mongoose from "mongoose";
 import { razorpayInstance } from "../../config/razorpay.js";
 import { Payment } from "./payment.model.js";
 import { PAYMENT_STATUS } from "./payment.constants.js";
@@ -76,6 +77,12 @@ class PaymentService {
       throw new ApiError(404, "Payment record not found");
     }
 
+    // Confirm registration if receipt is a valid registrationId
+    if (payment.receipt && mongoose.Types.ObjectId.isValid(payment.receipt)) {
+      const { default: registrationRepository } = await import("../registrations/registration.repository.js");
+      await registrationRepository.confirm(payment.receipt);
+    }
+
     return payment;
   }
 
@@ -118,18 +125,28 @@ class PaymentService {
     }
 
     if (event === "payment.captured") {
-      await Payment.findOneAndUpdate(
+      const payment = await Payment.findOneAndUpdate(
         { razorpayOrderId: orderId },
         { 
           status: PAYMENT_STATUS.SUCCESS,
           razorpayPaymentId: payload.id
-        }
+        },
+        { new: true }
       );
+      if (payment && payment.receipt && mongoose.Types.ObjectId.isValid(payment.receipt)) {
+        const { default: registrationRepository } = await import("../registrations/registration.repository.js");
+        await registrationRepository.confirm(payment.receipt);
+      }
     } else if (event === "payment.failed") {
-      await Payment.findOneAndUpdate(
+      const payment = await Payment.findOneAndUpdate(
         { razorpayOrderId: orderId },
-        { status: PAYMENT_STATUS.FAILED }
+        { status: PAYMENT_STATUS.FAILED },
+        { new: true }
       );
+      if (payment && payment.receipt && mongoose.Types.ObjectId.isValid(payment.receipt)) {
+        const { default: registrationRepository } = await import("../registrations/registration.repository.js");
+        await registrationRepository.markPaymentFailed(payment.receipt);
+      }
     }
 
     return { status: "success" };

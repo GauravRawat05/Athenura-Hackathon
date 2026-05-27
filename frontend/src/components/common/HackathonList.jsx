@@ -1,13 +1,80 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { hackathons, domains, statuses, modes } from "../../data/hackathons";
+import { hackathonService } from "../../services/hackathonService";
 import HackathonCard from "./HackathonCard";
 import HackathonFilters from "./HackathonFilters";
 import Navbar from "./Navbar";
 
+const domainImages = {
+  "AI/ML": "https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?w=800&q=80",
+  "Blockchain": "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&q=80",
+  "HealthTech": "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&q=80",
+  "Cybersecurity": "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80",
+  "Web3": "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&q=80",
+  "IoT": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&q=80"
+};
+
+const mapDbHackathon = (h) => {
+  const domain = h.technologyDomains?.[0] || "AI/ML";
+  const image = domainImages[domain] || "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&q=80";
+  
+  const formatYMD = (dateStr) => {
+    if (!dateStr) return "";
+    return new Date(dateStr).toISOString().split('T')[0];
+  };
+
+  return {
+    id: h._id,
+    title: h.title,
+    tagline: h.description ? (h.description.length > 80 ? h.description.substring(0, 77) + "..." : h.description) : "Innovative hackathon challenge",
+    status: h.status === "draft" ? "upcoming" : (h.status === "judging" ? "ongoing" : h.status),
+    mode: h.allowedModes?.[0]?.toLowerCase() || "team",
+    prize: h.prizePool || 0,
+    fee: h.registrationFee || 0,
+    domain: domain,
+    deadline: formatYMD(h.registrationDeadline || h.submissionDeadline),
+    startDate: formatYMD(h.startDate),
+    endDate: formatYMD(h.endDate),
+    teamSize: { min: h.minTeamSize || 2, max: h.maxTeamSize || 4 },
+    participants: 120,
+    image: image,
+    sponsors: h.sponsors?.map(s => s.name) || ["Athenura"],
+    tags: h.technologyDomains || [],
+    description: h.description,
+    rules: h.rules || [
+      "All code must be original and created during the hackathon period",
+      "Open-source libraries are permitted",
+      "Submissions must include a working demo and GitHub repo"
+    ],
+    timeline: [
+      { date: formatYMD(h.startDate), event: "Hackathon Kickoff" },
+      { date: formatYMD(h.registrationDeadline), event: "Registration Deadline" },
+      { date: formatYMD(h.submissionDeadline), event: "Submissions Deadline" },
+      { date: formatYMD(h.endDate), event: "Winners Announced" }
+    ],
+    prizes: [
+      { place: "1st", amount: `$${(h.prizePool * 0.6).toLocaleString()}`, perks: "Incubation Support" },
+      { place: "2nd", amount: `$${(h.prizePool * 0.3).toLocaleString()}`, perks: "Cloud Credits" },
+      { place: "3rd", amount: `$${(h.prizePool * 0.1).toLocaleString()}`, perks: "Swag Pack" }
+    ],
+    judging: h.judgingCriteria?.map(c => ({
+      criterion: c.name,
+      weight: c.weight
+    })) || [
+      { criterion: "Innovation", weight: 30 },
+      { criterion: "Technical Execution", weight: 30 },
+      { criterion: "Impact & Scalability", weight: 25 },
+      { criterion: "Presentation", weight: 15 }
+    ]
+  };
+};
+
 export default function HackathonList() {
-  // ✅ Use react-router-dom's navigate so the URL actually changes to /hackathons/:id
   const navigate = useNavigate();
+
+  const [hackathonsList, setHackathonsList] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [filters, setFilters] = useState({
     status: "all",
@@ -19,8 +86,29 @@ export default function HackathonList() {
   });
   const [showFilters, setShowFilters] = useState(false);
 
+  useEffect(() => {
+    const fetchHackathons = async () => {
+      try {
+        const res = await hackathonService.getAllHackathons();
+        if (res.data?.success && res.data?.data) {
+          const dbHacks = res.data.data.map(mapDbHackathon);
+          const merged = [...dbHacks, ...hackathons.filter(sh => !dbHacks.some(dh => dh.title.toLowerCase() === sh.title.toLowerCase()))];
+          setHackathonsList(merged);
+        } else {
+          setHackathonsList(hackathons);
+        }
+      } catch (err) {
+        
+        setHackathonsList(hackathons);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchHackathons();
+  }, []);
+
   const filtered = useMemo(() => {
-    return hackathons.filter((h) => {
+    return hackathonsList.filter((h) => {
       if (filters.status !== "all" && h.status !== filters.status) return false;
       if (filters.mode !== "all" && h.mode !== filters.mode) return false;
       if (filters.domain !== "All" && h.domain !== filters.domain) return false;
@@ -35,7 +123,7 @@ export default function HackathonList() {
         return false;
       return true;
     });
-  }, [filters]);
+  }, [filters, hackathonsList]);
 
   const setFilter = (key, val) => setFilters((f) => ({ ...f, [key]: val }));
 
@@ -67,10 +155,10 @@ export default function HackathonList() {
     past: "#90E0EF",
   };
   const statusCounts = {
-    all: hackathons.length,
-    upcoming: hackathons.filter((h) => h.status === "upcoming").length,
-    ongoing: hackathons.filter((h) => h.status === "ongoing").length,
-    past: hackathons.filter((h) => h.status === "past").length,
+    all: hackathonsList.length,
+    upcoming: hackathonsList.filter((h) => h.status === "upcoming").length,
+    ongoing: hackathonsList.filter((h) => h.status === "ongoing").length,
+    past: hackathonsList.filter((h) => h.status === "past").length,
   };
 
   const pill = (active, onClick, children, activeColor = "#0077B6") => ({
@@ -263,7 +351,7 @@ export default function HackathonList() {
             }}
           >
             {[
-              ["Hackathons", hackathons.length + "+"],
+              ["Hackathons", hackathonsList.length + "+"],
               ["Prize Pool", "$120K+"],
               ["Participants", "4,660+"],
               ["Countries", "60+"],

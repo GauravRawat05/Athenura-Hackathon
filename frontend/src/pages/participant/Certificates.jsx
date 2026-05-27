@@ -391,7 +391,7 @@ function CertCard({ cert, index }) {
       URL.revokeObjectURL(url);
       setDownloadCount(c => c + 1);
     } catch (err) {
-      console.error('Download error', err);
+      
       throw err;
     }
   };

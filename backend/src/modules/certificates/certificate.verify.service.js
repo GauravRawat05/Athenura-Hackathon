@@ -56,7 +56,9 @@ export function toPublicSnapshot(cert) {
     isRevoked: cert.isRevoked,
     revokedAt: cert.revokedAt,
     issuedAt: cert.createdAt?.toISOString?.() || null,
-    hackathonId: cert.hackathonId?.toString?.() || null,
+    hackathonId: cert.hackathonId?._id?.toString?.() || cert.hackathonId?.toString?.() || null,
+    recipientName: cert.userId?.fullName || null,
+    hackathonTitle: cert.hackathonId?.title || null,
   };
 }
 

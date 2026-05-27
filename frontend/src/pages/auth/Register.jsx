@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../../services/authService";
 
@@ -778,6 +778,7 @@ export default function Register() {
     collegeOrUniversity: "", graduationYear: "",
     skills: [],
     resumeLink: "",
+    secretKey: "",
   });
   const [skillInput, setSkillInput] = useState("");
   const [agreed, setAgreed] = useState(false);
@@ -866,27 +867,44 @@ export default function Register() {
         fullName: `${form.firstName} ${form.lastName}`.trim(),
         email: form.email,
         password: form.password,
-        phone: form.phone,
-        dateOfBirth: form.dateOfBirth,
         gender: form.gender,
-        collegeOrUniversity: form.collegeOrUniversity,
-        graduationYear: parseInt(form.graduationYear, 10),
-        skills: form.skills,
-        resumeLink: form.resumeLink,
       };
 
-      console.log("Submitting registration:", payload);
+      if (form.phone && form.phone.trim()) {
+        const cleanedPhone = form.phone.replace(/\D/g, "");
+        if (cleanedPhone) {
+          payload.phone = Number(cleanedPhone);
+        }
+      }
+
+      if (form.dateOfBirth && form.dateOfBirth.trim()) {
+        payload.dateOfBirth = form.dateOfBirth;
+      }
+
+      if (form.collegeOrUniversity && form.collegeOrUniversity.trim()) {
+        payload.collegeOrUniversity = form.collegeOrUniversity;
+      }
+
+      if (form.graduationYear) {
+        payload.graduationYear = parseInt(form.graduationYear, 10);
+      }
+
+      if (form.resumeLink && form.resumeLink.trim()) {
+        payload.resumeLink = form.resumeLink;
+      }
+
+      if (form.skills && form.skills.length > 0) {
+        payload.skills = form.skills;
+      }
+
+      if (form.secretKey && form.secretKey.trim()) {
+        payload.secretKey = form.secretKey.trim();
+      }
+
       const res = await authService.register(payload);
-      console.log("Registration response:", res);
       
       navigate('/verify-email', { state: { email: form.email } });
     } catch (err) {
-      console.error("Full error object:", err);
-      if (err.response) {
-        console.error("Response data:", err.response.data);
-        console.error("Response status:", err.response.status);
-      }
-      
       const msg = err.response?.data?.message || err.message || "Registration failed. Please check your network.";
       setErrors({ server: msg });
       alert(msg);
@@ -1246,6 +1264,20 @@ export default function Register() {
                       {errors.confirmPassword ? <p className="error-msg">⚠ {errors.confirmPassword}</p> : <div style={{ minHeight: 15 }} />}
                     </div>
                   </div>
+                </div>
+
+                <div className="field-wrap" style={{ width: "100%" }}>
+                  <div className="input-group">
+                    <input className={`form-input${form.secretKey ? " has-value" : ""}`} id="reg-skey"
+                      name="secretKey" type="password"
+                      placeholder="" value={form.secretKey || ""} onChange={setField("secretKey")} />
+                    <label className="float-label" htmlFor="reg-skey">Secret Key (Optional - for Admin/Judge/University)</label>
+                    <svg className="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                  </div>
+                  <div style={{ minHeight: 15 }} />
                 </div>
 
                 <div style={{ width: "100%", background: "#f0fbff", borderRadius: 8, padding: "8px 12px", marginBottom: 10, border: "1px solid #e0f4fa" }}>
