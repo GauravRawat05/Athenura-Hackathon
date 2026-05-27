@@ -50,7 +50,17 @@ const hackathonSchema = new mongoose.Schema({
     type:Number,
     required:true
   },
-  registrationFee:{
+  soloFee:{
+    type:Number,
+    required:true,
+    min: 0
+  },
+  teamFee:{
+    type:Number,
+    required:true,
+    min: 0
+  },
+  internFee:{
     type:Number,
     required:true,
     min: 0

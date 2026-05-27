@@ -778,7 +778,7 @@ export default function Register() {
     collegeOrUniversity: "", graduationYear: "",
     skills: [],
     resumeLink: "",
-    secretKey: "",
+    internId: "",
   });
   const [skillInput, setSkillInput] = useState("");
   const [agreed, setAgreed] = useState(false);
@@ -897,8 +897,8 @@ export default function Register() {
         payload.skills = form.skills;
       }
 
-      if (form.secretKey && form.secretKey.trim()) {
-        payload.secretKey = form.secretKey.trim();
+      if (form.internId && form.internId.trim()) {
+        payload.internId = form.internId.trim();
       }
 
       const res = await authService.register(payload);
@@ -1155,6 +1155,20 @@ export default function Register() {
                   </div>
                 </div>
 
+                {/* Intern ID */}
+                <div className="field-wrap">
+                  <div className="input-group">
+                    <input className={`form-input${form.internId ? " has-value" : ""}`}
+                      id="reg-internid" name="internId" type="text"
+                      placeholder="" value={form.internId} onChange={setField("internId")} />
+                    <label className="float-label" htmlFor="reg-internid">Intern ID (Optional)</label>
+                    <svg className="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 2v20M2 12h20"/>
+                    </svg>
+                  </div>
+                  <div style={{ minHeight: 10 }} />
+                </div>
+
                 {/* Skills */}
                 <div className="field-wrap">
                   <div style={{ position: "relative" }}>
@@ -1267,23 +1281,11 @@ export default function Register() {
                 </div>
 
                 <div className="field-wrap" style={{ width: "100%" }}>
-                  <div className="input-group">
-                    <input className={`form-input${form.secretKey ? " has-value" : ""}`} id="reg-skey"
-                      name="secretKey" type="password"
-                      placeholder="" value={form.secretKey || ""} onChange={setField("secretKey")} />
-                    <label className="float-label" htmlFor="reg-skey">Secret Key (Optional - for Admin/Judge/University)</label>
-                    <svg className="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                    </svg>
+                  <div style={{ width: "100%", background: "#f0fbff", borderRadius: 8, padding: "8px 12px", marginBottom: 10, border: "1px solid #e0f4fa" }}>
+                    <p style={{ fontSize: 10.5, color: "#0096c7", fontFamily: "'Poppins', sans-serif", lineHeight: 1.7, margin: 0 }}>
+                      Password must be min 6 chars, include <strong>1 uppercase</strong> letter &amp; <strong>1 special character</strong> (e.g. @, #, !)
+                    </p>
                   </div>
-                  <div style={{ minHeight: 15 }} />
-                </div>
-
-                <div style={{ width: "100%", background: "#f0fbff", borderRadius: 8, padding: "8px 12px", marginBottom: 10, border: "1px solid #e0f4fa" }}>
-                  <p style={{ fontSize: 10.5, color: "#0096c7", fontFamily: "'Poppins', sans-serif", lineHeight: 1.7, margin: 0 }}>
-                    Password must be min 6 chars, include <strong>1 uppercase</strong> letter &amp; <strong>1 special character</strong> (e.g. @, #, !)
-                  </p>
                 </div>
 
                 <div className="terms-row">

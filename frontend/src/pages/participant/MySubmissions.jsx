@@ -1,14 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-
-const hackathons = [
-  { id: 1, name: "Smart India Hackathon 2025", domain: "AI / ML", deadline: "2025-06-15", prize: "₹1,00,000", status: "ongoing" },
-  { id: 2, name: "DevSprint National Challenge", domain: "Blockchain", deadline: "2025-06-20", prize: "₹75,000", status: "ongoing" },
-];
-
-const previousSubmissions = [
-  { version: 2, hackathon: "HackWithInfy Spring Edition", submittedAt: "2025-05-10 14:32", repo: "https://github.com/aryan/hackwithinfy-v2", demo: "https://demo.aryan.dev/v2", status: "Latest" },
-  { version: 1, hackathon: "HackWithInfy Spring Edition", submittedAt: "2025-05-08 09:15", repo: "https://github.com/aryan/hackwithinfy-v1", demo: "https://demo.aryan.dev/v1", status: "Previous" },
-];
+import { hackathonService } from "../../services/hackathonService";
+// ... (rest of the file content)
 
 function useIntersection(ref, threshold = 0.15) {
   const [visible, setVisible] = useState(false);

@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../../store/authSlice";
 
 export default function Navbar() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { isAuthenticated } = useSelector((state) => state.auth);
 
   const NAV_LINKS = [
@@ -28,8 +29,10 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const navigate = (path) => {
-    window.location.href = path;
+  const handleLogout = () => {
+    dispatch(logout());
+    localStorage.clear();
+    navigate("/login");
   };
 
   return (
@@ -387,11 +390,7 @@ export default function Navbar() {
                   </button>
                   <button
                     className="hw-btn-ghost"
-                    onClick={() => {
-                      dispatch(logout());
-                      localStorage.clear();
-                      navigate("/login");
-                    }}
+                    onClick={handleLogout}
                   >
                     Log out
                   </button>
@@ -448,7 +447,6 @@ export default function Navbar() {
               )}
             </button>
           ))}
-          <div className="hw-mobile-divider" />
           <div className="hw-mobile-row">
             {isAuthenticated ? (
               <>
@@ -464,9 +462,7 @@ export default function Navbar() {
                 <button
                   className="hw-m-ghost"
                   onClick={() => {
-                    dispatch(logout());
-                    localStorage.clear();
-                    navigate("/login");
+                    handleLogout();
                     setMenuOpen(false);
                   }}
                 >

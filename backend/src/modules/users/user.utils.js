@@ -74,14 +74,20 @@ class UserUtils {
     graduationYear,
     resumeLink,
     skills,
-    role
+    role,
+    gender,
+    internId,
+    isInternIdVerified
   }) {
     const userData = {
       fullName,
       email,
       password,
       isEmailVerified: false,
-      role
+      role,
+      gender,
+      internId,
+      isInternIdVerified
     }
 
     if (phone) userData.phone = phone

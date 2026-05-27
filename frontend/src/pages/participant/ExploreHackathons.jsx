@@ -216,7 +216,7 @@ function HackathonExploreCard({ h, index, isRegistered }) {
             }}>Registration Closed</button>
           ) : (
             <button
-              onClick={() => navigate(`/hackathon/${h.id}`)}
+              onClick={() => navigate(`/dashboard/hackathons/${h.id}`)}
               style={{
                 background: "linear-gradient(135deg,#1e3a8a,#1d4ed8)",
                 border: "none", borderRadius: 12, padding: "8px 18px", color: "#fff",

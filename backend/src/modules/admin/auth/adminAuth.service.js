@@ -50,8 +50,8 @@ class AdminAuthService {
     }
 
     if (role === userRoles.JUDGE) {
-      if (!judgeSecretKey || !judgeId) {
-        throw new ApiError(400, "judgeSecretKey and judgeId are required when role is Judge")
+      if (!judgeSecretKey) {
+        throw new ApiError(400, "judgeSecretKey is required when role is Judge")
       }
       if (judgeSecretKey !== envConfig.judgeSecretKey) {
         throw new ApiError(403, "Invalid judge secret key")
@@ -69,13 +69,6 @@ class AdminAuthService {
       throw new ApiError(409, "User already exists with this email")
     }
 
-    if (role === userRoles.JUDGE) {
-      const existingUserByJudgeId = await authRepository.findByJudgeId(judgeId)
-      if (existingUserByJudgeId) {
-        throw new ApiError(409, "Judge ID is already registered")
-      }
-    }
-
     // ── Build user record — fields vary by role ──
     const userData = {
       fullName: role === userRoles.JUDGE ? "Judge" : "Admin",
@@ -89,11 +82,6 @@ class AdminAuthService {
       graduationYear: new Date().getFullYear(),
       skills: []
     };
-
-    // Only attach judgeId for judge accounts
-    if (role === userRoles.JUDGE) {
-      userData.judgeId = judgeId
-    }
 
     const user = await authRepository.createUser(userData)
 

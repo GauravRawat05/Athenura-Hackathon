@@ -536,7 +536,9 @@ export default function CreateHackathonPage() {
   const [regDeadline, setRegDeadline] = useState("");
   const [subDeadline, setSubDeadline] = useState("");
   const [prizePool, setPrizePool] = useState("");
-  const [regFee, setRegFee] = useState("free");
+  const [soloFee, setSoloFee] = useState("");
+  const [teamFee, setTeamFee] = useState("");
+  const [internFee, setInternFee] = useState("");
   const [currency, setCurrency] = useState("INR");
   const [domains, setDomains] = useState([]);
   const [domainInput, setDomainInput] = useState("");
@@ -546,7 +548,19 @@ export default function CreateHackathonPage() {
   const [studentOnly, setStudentOnly] = useState(true);
   const [years, setYears] = useState([]);
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [loading, setLoading] = useState(false);
   const fileRef = useRef();
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (loading) {
+        e.preventDefault();
+        e.returnValue = "Hackathon is being created. Do not leave the page.";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [loading]);
 
   // Load Hackathon Details in Edit Mode
   useEffect(() => {
@@ -644,7 +658,9 @@ export default function CreateHackathonPage() {
         setSubDeadline(toLocalDatetimeString(data.submissionDeadline));
 
         setPrizePool(data.prizePool || "");
-        setRegFee(data.registrationFee === 0 ? "free" : (data.registrationFee || ""));
+        setSoloFee(data.soloFee || "");
+        setTeamFee(data.teamFee || "");
+        setInternFee(data.internFee || "");
 
         // Map currency
         const currencyMap = {
@@ -690,7 +706,7 @@ export default function CreateHackathonPage() {
   };
 
   const handleSaveDraft = () => {
-    const draft = { title, slug, desc, status, mode, allowedModes, minTeam, maxTeam, startDate, endDate, regDeadline, subDeadline, prizePool, regFee, currency, domains, problem, criteria, rules, studentOnly, years };
+    const draft = { title, slug, desc, status, mode, allowedModes, minTeam, maxTeam, startDate, endDate, regDeadline, subDeadline, prizePool, soloFee, teamFee, internFee, currency, domains, problem, criteria, rules, studentOnly, years };
     localStorage.setItem("hackathonDraft", JSON.stringify(draft));
     alert("Draft saved!");
   };
@@ -699,6 +715,7 @@ export default function CreateHackathonPage() {
     if (!title || !status || !mode) { alert("Please fill in all required fields (Title, Status, Mode)."); return; }
     if (!startDate || !endDate || !regDeadline || !subDeadline) { alert("Please fill in all date fields."); return; }
 
+    setLoading(true);
     const backendCurrency = currency === "USD" || currency === "EUR" ? "DOLLAR" : "INR";
 
     let backendMode = [];
@@ -728,15 +745,11 @@ export default function CreateHackathonPage() {
       allowedGraduationYears: years.map(Number)
     };
 
-    let backendRegFee = 0;
-    if (regFee && regFee.trim().toLowerCase() !== "free") {
-      backendRegFee = Number(regFee) || 0;
-    }
-
     if (criteria.length > 0) {
       const totalWeight = criteria.reduce((sum, c) => sum + Number(c.weight || 0), 0);
       if (totalWeight !== 100) {
         alert(`Total judging criteria weight must equal 100%. Currently it is ${totalWeight}%.`);
+        setLoading(false);
         return;
       }
     }
@@ -759,7 +772,9 @@ export default function CreateHackathonPage() {
       payload.append("registrationDeadline", new Date(regDeadline).toISOString());
       payload.append("submissionDeadline", new Date(subDeadline).toISOString());
       payload.append("prizePool", Number(prizePool) || 0);
-      payload.append("registrationFee", backendRegFee);
+      payload.append("soloFee", Number(soloFee) || 0);
+      payload.append("teamFee", Number(teamFee) || 0);
+      payload.append("internFee", Number(internFee) || 0);
       payload.append("currency", backendCurrency);
       payload.append("minTeamSize", Number(minTeam) || 1);
       payload.append("maxTeamSize", Number(maxTeam) || 4);
@@ -781,7 +796,9 @@ export default function CreateHackathonPage() {
         registrationDeadline: new Date(regDeadline).toISOString(),
         submissionDeadline: new Date(subDeadline).toISOString(),
         prizePool: Number(prizePool) || 0,
-        registrationFee: backendRegFee,
+        soloFee: Number(soloFee) || 0,
+        teamFee: Number(teamFee) || 0,
+        internFee: Number(internFee) || 0,
         currency: backendCurrency,
         minTeamSize: Number(minTeam) || 1,
         maxTeamSize: Number(maxTeam) || 4,
@@ -804,8 +821,9 @@ export default function CreateHackathonPage() {
       localStorage.removeItem("hackathonDraft");
       navigate("/admin/hackathons");
     } catch (err) {
-      
       alert("Failed to save hackathon: " + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -822,9 +840,9 @@ export default function CreateHackathonPage() {
               <Icons.Save size={15} />
               <span className="btn-text">Save Draft</span>
             </button>
-            <button className="btn-create" onClick={handleCreate}>
+            <button className="btn-create" onClick={handleCreate} disabled={loading} style={{ opacity: loading ? 0.6 : 1 }}>
               <Icons.PlusCircle size={15} />
-              <span className="btn-text">{isEdit ? "Save Changes" : "Create"}</span>
+              <span className="btn-text">{loading ? "Saving..." : (isEdit ? "Save Changes" : "Create")}</span>
             </button>
             <div className="avatar">
               <img src="https://i.pravatar.cc/80" alt="Account" />
@@ -912,15 +930,22 @@ export default function CreateHackathonPage() {
               <div className="card-title">4. Prize & Fees</div>
               <div className="fields">
                 <Field label="Prize Pool (₹)" required>
-                  <input className="input" value={prizePool} onChange={(e) => setPrizePool(e.target.value)} placeholder="Enter prize pool amount" />
+                  <input className="input" type="number" value={prizePool} onChange={(e) => setPrizePool(e.target.value)} placeholder="Enter prize pool" />
                 </Field>
-                <Field label="Registration Fee (₹)" required>
-                  <input className="input" value={regFee} onChange={(e) => setRegFee(e.target.value)} placeholder="Enter registration fee" />
+                <div className="grid-2">
+                  <Field label="Solo Fee (₹)" required>
+                    <input className="input" type="number" value={soloFee} onChange={(e) => setSoloFee(e.target.value)} placeholder="Solo fee" />
+                  </Field>
+                  <Field label="Team Fee (₹)" required>
+                    <input className="input" type="number" value={teamFee} onChange={(e) => setTeamFee(e.target.value)} placeholder="Team fee" />
+                  </Field>
+                </div>
+                <Field label="Intern Fee (₹)" required>
+                  <input className="input" type="number" value={internFee} onChange={(e) => setInternFee(e.target.value)} placeholder="Intern fee" />
                 </Field>
                 <Field label="Currency" required>
                   <ThemedSelect value={currency} onChange={setCurrency} options={["INR","USD","EUR"]} />
                 </Field>
-                <p className="helper">Total prize money and registration fee for participants</p>
               </div>
             </div>
 
