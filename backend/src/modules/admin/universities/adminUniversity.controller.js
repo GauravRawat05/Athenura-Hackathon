@@ -33,17 +33,36 @@ class AdminUniversityController {
   }
 
   async createUniversity(req, res) {
-    const { name, code, email, phone, location, state, country, website } = req.body
+    const {
+      name,
+      code,
+      email,
+      phone,
+      address,
+      city,
+      state,
+      country,
+      website,
+      contact,
+      contactEmail,
+      status,
+      color
+    } = req.body
 
     const university = await adminUniversityService.createUniversity({
       name,
       code,
       email,
       phone,
-      location,
+      address,
+      city,
       state,
       country,
-      website
+      website,
+      contact,
+      contactEmail,
+      status,
+      color
     })
 
     return res.status(201).json(new ApiResponse(201, university, 'University created successfully'))
