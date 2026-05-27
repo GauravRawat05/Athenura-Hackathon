@@ -23,6 +23,7 @@ import MyHackathons from '../pages/participant/MyHackathons'
 import MySubmissions from '../pages/participant/MySubmissions'
 import MyResults from '../pages/participant/MyResults'
 import ExploreHackathons from '../pages/participant/ExploreHackathons'
+import TeamsPage from '../pages/dashboard/TeamsPage'
 import Profile from '../pages/participant/Profile'
 
 import AdminDashboard from '../pages/admin/AdminDashboard'
@@ -115,6 +116,7 @@ export default function AppRoutes() {
       <Route path="/explore-hackathons" element={<ProtectedRoute><Layout><ExploreHackathons /></Layout></ProtectedRoute>} />
       <Route path="/my-submissions" element={<Navigate to="/my-hackathons" replace />} />
       <Route path="/my-results" element={<ProtectedRoute><Layout><MyResults /></Layout></ProtectedRoute>} />
+      <Route path="/dashboard/teams" element={<ProtectedRoute><Layout><TeamsPage /></Layout></ProtectedRoute>} />
       <Route path="/dashboard/hackathons/:id" element={<ProtectedRoute><Layout><DashboardHackathonDetail /></Layout></ProtectedRoute>} />
       <Route path="/dashboard/hackathons/:id/join" element={<ProtectedRoute><Layout><DashboardHackathonJoin /></Layout></ProtectedRoute>} />
 

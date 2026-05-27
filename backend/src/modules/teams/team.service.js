@@ -105,6 +105,32 @@ class TeamService {
   }
 
   /**
+   * Delete team (leader only)
+   */
+  async deleteTeam(teamId, userId) {
+    const team = await this.getTeamById(teamId);
+
+    // Only leader can delete team
+    if (team.leader._id.toString() !== userId.toString()) {
+      throw new ApiError(403, "Only team leader can delete team");
+    }
+
+    // Check if team has participated in any hackathon (has registration)
+    const { default: registrationRepository } = await import("../registrations/registration.repository.js");
+    const registration = await registrationRepository.findByHackathonAndTeam(
+      team.hackathonId._id,
+      teamId
+    );
+
+    if (registration) {
+      throw new ApiError(400, "Cannot delete team that has already registered for a hackathon");
+    }
+
+    await teamRepository.softDelete(teamId);
+    return true;
+  }
+
+  /**
    * Remove member from team
    */
   async removeMember(teamId, memberIdToRemove, userId) {
@@ -142,6 +168,14 @@ class TeamService {
       memberIdToRemove
     );
     return updatedTeam;
+  }
+
+  /**
+   * Get all teams a user belongs to
+   */
+  async getMyTeamsService(userId) {
+    const teams = await teamRepository.findTeamsByUserId(userId);
+    return teams;
   }
 
   /**

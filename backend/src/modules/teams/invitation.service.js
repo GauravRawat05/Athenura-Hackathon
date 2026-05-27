@@ -110,13 +110,11 @@ class InvitationService {
   /**
    * Accept a team invitation
    */
-  async acceptInvitation(token, userId) {
-    const hashedToken = invitationToken.hashToken(token);
-
-    const invitation = await invitationRepository.findByToken(hashedToken);
+  async acceptInvitation(invitationId, userId) {
+    const invitation = await invitationRepository.findById(invitationId);
 
     if (!invitation) {
-      throw new ApiError(404, "Invitation not found. If you are testing, ensure you use the plain token from the inviteLink, not the hashed one from the database.");
+      throw new ApiError(404, "Invitation not found");
     }
 
     if (!invitation.teamId) {
@@ -186,10 +184,8 @@ class InvitationService {
   /**
    * Decline a team invitation
    */
-  async declineInvitation(token, userId) {
-    const hashedToken = invitationToken.hashToken(token);
-
-    const invitation = await invitationRepository.findByToken(hashedToken);
+  async declineInvitation(invitationId, userId) {
+    const invitation = await invitationRepository.findById(invitationId);
 
     if (!invitation) {
       throw new ApiError(404, "Invitation not found");
@@ -224,6 +220,10 @@ class InvitationService {
     }
 
     return { message: "Invitation declined successfully" };
+  }
+
+  async getMyInvitations(userId) {
+    return await invitationRepository.findByInvitedUser(userId);
   }
 
   /**

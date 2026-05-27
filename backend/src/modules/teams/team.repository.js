@@ -43,6 +43,8 @@ class TeamRepository {
       // Apply safe field selection for user-related populations
       if (field === "leader" || field === "members.userId") {
         query = query.populate(field, USER_SAFE_FIELDS);
+      } else if (field === "hackathonId") {
+        query = query.populate("hackathonId", "title startDate endDate");
       } else {
         query = query.populate(field);
       }
@@ -54,7 +56,7 @@ class TeamRepository {
    * Find teams by hackathon ID
    */
   async findByHackathon(hackathonId) {
-    return await Team.find({ hackathonId, isActive: true });
+    return await Team.find({ hackathonId, isActive: true }).populate("hackathonId", "title");
   }
 
   /**
@@ -65,7 +67,20 @@ class TeamRepository {
       hackathonId,
       isActive: true,
       "members.userId": userId
-    });
+    }).populate("hackathonId", "title");
+  }
+
+  /**
+   * Find all teams by member user ID
+   */
+  async findTeamsByUserId(userId) {
+    return await Team.find({
+      isActive: true,
+      "members.userId": userId
+    })
+    .populate("leader", USER_SAFE_FIELDS)
+    .populate("members.userId", USER_SAFE_FIELDS)
+    .populate("hackathonId", "title");
   }
 
   /**

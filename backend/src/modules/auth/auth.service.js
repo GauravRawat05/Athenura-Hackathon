@@ -14,6 +14,7 @@ import {
   sendPasswordResetEmail,
   EMAIL_TYPES
 } from "../notifications/notification.mailer.js"
+import Team from "../teams/team.model.js"
 
 const userUtils = new UserUtils()
 
@@ -51,11 +52,20 @@ class AuthService {
   }
 
   /**
-   * Get sanitized user data (without sensitive fields)
+   * Get sanitized user data (without sensitive fields) and include teamId
    */
   async getSanitizedUser(userId) {
     const excludeFields = userUtils.getSensitiveFieldsToExclude()
-    return await authRepository.findUserById(userId, excludeFields)
+    const user = await authRepository.findUserById(userId, excludeFields)
+    
+    if (user) {
+      const team = await Team.findOne({ "members.userId": userId, isActive: true })
+      if (team) {
+        user._doc.teamId = team._id
+      }
+    }
+    
+    return user
   }
 
   /**

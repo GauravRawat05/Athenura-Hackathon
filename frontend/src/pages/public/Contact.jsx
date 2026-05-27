@@ -252,7 +252,7 @@ function BentoCommunity() {
     const channels = [
         { icon: "📢", name: "announcements", desc: "Platform updates & new hackathons" },
         { icon: "🛠️", name: "dev-support",   desc: "Technical help from the community" },
-        { icon: "🏆", name: "showcase",       desc: "Show off your winning projects" },
+        { icon: "", name: "showcase",       desc: "Show off your winning projects" },
     ];
     return (
         <a href="https://discord.gg/hackforge" target="_blank" rel="noreferrer"
