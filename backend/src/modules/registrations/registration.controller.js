@@ -1,67 +1,34 @@
-/**
-   registration.controller.js
-   Handles HTTP request/response flow for registration, including parsing inputs and returning standardized API responses.
- */
-import ApiResponse from "../../libs/apiResponse.js";
-import registrationService from "./registration.service.js";
+// registration.controller.js
+import asyncHandler from '../../libs/asyncHandler.js';
+import ApiResponse  from '../../libs/apiResponse.js';
+import { registrationService } from './registration.service.js';
+import { initiateRegistrationSchema } from './registration.validation.js';
+import { validate } from '../../middleware/validate.middleware.js';
 
-class RegistrationController {
-  
-   // Register for a hackathon (solo or team)
-   //POST /hackathons/:hackathonId/register
-  async register(req, res) {
+// Endpoint: POST /hackathons/:hackathonId/initiate-registration
+const initiateRegistration = asyncHandler(async (req, res) => {
     const { hackathonId } = req.params;
-    const { mode, userId, teamId, notes } = req.body;
-    const callerId = req.user._id;
+    const { registrationType, teamId, isIntern, internProofUrl, universityEmail } = req.body;
 
-    const result = await registrationService.registerForHackathon({
-      hackathonId,
-      mode,
-      userId,
-      teamId,
-      notes
-    }, callerId);
+    const result = await registrationService.initiateHackathonRegistration(
+        req.user._id, 
+        hackathonId,
+        registrationType,
+        teamId,
+        { isIntern, internProofUrl, universityEmail }
+    );
 
-    return res
-      .status(201)
-      .json(new ApiResponse(201, result, "Registration successful"));
-  }
+    return res.status(200).json(
+        new ApiResponse(200, result, 'Registration initiation successful. Proceed to payment.')
+    );
+});
 
-  /**
-   * Get current user's registrations
-   * GET /registrations/me
-   */
-  async getMyRegistrations(req, res) {
-    const userId = req.user._id;
-    const { status, hackathonId } = req.query;
+// Endpoint: GET /registrations/me
+const getMyRegistrations = asyncHandler(async (req, res) => {
+    const registrations = await registrationService.getUserRegistrations(req.user._id);
+    return res.status(200).json(
+        new ApiResponse(200, registrations, 'Registrations fetched successfully.')
+    );
+});
 
-    const filters = {};
-    if (status) filters.status = status;
-    if (hackathonId) filters.hackathonId = hackathonId;
-
-    const registrations = await registrationService.getMyRegistrations(userId, filters);
-
-    return res
-      .status(200)
-      .json(new ApiResponse(200, registrations, "Registrations fetched successfully"));
-  }
-
-  /**
-   * Cancel a registration
-   * PATCH /registrations/:registrationId/cancel
-   */
-  async cancel(req, res) {
-    const { registrationId } = req.params;
-    const { reason } = req.body;
-    const userId = req.user._id;
-
-    const registration = await registrationService.cancelRegistration(registrationId, userId, reason);
-
-    return res
-      .status(200)
-      .json(new ApiResponse(200, registration, "Registration cancelled successfully"));
-  }
-}
-
-const registrationController = new RegistrationController();
-export default registrationController;
+export { initiateRegistration, getMyRegistrations };

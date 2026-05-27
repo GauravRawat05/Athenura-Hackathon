@@ -8,7 +8,7 @@ import ApiError from "../../../libs/apiError.js";
 import asyncHandler from "../../../libs/asyncHandler.js";
 import adminHackathonController from "./adminHackathon.controller.js";
 import { verifyAdmin, verifyJWT } from "../../../middleware/auth.middleware.js";
-import { validate } from "../../registrations/registration.validation.js";
+import { validate } from "../../../middleware/validate.middleware.js"; // Assuming a validation middleware exists
 import { 
   createHackathonValidation, 
   updateHackathonValidation, 

@@ -1,5 +1,5 @@
 import Hackathon from './hackathon.model.js'; // Corrected filename
-import Registration from '../../registrations/registration.model.js';
+import { Registration } from '../../registrations/registration.model.js';
 import Team from '../../teams/team.model.js';
 import User from '../../users/user.model.js';
 import mongoose from 'mongoose';

@@ -3,7 +3,7 @@
   Encapsulates MongoDB/Mongoose database queries for analytics.
  */
 
-import Registration from "../../registrations/registration.model.js";
+import {Registration} from "../../registrations/registration.model.js";
 import { Payment } from "../../payments/payment.model.js";
 import Submission from "../../submissions/submission.model.js";
 import Result from "../../results/result.model.js";

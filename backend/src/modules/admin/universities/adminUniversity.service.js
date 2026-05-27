@@ -5,7 +5,7 @@
 import ApiError from '../../../libs/apiError.js'
 import University from '../../universities/university.model.js'
 import User from '../../users/user.model.js'
-import Registration from '../../registrations/registration.model.js'
+import { Registration } from '../../registrations/registration.model.js'
 import Submission from '../../submissions/submission.model.js'
 import Result from '../../results/result.model.js'
 
