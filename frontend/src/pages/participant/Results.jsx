@@ -193,7 +193,7 @@ function LeaderboardRow({ row, index }) {
                 fontSize: 10, fontWeight: 700, color: GOLD,
                 background: `${GOLD}15`, border: `1px solid ${GOLD}30`,
                 padding: "2px 8px", borderRadius: 50,
-              }}>🏆 {row.prize}</span>
+              }}> {row.prize}</span>
             )}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12, color: "rgba(3,4,94,0.45)", flexWrap: "wrap", marginTop: 3 }}>
@@ -368,7 +368,7 @@ export default function Results() {
                   { icon: "🗓", label: hackathonDetails.date },
                   { icon: "🧠", label: hackathonDetails.domain },
                   { icon: "👥", label: `${hackathonDetails.participants.toLocaleString("en-IN")} Participants` },
-                  { icon: "🏆", label: `Prize Pool: ${hackathonDetails.prizePool}`, highlight: true },
+                  { icon: "", label: `Prize Pool: ${hackathonDetails.prizePool}`, highlight: true },
                 ].map((m, i) => (
                   <span key={i} style={{
                     display: "inline-flex", alignItems: "center", gap: 5,
@@ -420,7 +420,7 @@ export default function Results() {
                   All Participants
                 </p>
                 <h2 style={{ fontSize: 28, fontWeight: 800, color: NAVY, fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-.02em" }}>
-                  🏆 Global Leaderboard
+                   Global Leaderboard
                 </h2>
                 <p style={{ fontSize: 13.5, color: "rgba(3,4,94,0.45)", marginTop: 5 }}>
                   Ranks 1–{allLeaderboard.length} · {hackathonDetails.teams} teams total

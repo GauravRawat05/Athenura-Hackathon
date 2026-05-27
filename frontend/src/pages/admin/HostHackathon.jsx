@@ -992,7 +992,7 @@ export default function HostHackathon() {
                     flexShrink: 0,
                   }}
                 >
-                  🏆
+                  
                 </div>
                 <div>
                   <div

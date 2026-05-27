@@ -686,7 +686,7 @@ function HackCard({ hackathon, index, onViewFull }) {
               background: `${GOLD}18`, border: `2px solid ${GOLD}`,
               display: "flex", alignItems: "center", justifyContent: "center",
               fontSize: 16,
-            }}>🏆</div>
+            }}></div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 9.5, fontWeight: 700, color: GOLD, textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 2 }}>Champion</div>
               <div style={{ fontSize: 13, fontWeight: 700, color: NAVY, fontFamily: "'Poppins',sans-serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -1263,7 +1263,7 @@ export default function Result() {
                 border: "1px solid rgba(255,255,255,0.18)", borderRadius: "14px",
                 padding: "10px 18px", color: "#fff", fontWeight: "700", fontSize: "13px", zIndex: 10,
               }}>
-                🏆 Live Results
+                 Live Results
               </div>
 
               {/* Bottom Left Card */}

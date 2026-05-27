@@ -8,6 +8,19 @@ import invitationService from "./invitation.service.js";
 
 class TeamController {
   /**
+   * Get all teams for current user
+   */
+  async getMyTeams(req, res) {
+    const userId = req.user._id;
+
+    const teams = await teamService.getMyTeamsService(userId);
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, teams, "Teams fetched successfully"));
+  }
+
+  /**
    * Create a new team
    */
   async createTeam(req, res) {
@@ -56,6 +69,20 @@ class TeamController {
   }
 
   /**
+   * Delete team (leader only)
+   */
+  async deleteTeam(req, res) {
+    const { teamId } = req.params;
+    const userId = req.user._id;
+
+    await teamService.deleteTeam(teamId, userId);
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, null, "Team deleted successfully"));
+  }
+
+  /**
    * Remove member from team
    */
   async removeMember(req, res) {
@@ -89,13 +116,26 @@ class TeamController {
   }
 
   /**
+   * Get invitations for current user
+   */
+  async getMyInvitations(req, res) {
+    const userId = req.user._id;
+
+    const invitations = await invitationService.getMyInvitations(userId);
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, invitations, "Invitations fetched successfully"));
+  }
+
+  /**
    * Accept team invitation
    */
   async acceptInvitation(req, res) {
-    const { token } = req.params;
+    const { invitationId } = req.params;
     const userId = req.user._id;
 
-    const result = await invitationService.acceptInvitation(token, userId);
+    const result = await invitationService.acceptInvitation(invitationId, userId);
 
     return res
       .status(200)
@@ -103,13 +143,13 @@ class TeamController {
   }
 
   /**
-   * Decline team invitation
+   * Decline a team invitation
    */
   async declineInvitation(req, res) {
-    const { token } = req.params;
+    const { invitationId } = req.params;
     const userId = req.user._id;
 
-    const result = await invitationService.declineInvitation(token, userId);
+    const result = await invitationService.declineInvitation(invitationId, userId);
 
     return res
       .status(200)

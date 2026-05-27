@@ -451,7 +451,7 @@ function CertCard({ cert, index }) {
               fontSize: 12, fontFamily: "Nunito,sans-serif", fontWeight: 800,
               color: cert.color.tag, background: cert.color.tagBg,
               padding: "4px 12px", borderRadius: 20,
-            }}>🏆 Prize Won: {cert.prize}</span>
+            }}> Prize Won: {cert.prize}</span>
           </div>
         )}
 

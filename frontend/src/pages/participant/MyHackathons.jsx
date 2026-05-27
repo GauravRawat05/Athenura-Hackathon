@@ -818,7 +818,7 @@ function ResultModal({ hackathon, onClose }) {
                       color: tc.accentColor, background: "#eff6ff",
                       padding: "6px 14px", borderRadius: 20, border: "1px dashed #bfdbfe",
                     }}>
-                      🏆 Prize Winner: {result.prize}
+                       Prize Winner: {result.prize}
                     </span>
                   )}
                   {result.certificateReady && (

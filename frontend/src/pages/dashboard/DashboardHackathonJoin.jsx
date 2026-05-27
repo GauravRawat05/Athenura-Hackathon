@@ -77,18 +77,25 @@ export default function HackathonJoin() {
 
   const [h, setH] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [fetchingTeams, setFetchingTeams] = useState(false);
+  const [myTeams, setMyTeams] = useState([]);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [registrationResult, setRegistrationResult] = useState({});
+  
+  // Conditionally set STEPS based on hackathon mode
+  const [STEPS, setSteps] = useState(["Your Info", "Team Setup", "Confirm"]);
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
+  
   const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    college: "",
+    name: user?.fullName || user?.name || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
+    college: user?.university || user?.college || "",
     github: "",
     teamName: "",
-    teamMode: "create",
+    teamId: "",
+    teamMode: "join",
     inviteCode: "",
     teammates: [""],
     agreeTerms: false,
@@ -106,23 +113,30 @@ export default function HackathonJoin() {
           
           const statusMap = { upcoming: 'upcoming', ongoing: 'ongoing', past: 'completed', judging: 'completed', draft: 'upcoming' };
           const status = statusMap[raw.status] || 'upcoming';
-          const fee = raw.registrationFee === 0 ? 'Free' : `$${raw.registrationFee}`;
+          
+          // Determine fee correctly
+          const fee = raw.registrationFee || (raw.soloFee || raw.teamFee || 0);
           
           const mapped = {
             id: raw._id,
             title: raw.title,
             status,
-            fee,
-            feeNum: raw.registrationFee || 0,
-            mode: raw.allowedModes?.[0]?.toLowerCase() || 'team',
+            fee: fee === 0 ? "Free" : `${raw.currency || 'INR'} ${fee}`,
+            feeNum: fee,
+            currency: raw.currency || 'INR',
+            mode: raw.allowedModes?.[0]?.toLowerCase() || 'team', // Assuming 'solo' or 'team'
             teamSize: { min: raw.minTeamSize || 2, max: raw.maxTeamSize || 4 },
           };
           if (mounted) {
             setH(mapped);
-            setForm(f => ({
-              ...f,
-              teamMode: mapped.mode === "solo" ? "solo" : "create"
-            }));
+            // Adjust steps
+            if (mapped.mode === "solo") {
+              setSteps(["Your Info", "Confirm"]);
+              setForm(f => ({ ...f, teamMode: "solo" }));
+            } else {
+              setSteps(["Your Info", "Team Setup", "Confirm"]);
+              setForm(f => ({ ...f, teamMode: "select" }));
+            }
           }
         }
       } catch (err) {
@@ -135,9 +149,31 @@ export default function HackathonJoin() {
   }, [id]);
 
   useEffect(() => {
+    const fetchTeams = async () => {
+      try {
+        setFetchingTeams(true);
+        const res = await api.get('/teams/me');
+        if (res.data?.data) {
+          // Filter teams for this hackathon
+          const filtered = res.data.data.filter(t => t.hackathonId === id);
+          setMyTeams(filtered);
+          if (filtered.length > 0) {
+            setForm(f => ({ ...f, teamId: filtered[0]._id, teamMode: "select" }));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch teams:", err);
+      } finally {
+        setFetchingTeams(false);
+      }
+    };
+    if (id) fetchTeams();
+  }, [id]);
+
+  useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await api.get('/users/profile'); // Assuming this endpoint exists
+        const res = await api.get('/users/me'); // Correct endpoint
         if (res.data?.data) {
           const u = res.data.data;
           setForm(f => ({
@@ -228,8 +264,8 @@ export default function HackathonJoin() {
       if (!form.college.trim()) e.college = "College/Organization is required";
     }
     if (step === 1 && h.mode === "team") {
-      if (form.teamMode === "create" && !form.teamName.trim())
-        e.teamName = "Team name is required";
+      if (form.teamMode === "select" && !form.teamId)
+        e.teamId = "Please select a team";
       if (form.teamMode === "join" && !form.inviteCode.trim())
         e.inviteCode = "Invite code is required";
     }
@@ -256,36 +292,20 @@ export default function HackathonJoin() {
         const res = await hackathonService.register(id, { mode: "solo" });
         setRegistrationResult(res?.data?.data || {});
         setSubmitted(true);
-      } else if (form.teamMode === "create") {
-        // Create Team first
-        const teamRes = await api.post(`/teams/hackathons/${id}/teams`, {
-          teamName: form.teamName
-        });
-        const createdTeam = teamRes?.data?.data;
-        if (!createdTeam?._id) {
-          throw new Error("Failed to create team");
-        }
-        
-        // Invite members (if any)
-        const activeEmails = form.teammates.filter(tm => tm && tm.trim());
-        for (const email of activeEmails) {
-          try {
-            await api.post(`/teams/${createdTeam._id}/invitations`, { email });
-          } catch (e) {
-            
-          }
-        }
-        
-        // Register Team for Hackathon
+      } else if (form.teamMode === "select") {
+        // Register existing team
         const regRes = await hackathonService.register(id, {
           mode: "team",
-          teamId: createdTeam._id
+          teamId: form.teamId
         });
         setRegistrationResult(regRes?.data?.data || {});
         setSubmitted(true);
       } else if (form.teamMode === "join") {
         // Join Team with Invite Code
         await api.post(`/teams/team-invitations/${form.inviteCode}/accept`);
+        // After joining, we might need to fetch the team ID to register, 
+        // but typically joining is its own step. 
+        // The user probably wants to just join here.
         setSubmitted(true);
       }
     } catch (err) {
@@ -740,7 +760,7 @@ export default function HackathonJoin() {
                     </label>
                     <div style={{ display: "flex", gap: 10 }}>
                       {[
-                        { val: "create", label: "➕ Create a Team" },
+                        { val: "select", label: "📋 Select Existing Team" },
                         { val: "join", label: "🔗 Join with Code" },
                       ].map(({ val, label }) => (
                         <button
@@ -773,87 +793,59 @@ export default function HackathonJoin() {
                     </div>
                   </div>
 
-                  {form.teamMode === "create" ? (
+                  {form.teamMode === "select" ? (
                     <>
-                      <div>
-                        <label style={labelStyle}>Team Name *</label>
-                        <input
-                          value={form.teamName}
-                          onChange={(e) => set("teamName", e.target.value)}
-                          placeholder="e.g. Code Ninjas"
-                          style={inputStyle(errors.teamName)}
-                        />
-                        {errors.teamName && (
-                          <p style={errorStyle}>{errors.teamName}</p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label style={labelStyle}>
-                          Invite Teammates (emails){" "}
-                          <span style={{ opacity: 0.6, fontWeight: 400 }}>
-                            — up to {h.teamSize.max - 1} more
-                          </span>
-                        </label>
-                        {form.teammates.map((tm, idx) => (
-                          <div
-                            key={idx}
-                            style={{ display: "flex", gap: 8, marginBottom: 8 }}
+                      {fetchingTeams ? (
+                        <div style={{ textAlign: "center", padding: 20, color: C.mutedText }}>
+                          Loading your teams...
+                        </div>
+                      ) : myTeams.length > 0 ? (
+                        <div>
+                          <label style={labelStyle}>Select Your Team *</label>
+                          <select
+                            value={form.teamId}
+                            onChange={(e) => set("teamId", e.target.value)}
+                            style={inputStyle(errors.teamId)}
                           >
-                            <input
-                              value={tm}
-                              onChange={(e) => {
-                                const updated = [...form.teammates];
-                                updated[idx] = e.target.value;
-                                set("teammates", updated);
-                              }}
-                              placeholder={`teammate${idx + 1}@example.com`}
-                              style={{ ...inputStyle(false), flex: 1 }}
-                            />
-                            {form.teammates.length > 1 && (
-                              <button
-                                onClick={() =>
-                                  set(
-                                    "teammates",
-                                    form.teammates.filter((_, i) => i !== idx),
-                                  )
-                                }
-                                style={{
-                                  padding: "0 14px",
-                                  borderRadius: 10,
-                                  background: "#FEF2F2",
-                                  border: "1px solid #FECACA",
-                                  color: "#DC2626",
-                                  cursor: "pointer",
-                                  fontSize: 16,
-                                }}
-                              >
-                                ×
-                              </button>
-                            )}
-                          </div>
-                        ))}
-                        {form.teammates.length < h.teamSize.max - 1 && (
-                          <button
-                            onClick={() =>
-                              set("teammates", [...form.teammates, ""])
-                            }
-                            style={{
-                              padding: "9px 18px",
-                              borderRadius: 10,
-                              background: C.pillIdleBg,
-                              border: `1px dashed ${C.inputBorder}`,
-                              color: C.accentBlue,
-                              cursor: "pointer",
-                              fontSize: 13,
-                              fontFamily: "'Poppins', sans-serif",
-                              fontWeight: 600,
-                            }}
+                            <option value="">-- Choose a team --</option>
+                            {myTeams.map(t => (
+                              <option key={t._id} value={t._id}>
+                                {t.teamName} ({t.members?.length} members)
+                              </option>
+                            ))}
+                          </select>
+                          {errors.teamId && (
+                            <p style={errorStyle}>{errors.teamId}</p>
+                          )}
+                          <p style={{ fontSize: 12, color: C.mutedText, marginTop: 8 }}>
+                            Only teams created for <strong>{h.title}</strong> are shown here.
+                          </p>
+                          
+                          {/* Show selected team details */}
+                          {form.teamId && (
+                            <div style={{ marginTop: 16, padding: 16, background: C.sectionBg, borderRadius: 12, border: `1px solid ${C.cardBorder}` }}>
+                              <h4 style={{ margin: "0 0 8px", fontSize: 13, color: C.headingText }}>Selected Team Info:</h4>
+                              <p style={{ margin: "0 0 4px", fontSize: 12, color: C.mutedText }}>
+                                <strong>Leader:</strong> {myTeams.find(t => t._id === form.teamId)?.leader?.fullName || "You"}
+                              </p>
+                              <p style={{ margin: 0, fontSize: 12, color: C.mutedText }}>
+                                <strong>Members:</strong> {myTeams.find(t => t._id === form.teamId)?.members?.map(m => m.userId?.fullName).join(", ")}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div style={{ padding: 20, borderRadius: 16, background: "#FFFBEB", border: "1px solid #FDE68A", color: "#92400E", fontSize: 13 }}>
+                          ⚠️ No teams found for this hackathon. 
+                          <br />
+                          <button 
+                            onClick={() => routerNavigate("/dashboard/teams")}
+                            style={{ background: "none", border: "none", padding: 0, color: C.accentBlue, textDecoration: "underline", cursor: "pointer", fontWeight: 600, marginTop: 8 }}
                           >
-                            + Add Teammate
+                            Go to Teams page to create one
                           </button>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </>
                   ) : (
                     <div>
@@ -911,8 +903,11 @@ export default function HackathonJoin() {
                   { label: "College", value: form.college },
                   form.phone ? { label: "Phone", value: form.phone } : null,
                   form.github ? { label: "GitHub", value: form.github } : null,
-                  h.mode === "team" && form.teamMode === "create"
-                    ? { label: "Team Name", value: form.teamName }
+                  h.mode === "team" && form.teamMode === "select"
+                    ? { 
+                        label: "Team Name", 
+                        value: myTeams.find(t => t._id === form.teamId)?.teamName || "Selected Team" 
+                      }
                     : null,
                   h.mode === "team" && form.teamMode === "join"
                     ? {
@@ -922,7 +917,7 @@ export default function HackathonJoin() {
                     : null,
                   {
                     label: "Entry Fee",
-                    value: h.fee === 0 ? "Free 🎁" : `$${h.fee}`,
+                    value: h.fee === 0 ? "Free 🎁" : `${h.fee}`,
                   },
                 ]
                   .filter(Boolean)
@@ -1099,7 +1094,7 @@ export default function HackathonJoin() {
               ) : step === STEPS.length - 1 ? (
                 h.feeNum === 0
                   ? "Complete Registration 🚀"
-                  : `Pay $${h.feeNum} & Register 🚀`
+                  : `Pay ${h.fee} & Register 🚀`
               ) : (
                 "Continue →"
               )}

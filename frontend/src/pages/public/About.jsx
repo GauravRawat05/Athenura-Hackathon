@@ -540,7 +540,7 @@ export default function AboutPage() {
                                 <div style={{ position:"absolute", inset:0, background:"linear-gradient(135deg,rgba(3,4,94,0.6) 0%,rgba(41,98,255,0.3) 100%)" }} />
                                 <div style={{ position:"absolute", top:"50%", right:24, transform:"translateY(-50%)", fontSize:80, fontWeight:900, color:"rgba(255,255,255,0.08)", fontFamily:"monospace", lineHeight:1 }}>{"{ }"}</div>
                                 <div style={{ position:"absolute", top:20, left:20 }}>
-                                    <div style={{ background:"rgba(255,255,255,0.12)", backdropFilter:"blur(8px)", border:"1px solid rgba(255,255,255,0.2)", borderRadius:10, padding:"8px 14px", fontSize:12, color:"white", fontWeight:700 }}>🏆 Live Hackathon</div>
+                                    <div style={{ background:"rgba(255,255,255,0.12)", backdropFilter:"blur(8px)", border:"1px solid rgba(255,255,255,0.2)", borderRadius:10, padding:"8px 14px", fontSize:12, color:"white", fontWeight:700 }}> Live Hackathon</div>
                                 </div>
                             </div>
                             <div style={{ position:"absolute", bottom:-18, left:-18, background:NAVY, borderRadius:16, padding:"14px 20px", border:"1px solid rgba(255,255,255,0.12)", boxShadow:"0 16px 48px rgba(3,4,94,0.4)" }}>
