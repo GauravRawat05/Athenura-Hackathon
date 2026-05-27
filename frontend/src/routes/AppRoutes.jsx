@@ -52,7 +52,7 @@ import Layout from '../components/common/Layout'
 import AdminLayout from '../components/common/AdminLayout'
 import PublicLayout from '../components/common/PublicLayout'
 
-import PublicHackathonList from '../components/common/HackathonList'
+import Hackathons from '../pages/public/Hackathons'
 import HackathonJoin from '../pages/participant/HackathonJoin'
 import HostHackathon from '../pages/admin/HostHackathon'
 
@@ -86,8 +86,8 @@ export default function AppRoutes() {
       <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
       <Route path="/about" element={<PublicLayout><About /></PublicLayout>} />
       <Route path="/contact" element={<PublicLayout><Contact /></PublicLayout>} />
-      <Route path="/hackathons" element={<PublicLayout><PublicHackathonList /></PublicLayout>} />
-      <Route path="/hackathons/:id/join" element={<PublicLayout><HackathonJoin /></PublicLayout>} />
+      <Route path="/hackathons" element={<PublicLayout><Hackathons /></PublicLayout>} />
+      <Route path="/hackathons/:id/join" element={<ProtectedRoute><PublicLayout><HackathonJoin /></PublicLayout></ProtectedRoute>} />
       <Route path="/host" element={<PublicLayout><HostHackathon /></PublicLayout>} />
       <Route path="/admin-login" element={<AdminLogin />} />
       <Route path="/admin-register" element={<AdminRegister />} />

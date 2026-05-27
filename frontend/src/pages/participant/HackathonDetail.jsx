@@ -103,14 +103,13 @@ export default function HackathonDetail() {
 
   const handleRegisterClick = () => {
     if (!isAuthenticated) {
-      routerNavigate("/auth/login");
+      routerNavigate("/login");
       return;
     }
     if (h && h.status !== "past") {
       routerNavigate(`/hackathons/${id}/join`);
     }
   };
-
   const [h, setH] = useState(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");

@@ -4,12 +4,24 @@ import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../../store/authSlice";
 
 export default function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [activeLink, setActiveLink] = useState("Home");
-  const { isAuthenticated } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { isAuthenticated } = useSelector((state) => state.auth);
+
+  const NAV_LINKS = [
+    { label: "Home", path: "/" },
+    { label: "About", path: "/about" },
+    { label: "Result", path: "/result" },
+    { label: "Hackathons", path: "/hackathons", badge: true },
+    { label: "Contact", path: "/contact" },
+  ];
+
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [activeLink, setActiveLink] = useState(() => {
+    const matched = NAV_LINKS.find(link => link.path === window.location.pathname);
+    return matched ? matched.label : "Home";
+  });
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -19,16 +31,9 @@ export default function Navbar() {
 
   const handleLogout = () => {
     dispatch(logout());
-    navigate("/");
+    localStorage.clear();
+    navigate("/login");
   };
-
-  const NAV_LINKS = [
-    { label: "Home", path: "/" },
-    { label: "About", path: "/about" },
-    { label: "Result", path: "/result" },
-    { label: "Hackathons", path: "/hackathons", badge: true },
-    { label: "Contact", path: "/contact" },
-  ];
 
   return (
     <>
@@ -377,24 +382,30 @@ export default function Navbar() {
             <div className="hw-actions">
               {isAuthenticated ? (
                 <>
-                  <button className="hw-btn-ghost" onClick={() => navigate("/dashboard")}>
+                  <button
+                    className="hw-btn-primary"
+                    onClick={() => navigate("/dashboard")}
+                  >
                     Dashboard
                   </button>
-                  <button className="hw-btn-primary" onClick={handleLogout}>
-                    Logout
+                  <button
+                    className="hw-btn-ghost"
+                    onClick={handleLogout}
+                  >
+                    Log out
                   </button>
                 </>
               ) : (
                 <>
                   <button
-                    className="hw-btn-ghost"
-                    onClick={() => navigate("/auth/login")}
+                    className="hw-btn-primary"
+                    onClick={() => navigate("/login")}
                   >
                     Log in
                   </button>
                   <button
                     className="hw-btn-primary"
-                    onClick={() => navigate("/auth/register")}
+                    onClick={() => navigate("/register")}
                   >
                     Sign up free
                   </button>
@@ -436,22 +447,49 @@ export default function Navbar() {
               )}
             </button>
           ))}
-          <div className="hw-mobile-divider" />
           <div className="hw-mobile-row">
             {isAuthenticated ? (
-              <button className="hw-m-primary" onClick={handleLogout}>
-                Logout
-              </button>
+              <>
+                <button
+                  className="hw-m-primary"
+                  onClick={() => {
+                    navigate("/dashboard");
+                    setMenuOpen(false);
+                  }}
+                >
+                  Dashboard
+                </button>
+                <button
+                  className="hw-m-ghost"
+                  onClick={() => {
+                    handleLogout();
+                    setMenuOpen(false);
+                  }}
+                >
+                  Log out
+                </button>
+              </>
             ) : (
-              <button
-                className="hw-m-ghost"
-                onClick={() => {
-                  navigate("/auth/login");
-                  setMenuOpen(false);
-                }}
-              >
-                Log in
-              </button>
+              <>
+                <button
+                  className="hw-m-primary"
+                  onClick={() => {
+                    navigate("/login");
+                    setMenuOpen(false);
+                  }}
+                >
+                  Log in
+                </button>
+                <button
+                  className="hw-m-ghost"
+                  onClick={() => {
+                    navigate("/register");
+                    setMenuOpen(false);
+                  }}
+                >
+                  Sign up free
+                </button>
+              </>
             )}
           </div>
         </div>
