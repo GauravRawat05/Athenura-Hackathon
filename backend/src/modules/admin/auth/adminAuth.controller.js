@@ -10,7 +10,7 @@ class AdminAuthController {
 
   // ── Register — role in body decides whether Admin or Judge is created ──────
   async registerAdmin(req, res) {
-    const { email, password, confirmPassword, phone, role, adminSecretKey, judgeSecretKey, judgeId } = req.body
+    const { email, password, confirmPassword, phone, role, adminSecretKey, judgeSecretKey } = req.body
 
     const { user, accessToken, refreshToken } = await adminAuthService.registerAdminService({
       email,
@@ -19,8 +19,7 @@ class AdminAuthController {
       phone,
       role,
       adminSecretKey,
-      judgeSecretKey,
-      judgeId
+      judgeSecretKey
     })
 
     const options = {

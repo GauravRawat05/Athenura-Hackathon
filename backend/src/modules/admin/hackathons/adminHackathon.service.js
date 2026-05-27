@@ -44,9 +44,9 @@ const createHackathon = async (hackathonData) => {
   }
 
   // Handle "free" registration fee by converting it to 0
-  if (hackathonData.registrationFee === 'free') {
-    hackathonData.registrationFee = 0;
-  }
+  hackathonData.soloFee = Number(hackathonData.soloFee) || 0;
+  hackathonData.teamFee = Number(hackathonData.teamFee) || 0;
+  hackathonData.internFee = Number(hackathonData.internFee) || 0;
 
   // Normalize allowedModes if provided directly to handle case-sensitivity
   if (hackathonData.allowedModes && Array.isArray(hackathonData.allowedModes)) {
@@ -152,9 +152,9 @@ const updateHackathon = async (hackathonId, updateData) => {
   }
 
   // Handle "free" registration fee by converting it to 0
-  if (updateData.registrationFee === 'free') {
-    updateData.registrationFee = 0;
-  }
+  if (updateData.soloFee !== undefined) updateData.soloFee = Number(updateData.soloFee) || 0;
+  if (updateData.teamFee !== undefined) updateData.teamFee = Number(updateData.teamFee) || 0;
+  if (updateData.internFee !== undefined) updateData.internFee = Number(updateData.internFee) || 0;
 
   // Check if the hackathon exists
   const existingHackathon = await Hackathon.findById(hackathonId);

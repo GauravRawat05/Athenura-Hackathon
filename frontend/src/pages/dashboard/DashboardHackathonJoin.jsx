@@ -511,11 +511,11 @@ export default function HackathonJoin() {
             {h.title}
           </h1>
           <p style={{ margin: 0, color: "#90E0EF", fontSize: 14 }}>
-            💳 Registration fees: 
+            💳 Registration fee: 
             {h.fees?.solo > 0 && ` Solo: ${h.currency}${h.fees.solo}`}
             {h.fees?.team > 0 && ` Team: ${h.currency}${h.fees.team}`}
             {h.fees?.intern > 0 && ` Intern: ${h.currency}${h.fees.intern}`}
-            {(!h.fees?.solo || h.fees.solo === 0) && (!h.fees?.team || h.fees.team === 0) && (!h.fees?.intern || h.fees.intern === 0) && " Free"}
+            {!h.fees?.solo && !h.fees?.team && !h.fees?.intern && " Free"}
           </p>
         </div>
 

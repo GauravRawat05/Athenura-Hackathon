@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { hackathons as mockHackathons, domains, statuses, modes } from "../../data/hackathons";
 import { hackathonService } from "../../services/hackathonService";
 import { setHackathons, setLoading } from "../../store/hackathonSlice";
 import HackathonCard from "./HackathonCard";
@@ -17,10 +16,23 @@ const domainImages = {
   "IoT": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&q=80"
 };
 
+const domains = [
+  "All",
+  "AI/ML",
+  "Blockchain",
+  "HealthTech",
+  "Cybersecurity",
+  "Web3",
+  "IoT",
+  "Climate",
+];
+const statuses = ["all", "upcoming", "ongoing", "past"];
+const modes = ["all", "solo", "team"];
+
 const mapDbHackathon = (h) => {
   const domain = h.technologyDomains?.[0] || "AI/ML";
   const image = domainImages[domain] || "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&q=80";
-  
+
   const formatYMD = (dateStr) => {
     if (!dateStr) return "";
     return new Date(dateStr).toISOString().split('T')[0];
@@ -41,7 +53,7 @@ const mapDbHackathon = (h) => {
     teamSize: { min: h.minTeamSize || 2, max: h.maxTeamSize || 4 },
     participants: 120,
     image: image,
-    sponsors: h.sponsors?.map(s => s.name) || ["Athenura"],
+    sponsors: h.sponsors?.map(s => typeof s === 'string' ? s : s?.name || "Sponsor") || ["Athenura"],
     tags: h.technologyDomains || [],
     description: h.description,
     rules: h.rules || [
@@ -54,20 +66,6 @@ const mapDbHackathon = (h) => {
       { date: formatYMD(h.registrationDeadline), event: "Registration Deadline" },
       { date: formatYMD(h.submissionDeadline), event: "Submissions Deadline" },
       { date: formatYMD(h.endDate), event: "Winners Announced" }
-    ],
-    prizes: [
-      { place: "1st", amount: `$${(h.prizePool * 0.6).toLocaleString()}`, perks: "Incubation Support" },
-      { place: "2nd", amount: `$${(h.prizePool * 0.3).toLocaleString()}`, perks: "Cloud Credits" },
-      { place: "3rd", amount: `$${(h.prizePool * 0.1).toLocaleString()}`, perks: "Swag Pack" }
-    ],
-    judging: h.judgingCriteria?.map(c => ({
-      criterion: c.name,
-      weight: c.weight
-    })) || [
-      { criterion: "Innovation", weight: 30 },
-      { criterion: "Technical Execution", weight: 30 },
-      { criterion: "Impact & Scalability", weight: 25 },
-      { criterion: "Presentation", weight: 15 }
     ]
   };
 };
@@ -92,16 +90,15 @@ export default function HackathonList() {
       dispatch(setLoading(true));
       try {
         const res = await hackathonService.getAllHackathons();
-        if (res.data?.success && res.data?.data) {
+        if (res.data?.data) {
           const dbHacks = res.data.data.map(mapDbHackathon);
-          const merged = [...dbHacks, ...mockHackathons.filter(sh => !dbHacks.some(dh => dh.title.toLowerCase() === sh.title.toLowerCase()))];
-          dispatch(setHackathons(merged));
+          dispatch(setHackathons(dbHacks));
         } else {
-          dispatch(setHackathons(mockHackathons));
+          dispatch(setHackathons([]));
         }
       } catch (err) {
         console.error("Error fetching hackathons:", err);
-        dispatch(setHackathons(mockHackathons));
+        dispatch(setHackathons([]));
       } finally {
         dispatch(setLoading(false));
       }
@@ -353,7 +350,7 @@ export default function HackathonList() {
             }}
           >
             {[
-              ["Hackathons", hackathonsList.length + "+"],
+              ["Hackathons", hackathons.length + "+"],
               ["Prize Pool", "$120K+"],
               ["Participants", "4,660+"],
               ["Countries", "60+"],

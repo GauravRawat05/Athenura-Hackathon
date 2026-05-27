@@ -1,6 +1,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import AdminNotifications from '../pages/admin/AdminNotifications'
+import AdminLogin from '../pages/admin/auth/AdminLogin'
+import AdminRegister from '../pages/admin/auth/AdminRegister'
 import Login from '../pages/auth/Login'
 import Register from '../pages/auth/Register'
 import VerifyEmail from '../pages/auth/VerifyEmail'
@@ -9,17 +11,19 @@ import ForgotPassword from '../pages/auth/ForgotPassword'
 import Home from '../pages/participant/Home'
 import HackathonDetail from '../pages/participant/HackathonDetail'
 import Dashboard from '../pages/participant/Dashboard'
-import Profile from '../pages/participant/Profile'
+import DashboardHackathonDetail from '../pages/dashboard/DashboardHackathonDetail'
+import DashboardHackathonJoin from '../pages/dashboard/DashboardHackathonJoin'
 import TeamInviteAccept from '../pages/participant/TeamInviteAccept'
 import Payment from '../pages/participant/Payment'
 import PaymentStatus from '../pages/participant/PaymentStatus'
 import ProjectSubmission from '../pages/participant/ProjectSubmission'
 import Results from '../pages/participant/Results'
 import Certificates from '../pages/participant/Certificates'
-import MyHackathons from '../pages/participant/MyHackathons'   // ✅ NEW
-import MySubmissions from '../pages/participant/MySubmissions' // ✅ NEW
-import MyResults from '../pages/participant/MyResults'         // ✅ NEW
-import ExploreHackathons from '../pages/participant/ExploreHackathons' // ✅ NEW
+import MyHackathons from '../pages/participant/MyHackathons'
+import MySubmissions from '../pages/participant/MySubmissions'
+import MyResults from '../pages/participant/MyResults'
+import ExploreHackathons from '../pages/participant/ExploreHackathons'
+import Profile from '../pages/participant/Profile'
 
 import AdminDashboard from '../pages/admin/AdminDashboard'
 import CreateHackathon from '../pages/admin/CreateHackathon'
@@ -42,12 +46,11 @@ import PublicWinners from '../pages/public/PublicWinners'
 import NotFound from '../pages/public/NotFound'
 import About from '../pages/public/About'
 import Contact from '../pages/public/Contact'
-import Result from '../pages/public/Result' // ✅ NEW
+import Result from '../pages/public/Result'
 
-import Layout from '../components/common/Layout' // ✅ NEW
+import Layout from '../components/common/Layout'
 import AdminLayout from '../components/common/AdminLayout'
-import PublicLayout from '../components/common/PublicLayout' // ✅ NEW
-
+import PublicLayout from '../components/common/PublicLayout'
 
 import PublicHackathonList from '../components/common/HackathonList'
 import HackathonJoin from '../pages/participant/HackathonJoin'
@@ -86,13 +89,15 @@ export default function AppRoutes() {
       <Route path="/hackathons" element={<PublicLayout><PublicHackathonList /></PublicLayout>} />
       <Route path="/hackathons/:id/join" element={<PublicLayout><HackathonJoin /></PublicLayout>} />
       <Route path="/host" element={<PublicLayout><HostHackathon /></PublicLayout>} />
+      <Route path="/admin-login" element={<AdminLogin />} />
+      <Route path="/admin-register" element={<AdminRegister />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/verify-certificate/:id" element={<PublicLayout><VerifyCertificate /></PublicLayout>} />
       <Route path="/winners/:hackathonId" element={<PublicLayout><PublicWinners /></PublicLayout>} />
-      <Route path="/result" element={<PublicLayout><Result /></PublicLayout>} /> {/* ✅ NEW */}
+      <Route path="/result" element={<PublicLayout><Result /></PublicLayout>} />
 
       {/* Participant */}
       <Route path="/hackathon/:id" element={<PublicLayout><HackathonDetail /></PublicLayout>} />
@@ -110,6 +115,8 @@ export default function AppRoutes() {
       <Route path="/explore-hackathons" element={<ProtectedRoute><Layout><ExploreHackathons /></Layout></ProtectedRoute>} />
       <Route path="/my-submissions" element={<Navigate to="/my-hackathons" replace />} />
       <Route path="/my-results" element={<ProtectedRoute><Layout><MyResults /></Layout></ProtectedRoute>} />
+      <Route path="/dashboard/hackathons/:id" element={<ProtectedRoute><Layout><DashboardHackathonDetail /></Layout></ProtectedRoute>} />
+      <Route path="/dashboard/hackathons/:id/join" element={<ProtectedRoute><Layout><DashboardHackathonJoin /></Layout></ProtectedRoute>} />
 
       {/* Admin */}
       <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><AdminDashboard /></AdminLayout></ProtectedRoute>} />
@@ -136,4 +143,4 @@ export default function AppRoutes() {
       <Route path="*" element={<NotFound />} />
     </Routes>
   )
-}
+}

@@ -101,6 +101,14 @@ const userSchema = new mongoose.Schema(
         type : String,
         default : ""
       }
+    },
+    internId: {
+      type: String,
+      default: null
+    },
+    isInternIdVerified: {
+      type: Boolean,
+      default: false
     }
   },
   {

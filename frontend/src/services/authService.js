@@ -9,4 +9,7 @@ export const authService = {
   getMe: () => api.get('/auth/me'),
   logout: () => api.post('/auth/logout'),
   refreshToken: () => api.post('/auth/refresh'),
+  adminLogin: (credentials) => api.post('/admin/auth/loginAdminOrJudge', credentials),
+  adminRegister: (userData) => api.post('/admin/auth/registerAdminOrJudge', userData),
+  adminForgotPassword: (data) => api.post('/admin/auth/forgotPassword', data),
 };

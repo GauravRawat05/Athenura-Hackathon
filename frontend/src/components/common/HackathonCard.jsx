@@ -13,8 +13,7 @@ export default function HackathonCard({ hackathon: h, navigate, index }) {
 
   return (
     <div
-      onClick={() => navigate(`/hackathon/${h.id}`)}
-      style={{
+      onClick={() => navigate(`/dashboard/hackathons/${h.id}`)}      style={{
         borderRadius: 24,
         overflow: "hidden",
         cursor: "pointer",
@@ -265,7 +264,7 @@ export default function HackathonCard({ hackathon: h, navigate, index }) {
           <button
             onClick={(e) => {
               e.stopPropagation(); // prevent double-firing with card onClick
-              navigate(`/hackathon/${h.id}`);
+              navigate(`/dashboard/hackathons/${h.id}`);
             }}
             style={{
               padding: "8px 18px",

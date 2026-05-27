@@ -1,10 +1,15 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { logout } from "../../store/authSlice";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeLink, setActiveLink] = useState("Home");
+  const { isAuthenticated } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -12,8 +17,9 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const navigate = (path) => {
-    window.location.href = path;
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate("/");
   };
 
   const NAV_LINKS = [
@@ -369,18 +375,31 @@ export default function Navbar() {
 
             {/* Actions */}
             <div className="hw-actions">
-              <button
-                className="hw-btn-primary"
-                onClick={() => navigate("/login")}
-              >
-                Log in
-              </button>
-              <button
-                className="hw-btn-primary"
-                onClick={() => navigate("/register")}
-              >
-                Sign up free
-              </button>
+              {isAuthenticated ? (
+                <>
+                  <button className="hw-btn-ghost" onClick={() => navigate("/dashboard")}>
+                    Dashboard
+                  </button>
+                  <button className="hw-btn-primary" onClick={handleLogout}>
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    className="hw-btn-ghost"
+                    onClick={() => navigate("/auth/login")}
+                  >
+                    Log in
+                  </button>
+                  <button
+                    className="hw-btn-primary"
+                    onClick={() => navigate("/auth/register")}
+                  >
+                    Sign up free
+                  </button>
+                </>
+              )}
             </div>
 
             {/* Hamburger */}
@@ -419,15 +438,21 @@ export default function Navbar() {
           ))}
           <div className="hw-mobile-divider" />
           <div className="hw-mobile-row">
-            <button
-              className="hw-m-ghost"
-              onClick={() => {
-                navigate("/login");
-                setMenuOpen(false);
-              }}
-            >
-              Log in
-            </button>
+            {isAuthenticated ? (
+              <button className="hw-m-primary" onClick={handleLogout}>
+                Logout
+              </button>
+            ) : (
+              <button
+                className="hw-m-ghost"
+                onClick={() => {
+                  navigate("/auth/login");
+                  setMenuOpen(false);
+                }}
+              >
+                Log in
+              </button>
+            )}
           </div>
         </div>
       </nav>

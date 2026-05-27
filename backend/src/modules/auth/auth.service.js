@@ -4,6 +4,7 @@
 */
 import authRepository from "./auth.repository.js"
 import UserUtils from "../users/user.utils.js"
+import Intern from "../interns/intern.model.js"
 import jwt from "jsonwebtoken"
 import envConfig from "../../config/envConfig.js"
 import ApiError from "../../libs/apiError.js"
@@ -61,9 +62,18 @@ class AuthService {
    * Register a new user
    */
   async registerUserService(userInputData) {
-    const { fullName, email, password, phone, dateOfBirth, collegeOrUniversity, graduationYear, resumeLink, skills, secretKey, gender } = userInputData
+    const { fullName, email, password, phone, dateOfBirth, collegeOrUniversity, graduationYear, resumeLink, skills, secretKey, gender, internId } = userInputData
 
     const existingUser = await authRepository.findUserByEmail(email)
+
+    const isInternIdVerified = false;
+    if (internId) {
+      const intern = await Intern.findOne({ internId }).lean();
+      if (!intern) {
+        throw new ApiError(400, "Invalid Intern ID provided");
+      }
+      isInternIdVerified = true;
+    }
 
     if (existingUser) {
       if (existingUser.isEmailVerified) {
@@ -91,6 +101,8 @@ class AuthService {
       existingUser.skills = skills && skills.length > 0 ? skills : []
       existingUser.role = role
       existingUser.gender = gender
+      existingUser.internId = internId || null
+      existingUser.isInternIdVerified = isInternIdVerified
 
       const otp = userUtils.generateOTP()
       console.log(otp);
@@ -132,7 +144,9 @@ class AuthService {
       resumeLink,
       skills,
       role,
-      gender
+      gender,
+      internId: internId || null,
+      isInternIdVerified
     })
 
     const user = await authRepository.createUser(userData)
