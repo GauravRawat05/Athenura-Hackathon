@@ -103,13 +103,14 @@ export default function HackathonDetail() {
 
   const handleRegisterClick = () => {
     if (!isAuthenticated) {
-      routerNavigate("/login");
+      routerNavigate("/auth/login");
       return;
     }
     if (h && h.status !== "past") {
-      routerNavigate(`/hackathons/${id}/join`);
+      routerNavigate(`/dashboard/hackathons/${id}/join`);
     }
   };
+
   const [h, setH] = useState(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
@@ -204,7 +205,7 @@ export default function HackathonDetail() {
         />
 
         <button
-          onClick={() => routerNavigate("/hackathons")}
+          onClick={() => routerNavigate("/explore-hackathons")}
           style={{
             position: "absolute",
             top: 16,
@@ -796,7 +797,8 @@ export default function HackathonDetail() {
                 Registration fees: 
                 {h.fees.solo > 0 && <span style={{ color: "#d97706", margin: "0 4px" }}>Solo: {h.currency}{h.fees.solo}</span>}
                 {h.fees.team > 0 && <span style={{ color: "#d97706", margin: "0 4px" }}>Team: {h.currency}{h.fees.team}</span>}
-                {h.fees.solo === 0 && h.fees.team === 0 && <span style={{ color: "#16a34a", margin: "0 4px" }}>Free</span>}
+                {h.fees.intern > 0 && <span style={{ color: "#d97706", margin: "0 4px" }}>Intern: {h.currency}{h.fees.intern}</span>}
+                {h.fees.solo === 0 && h.fees.team === 0 && h.fees.intern === 0 && <span style={{ color: "#16a34a", margin: "0 4px" }}>Free</span>}
               </div>
             )}
           </div>
@@ -823,7 +825,7 @@ export default function HackathonDetail() {
               {
                 icon: "💰",
                 label: "Entry Fees",
-                value: h.fees?.solo === 0 && h.fees?.team === 0 ? "Free" : `${h.currency}${h.fees?.solo || 0}/${h.currency}${h.fees?.team || 0}`,
+                value: h.fees?.solo === 0 && h.fees?.team === 0 && h.fees?.intern === 0 ? "Free" : `${h.currency}${h.fees?.solo || 0}/${h.currency}${h.fees?.team || 0}/${h.currency}${h.fees?.intern || 0}`,
               },
               {
                 icon: "🎯",

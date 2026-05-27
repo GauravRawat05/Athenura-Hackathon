@@ -92,20 +92,21 @@ class RegistrationService {
     }
 
     // Build registration data
+    const fee = caller.isInternIdVerified ? hackathon.internFee : hackathon.soloFee;
     const regData = {
       hackathonId: hackathon._id,
       userId,
       teamId: null,
       mode: "solo",
       participantIds: [userId],
-      totalAmount: hackathon.registrationFee,
+      totalAmount: fee,
       currency: hackathon.currency,
       notes,
-      status: hackathon.registrationFee > 0 ? "pending" : "confirmed",
-      paymentStatus: hackathon.registrationFee > 0 ? "pending" : "completed"
+      status: fee > 0 ? "pending" : "confirmed",
+      paymentStatus: fee > 0 ? "pending" : "completed"
     };
 
-    if (hackathon.registrationFee === 0) {
+    if (fee === 0) {
       regData.confirmedAt = new Date();
       regData.paymentCompletedAt = new Date();
     }
@@ -142,8 +143,8 @@ class RegistrationService {
       teamId: registration.teamId,
       status: registration.status,
       paymentStatus: registration.paymentStatus,
-      requiresPayment: hackathon.registrationFee > 0,
-      message: hackathon.registrationFee > 0
+      requiresPayment: fee > 0,
+      message: fee > 0
         ? "Registration successful. Please complete payment to confirm."
         : "Registration successful. You are confirmed!"
     };
@@ -213,14 +214,14 @@ class RegistrationService {
        mode: "team",
        userId: null,
        participantIds: acceptedMemberIds,
-       totalAmount: hackathon.registrationFee,
+       totalAmount: hackathon.teamFee,
        currency: hackathon.currency,
        notes,
-       status: hackathon.registrationFee > 0 ? "pending" : "confirmed",
-       paymentStatus: hackathon.registrationFee > 0 ? "pending" : "completed"
+       status: hackathon.teamFee > 0 ? "pending" : "confirmed",
+       paymentStatus: hackathon.teamFee > 0 ? "pending" : "completed"
      };
 
-    if (hackathon.registrationFee === 0) {
+    if (hackathon.teamFee === 0) {
       regData.confirmedAt = new Date();
       regData.paymentCompletedAt = new Date();
     }

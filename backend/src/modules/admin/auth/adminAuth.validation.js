@@ -37,9 +37,8 @@ export const registerAdminValidation = Joi.object({
     "any.required": "Role is required"
   }),
   adminSecretKey: Joi.string().when("role", { is: userRoles.ADMIN, then: Joi.required(), otherwise: Joi.optional() }),
-  judgeSecretKey: Joi.string().when("role", { is: userRoles.JUDGE, then: Joi.required(), otherwise: Joi.optional() }),
-  judgeId: Joi.string().min(3).max(50).when("role", { is: userRoles.JUDGE, then: Joi.required(), otherwise: Joi.optional() })
-}).with("adminSecretKey", "role").with("judgeSecretKey", "judgeId").messages({
+  judgeSecretKey: Joi.string().when("role", { is: userRoles.JUDGE, then: Joi.required(), otherwise: Joi.optional() })
+}).with("adminSecretKey", "role").messages({
   "any.only": "Role must be 'Admin' or 'Judge'"
 })
 

@@ -942,7 +942,7 @@ export default function Dashboard() {
               <div 
                 className="db-hack-card" 
                 key={h._id || h.id} 
-                onClick={() => navigate(`/hackathon/${h._id || h.id}`)}
+                onClick={() => navigate(`/dashboard/hackathons/${h._id || h.id}`)}
               >
                 <div className="db-hack-img-wrap">
                   <img 
