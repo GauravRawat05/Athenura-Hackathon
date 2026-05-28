@@ -10,6 +10,7 @@ import uploadService from "./upload.service.js";
 import Team from "../teams/team.model.js";
 import Hackathon from "../admin/hackathons/hackathon.model.js";
 import {Registration} from "../registrations/registration.model.js";
+import { REGISTRATION_STATUSES } from "../../constants/user.constants.js";
 import ApiError from "../../libs/apiError.js";
 import { MAX_ASSETS_PER_SUBMISSION } from "./submission.constants.js";
 import { deleteFromCloudinary } from "../../config/cloudinary.js";
@@ -39,7 +40,7 @@ class AssetService {
     const registration = await Registration.findOne({
       hackathonId: submission.hackathonId,
       participantIds: userId,
-      status: "confirmed"
+      registrationStatus: REGISTRATION_STATUSES.CONFIRMED
     }).session(session);
     if (!registration) {
       throw new ApiError(403, "You must have a confirmed registration to add assets");

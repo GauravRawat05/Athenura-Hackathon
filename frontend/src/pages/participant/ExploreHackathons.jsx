@@ -152,10 +152,10 @@ function HackathonExploreCard({ h, index, registration }) {
           
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "#64748b", fontWeight: 500 }}>
-              <IconUsers /> {h.mode === "solo" ? "Solo Mode allowed" : `Team Size: ${h.minTeamSize}-${h.maxTeamSize}`}
+              <IconUsers /> {h.modes.join(", ")}
             </span>
             <span style={{ fontSize: 11, color: "#64748b" }}>
-              Fee: <strong style={{ color: h.fee === "Free" ? "#16a34a" : "#1e3a8a" }}>{h.fee}</strong>
+              Fee: <strong style={{ color: h.feeNum === 0 ? "#16a34a" : "#1e3a8a" }}>{h.fee}</strong>
             </span>
           </div>
         </div>
@@ -289,31 +289,31 @@ export default function ExploreHackathons() {
           const statusMap = { upcoming: 'upcoming', ongoing: 'ongoing', past: 'completed', judging: 'completed', draft: 'upcoming' };
           const status = statusMap[hack.status] || 'upcoming';
           const prize = hack.prizePool != null ? `${hack.currency === 'INR' ? '₹' : '$'}${Number(hack.prizePool).toLocaleString('en-IN')}` : '₹0';
-          
-          // Use soloFee as fee if registrationFee is 0, or handle based on hackathon rules.
-          // The API response shows 'registrationFee' for some and 'soloFee', 'teamFee' for others.
-          const fee = (hack.registrationFee === 0 || hack.registrationFee == null) ? 'Free' : `${hack.currency === 'INR' ? '₹' : '$'}${Number(hack.registrationFee).toLocaleString('en-IN')}`;
-          
-          return {
-            id: hack._id,
-            title: hack.title,
-            domain: (hack.technologyDomains && hack.technologyDomains[0]) || 'General',
-            status,
-            minTeamSize: hack.minTeamSize || 2,
-            maxTeamSize: hack.maxTeamSize || 4,
-            mode: (hack.allowedModes && hack.allowedModes[0]) || 'team',
-            prize,
-            fee,
-            feeNum: hack.registrationFee || 0,
-            prizeNum: hack.prizePool || 0,
-            startDate: hack.startDate,
-            endDate: hack.endDate,
-            registrationDeadline: hack.registrationDeadline || hack.startDate,
-            image: hack.bannerUrl || `https://picsum.photos/seed/${hack._id}/800/400`,
-            technologyDomains: hack.technologyDomains || [],
-          };
-        });
 
+            // Calculate minimum fee and display modes
+            const fees = [hack.soloFee, hack.teamFee].filter(f => f != null && f >= 0);
+            const minFee = fees.length > 0 ? Math.min(...fees) : 0;
+            const feeDisplay = minFee === 0 ? 'Free' : 'Paid';
+            
+            return {
+              id: hack._id,
+              title: hack.title,
+              domain: (hack.technologyDomains && hack.technologyDomains[0]) || 'General',
+              status,
+              minTeamSize: hack.minTeamSize || 2,
+              maxTeamSize: hack.maxTeamSize || 4,
+              modes: hack.mode || [],
+              prize,
+              fee: feeDisplay,
+              feeNum: minFee,
+              prizeNum: hack.prizePool || 0,
+              startDate: hack.startDate,
+              endDate: hack.endDate,
+              registrationDeadline: hack.registrationDeadline || hack.startDate,
+              image: hack.bannerUrl || `https://picsum.photos/seed/${hack._id}/800/400`,
+              technologyDomains: hack.technologyDomains || [],
+            };
+        });
         if (mounted) {
           setHackathonsList(mapped);
           setRegisteredMap(regMap);

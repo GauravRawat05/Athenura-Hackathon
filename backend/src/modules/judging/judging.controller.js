@@ -33,6 +33,19 @@ class JudgingController {
       .json(new ApiResponse(201, result, "Judges assigned successfully"));
   }
 
+  // Replace hackathon judge set based on selected judgeIds.
+  async updateHackathonJudges(req, res) {
+    const { hackathonId } = req.params;
+    const { judgeIds } = req.body;
+    const adminId = req.user._id;
+
+    const result = await judgingService.updateHackathonJudges(hackathonId, judgeIds, adminId);
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, result, "Hackathon judges updated successfully"));
+  }
+
   async getAssignments(req, res) {
     const judgeId = req.user._id;
     const assignments = await judgingService.getJudgeAssignments(judgeId);

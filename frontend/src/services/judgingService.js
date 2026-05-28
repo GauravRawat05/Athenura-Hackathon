@@ -4,6 +4,7 @@ export const judgingService = {
   adminGetJudges: () => api.get('/judge/admin/judges'),
   adminGetHackathonJudges: (hackathonId) => api.get(`/judge/admin/hackathons/${hackathonId}/judges`),
   adminAssignJudges: (hackathonId, judgeIds) => api.post(`/judge/admin/hackathons/${hackathonId}/assign`, { judgeIds }),
+  adminUpdateHackathonJudges: (hackathonId, judgeIds) => api.post(`/judge/admin/hackathons/${hackathonId}/assign-update`, { judgeIds }),
   
   // Judge APIs
   getAssignments: () => api.get('/judge/assignments'),

@@ -9,7 +9,7 @@ import resultRepository from "../results/result.repository.js"
 import registrationRepository from "../registrations/registration.repository.js"
 import { uploadToCloudinary, deleteFromCloudinary } from "../../config/cloudinary.js"
 import ApiError from "../../libs/apiError.js"
-import { PROFILE_PHOTO_MAX_FILE_SIZE, PROFILE_PHOTO_UPLOAD_FOLDER } from "../../constants/user.constants.js"
+import { PROFILE_PHOTO_MAX_FILE_SIZE, PROFILE_PHOTO_UPLOAD_FOLDER, REGISTRATION_STATUSES } from "../../constants/user.constants.js"
 
 class UserService {
   constructor() {
@@ -148,7 +148,7 @@ class UserService {
     const registrations = await registrationRepository.findUserRegistrationsWithDetails(
       userId,
       [],
-      { status: "confirmed" }
+      { registrationStatus: REGISTRATION_STATUSES.CONFIRMED }
     );
     const hackathonsJoined = registrations.length;
 
@@ -194,7 +194,7 @@ class UserService {
     const recentRegistrations = await registrationRepository.findUserRegistrationsWithDetails(
       userId,
       [],
-      { status: "confirmed" }
+      { registrationStatus: REGISTRATION_STATUSES.CONFIRMED }
     );
     for (const reg of recentRegistrations.slice(0, 5)) {
       const hackathon = reg.hackathonId;
@@ -281,7 +281,7 @@ class UserService {
     const registrations = await registrationRepository.findUserRegistrationsWithDetails(
       userId,
       teamIds,
-      { status: "confirmed" }
+      { registrationStatus: REGISTRATION_STATUSES.CONFIRMED }
     );
 
     // Filter to only ongoing/upcoming hackathons and enrich with submission status

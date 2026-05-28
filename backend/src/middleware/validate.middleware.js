@@ -27,7 +27,15 @@ const validate = (schema, target = 'body') => (req, res, next) => {
     }
 
     // Replace the original request part with the validated and stripped value
-    req[target] = value;
+    // Special handling for 'query' since req.query is a getter and can't be directly assigned
+    if (target === 'query') {
+        Object.keys(req.query).forEach(key => {
+            delete req.query[key];
+        });
+        Object.assign(req.query, value);
+    } else {
+        req[target] = value;
+    }
     next();
 };
 

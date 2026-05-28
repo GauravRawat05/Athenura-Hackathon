@@ -4,6 +4,7 @@ import Team from '../../teams/team.model.js';
 import User from '../../users/user.model.js';
 import mongoose from 'mongoose';
 import { sendEmail, EMAIL_TYPES } from '../../notifications/notification.mailer.js';
+import { REGISTRATION_STATUSES } from '../../../constants/user.constants.js';
 
 // Helper function to validate date types with timezone handling
 const isValidDate = (date) => {
@@ -219,7 +220,7 @@ const updateHackathon = async (hackathonId, updateData) => {
   }
 
   // Prevent manual update to ongoing/past if the requirement is strict
-  if (updateData.status && !['draft', 'upcoming'].includes(updateData.status)) {
+  if (updateData.status && !['draft', 'upcoming', 'ongoing', 'past'].includes(updateData.status)) {
     throw new Error('Status can only be manually set to "draft" or "upcoming".');
   }
 
@@ -468,18 +469,29 @@ const syncHackathonStatuses = async () => {
   let transitionedToOngoing = 0;
 
   for (const hackathon of hackathonsToStart) {
-    hackathon.status = 'ongoing';
-    await hackathon.save();
+    // Atomically mark as 'ongoing' to avoid duplicate processing when
+    // sync runs concurrently. If another process already transitioned
+    // this hackathon, skip sending notifications.
+    const updatedHackathon = await Hackathon.findOneAndUpdate(
+      { _id: hackathon._id, status: 'upcoming' },
+      { $set: { status: 'ongoing' } },
+      { new: true }
+    );
+
+    if (!updatedHackathon) {
+      continue; // already transitioned by another worker
+    }
+
     transitionedToOngoing++;
 
     // Fetch all confirmed registrations and all active teams for this hackathon in one shot.
     // We collect team member emails from the Team model itself — not from participantIds —
     // so that every accepted member (including co-founders added after registration) is included.
-    const [registrations, teams] = await Promise.all([
+      const [registrations, teams] = await Promise.all([
       Registration.find({
-        hackathonId: hackathon._id,
-        status: 'confirmed'
-      }).populate('participantIds', 'fullName email').lean(),
+        hackathonId: updatedHackathon._id,
+        registrationStatus: REGISTRATION_STATUSES.CONFIRMED
+      }).populate('userId', 'fullName email').lean(),
 
       Team.find({
         hackathonId: hackathon._id,
@@ -515,28 +527,24 @@ const syncHackathonStatuses = async () => {
       // added after the registration was created).
       const teamEmails = teamKey ? teamMemberEmails.get(teamKey) || [] : [];
 
-      // Fallback: participantIds still there as a safety net.
-      const participantUserIds = reg.participantIds || [];
-
-      for (const participant of participantUserIds) {
-        if (participant?.email && !notifiedEmails.has(participant.email)) {
-          try {
-            await sendEmail(participant.email, 'HACKATHON_DETAILS', {
-              fullName: participant.fullName || 'Participant',
-              hackathonTitle: hackathon.title,
-              problemStatement: hackathon.problemStatement,
-              startDate: hackathon.startDate,
-              endDate: hackathon.endDate,
-              submissionDeadline: hackathon.submissionDeadline,
-              rules: hackathon.rules || [],
-              judgingCriteria: hackathon.judgingCriteria || [],
-              hackathonLink: `/hackathons/${hackathon.slug}`,
-              detailsPdfUrl: hackathon.detailsPdfUrl || null
-            });
-            notifiedEmails.add(participant.email);
-          } catch (emailError) {
-            console.error(`[Sync] Failed to notify participant ${participant.email}:`, emailError.message);
-          }
+      // Solo/intern registrations: notify the registered user
+      if (!isTeamReg && reg.userId?.email && !notifiedEmails.has(reg.userId.email)) {
+        try {
+          await sendEmail(reg.userId.email, EMAIL_TYPES.HACKATHON_DETAILS, {
+              fullName: reg.userId.fullName || 'Participant',
+              hackathonTitle: updatedHackathon.title,
+              problemStatement: updatedHackathon.problemStatement,
+              startDate: updatedHackathon.startDate,
+              endDate: updatedHackathon.endDate,
+              submissionDeadline: updatedHackathon.submissionDeadline,
+              rules: updatedHackathon.rules || [],
+              judgingCriteria: updatedHackathon.judgingCriteria || [],
+              hackathonLink: `/hackathons/${updatedHackathon.slug}`,
+              detailsPdfUrl: updatedHackathon.detailsPdfUrl || null
+          });
+          notifiedEmails.add(reg.userId.email);
+        } catch (emailError) {
+          console.error(`[Sync] Failed to notify participant ${reg.userId.email}:`, emailError.message);
         }
       }
 
@@ -549,17 +557,17 @@ const syncHackathonStatuses = async () => {
             // member names aren't stored in the Team model's members array here.
             const memberEmail = email;
             try {
-              await sendEmail(memberEmail, 'HACKATHON_DETAILS', {
+              await sendEmail(memberEmail, EMAIL_TYPES.HACKATHON_DETAILS, {
                 fullName: 'Participant',
-                hackathonTitle: hackathon.title,
-                problemStatement: hackathon.problemStatement,
-                startDate: hackathon.startDate,
-                endDate: hackathon.endDate,
-                submissionDeadline: hackathon.submissionDeadline,
-                rules: hackathon.rules || [],
-                judgingCriteria: hackathon.judgingCriteria || [],
-                hackathonLink: `/hackathons/${hackathon.slug}`,
-                detailsPdfUrl: hackathon.detailsPdfUrl || null
+                  hackathonTitle: updatedHackathon.title,
+                  problemStatement: updatedHackathon.problemStatement,
+                  startDate: updatedHackathon.startDate,
+                  endDate: updatedHackathon.endDate,
+                  submissionDeadline: updatedHackathon.submissionDeadline,
+                  rules: updatedHackathon.rules || [],
+                  judgingCriteria: updatedHackathon.judgingCriteria || [],
+                  hackathonLink: `/hackathons/${updatedHackathon.slug}`,
+                  detailsPdfUrl: updatedHackathon.detailsPdfUrl || null
               });
               notifiedEmails.add(memberEmail);
             } catch (emailError) {

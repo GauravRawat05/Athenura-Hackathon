@@ -89,7 +89,7 @@ class AdminAuthService {
 
     const createdUser = await this.getSanitizedUser(user._id)
 
-    return { user: createdUser, accessToken, refreshToken }
+    return { user: createdUser }
   }
 
   // ── Login — accepts either Admin or Judge; rejects other roles ────────────

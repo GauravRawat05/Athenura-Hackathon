@@ -479,9 +479,14 @@ export default function Payment() {
               state: { status: "success", hackathon }
             }), 420);
           } catch (verifyErr) {
+            console.error('[Payment] Payment verification failed:', verifyErr);
             setLoading(false);
             navigate("/payment/status", {
-              state: { status: "failed", hackathon }
+              state: { 
+                status: "failed", 
+                hackathon,
+                errorMessage: verifyErr?.response?.data?.message || "Payment verification failed. Please contact support." 
+              }
             });
           }
         },

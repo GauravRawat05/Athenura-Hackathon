@@ -152,6 +152,10 @@ export default function Dashboard() {
   const [winners, setWinners] = useState([]);
   const [scores, setScores] = useState({});
   const [manageSelectedJudgeIds, setManageSelectedJudgeIds] = useState([]);
+  const [resultProgress, setResultProgress] = useState(null);
+  const [hackathonResults, setHackathonResults] = useState(null);
+  const [publishLoading, setPublishLoading] = useState(false);
+  const [computeLoading, setComputeLoading] = useState(false);
 
   const ITEMS_PER_PAGE = 6;
 
@@ -222,11 +226,17 @@ export default function Dashboard() {
     try {
       setLoading(true);
       
-      const [resJudges, resAssigned, resRegs] = await Promise.all([
+    const [resJudges, resAssigned, resRegs, resProgress, resResults] = await Promise.all([ 
+
         judgingService.adminGetJudges(),
         judgingService.adminGetHackathonJudges(hackId),
-        hackathonService.adminListRegistrations(hackId, { limit: 100 })
+        hackathonService.adminListRegistrations(hackId, { limit: 100 }),
+        hackathonService.adminGetResultProgress(hackId),
+        hackathonService.adminGetHackathonResults(hackId)
       ]);
+
+      setResultProgress(resProgress?.data?.data || resProgress?.data || null);
+      setHackathonResults(resResults?.data?.data || resResults?.data || null);
 
       
       
@@ -248,6 +258,7 @@ export default function Dashboard() {
   resJudges?.data?.data?.judges ||
   resJudges?.data?.judges ||
   resJudges?.data?.data ||
+  resJudges?.data ||
   [];
       if (Array.isArray(judgesData)) {
         mappedAllJudges = judgesData.map((u, index) => {
@@ -278,6 +289,7 @@ export default function Dashboard() {
   resAssigned?.data?.data?.judges ||
   resAssigned?.data?.judges ||
   resAssigned?.data?.data ||
+  resAssigned?.data ||
   [];
       if (Array.isArray(assignedData)) {
         mappedAssigned = assignedData.map((u, index) => {
@@ -420,9 +432,13 @@ export default function Dashboard() {
 
   const saveManageJudges = async () => {
     if (!activeHackathon?._id) return;
+    if (!Array.isArray(manageSelectedJudgeIds) || manageSelectedJudgeIds.length === 0) {
+      showToast("Select at least one judge before saving.", "error");
+      return;
+    }
     try {
       setLoading(true);
-      await judgingService.adminAssignJudges(activeHackathon._id, manageSelectedJudgeIds);
+      await judgingService.adminUpdateHackathonJudges(activeHackathon._id, manageSelectedJudgeIds);
       showToast("Hackathon judge assignments updated successfully!", "success");
       setModal(null);
       await fetchHackathonData();
@@ -433,20 +449,39 @@ export default function Dashboard() {
     }
   };
 
-  const removeJudgeFromTeam = async (teamCode, judgeName) => {
-    const judgeToRemove = assignedJudges.find(j => j.name === judgeName);
-    if (!judgeToRemove) return;
-    const nextJudgeIds = assignedJudges.filter(j => j.name !== judgeName).map(j => j._realId);
+  const handleComputeDraft = async () => {
+    if (!activeHackathon?._id) return;
     try {
-      setLoading(true);
-      await judgingService.adminAssignJudges(activeHackathon._id, nextJudgeIds);
-      showToast(`${judgeName} removed from hackathon judging panel`, "warning");
+      setComputeLoading(true);
+      await hackathonService.adminComputeResults(activeHackathon._id);
+      showToast("Draft generated successfully.", "success");
       await fetchHackathonData();
     } catch (err) {
-      showToast("Failed to remove judge", "error");
+      showToast(err.response?.data?.message || "Failed to compute draft", "error");
     } finally {
-      setLoading(false);
+      setComputeLoading(false);
     }
+  };
+
+  const handlePublishResults = async () => {
+    if (!activeHackathon?._id) return;
+    try {
+      setPublishLoading(true);
+      await hackathonService.adminPublishResults(activeHackathon._id);
+      showToast("Results published successfully.", "success");
+      await fetchHackathonData();
+    } catch (err) {
+      showToast(err.response?.data?.message || "Failed to publish results", "error");
+    } finally {
+      setPublishLoading(false);
+    }
+  };
+
+  // NOTE: Judge assignment is hackathon-wide (JudgeAssignment is keyed only by hackathonId + judgeId).
+  // Removing a judge from a specific team/submission is not supported.
+  // We therefore only allow judge assignment changes via the “Manage Judges” modal.
+  const removeJudgeFromTeam = async () => {
+    showToast("Use “Manage Judges” to modify hackathon-level judge assignment.", "info");
   };
 
   const submitScore = (teamCode, score) => {
@@ -470,12 +505,12 @@ export default function Dashboard() {
     setTieWinner(null);
   };
 
-  const publishResults = () => {
-    if (winners.length === 0) {
-      showToast("No winners declared yet!", "warning");
+  const publishResults = async () => {
+    if (published) {
+      showToast("Results have already been published.", "info");
       return;
     }
-    showToast(`Results published! Winners: ${winners.join(", ")}`, "success");
+    await handlePublishResults();
   };
 
   const goToPage = (p) => {
@@ -497,6 +532,14 @@ export default function Dashboard() {
 
   const pageNums = Array.from({ length: Math.min(totalPages, 4) }, (_, i) => i + 1);
 
+  const resultScoring = resultProgress?.scoring || {};
+  const scoreReviewItems = hackathonResults?.results?.filter(r => !r.isComplete) || [];
+  const tiedResults = hackathonResults?.results?.filter(r => r.isTie) || [];
+  const published = hackathonResults?.resultsPublished || resultProgress?.resultsPublished || false;
+  const topWinners = (hackathonResults?.results || []).filter(r => r.rank <= 3).slice(0, 3);
+  const evaluationRate = resultProgress ? `${resultScoring.completionPercent || 0}%` : `${completionRateNum}%`;
+
+  const canPublish = !published && hackathonResults?.results?.length > 0 && !hackathonResults?.unresolvedTies;
 
   return (
     <div style={fontStack} className="min-h-screen bg-gradient-to-br from-[#ecfcff] via-[#f8ffff] to-[#dff7ff] text-slate-800">
@@ -678,15 +721,10 @@ export default function Dashboard() {
                                   </div>
                                 </div>
                                 <div className="col-span-7 flex flex-wrap items-center gap-2">
-                                  {team.judges.map((j) => (
-                                    <JudgeBadge key={j} name={j} onRemove={() => removeJudgeFromTeam(team.code, j)} />
-                                  ))}
-                                  <button
-                                    onClick={() => openAddJudge(team)}
-                                    className="w-6 h-6 rounded-full border border-dashed border-slate-300 flex items-center justify-center text-slate-400 hover:border-blue-400 hover:text-blue-500 transition"
-                                  >
-                                    <Plus className="w-3 h-3" />
-                                  </button>
+                                  <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100 whitespace-nowrap">
+                                    <ClipboardList className="w-3.5 h-3.5" />
+                                    All assigned judges evaluate this team
+                                  </span>
                                 </div>
                                 <div className="col-span-1 flex justify-end">
                                   <button
@@ -739,54 +777,67 @@ export default function Dashboard() {
                     )}
                     {activeTab === 1 && (
                       <div className="py-4">
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-base font-semibold text-[#0b1b52]">Score Review</h3>
-                          <button
-                            onClick={() => showToast("All scores have been reviewed", "success")}
-                            className="px-4 py-2 rounded-xl bg-emerald-50 text-emerald-600 text-sm font-medium hover:bg-emerald-100 transition"
-                          >
-                            Approve All
-                          </button>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
+                          <div>
+                            <h3 className="text-base font-semibold text-[#0b1b52]">Score Review</h3>
+                            <p className="text-xs text-slate-400 mt-1">Review scoring progress and approve completed entries.</p>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <button
+                              onClick={() => handleComputeDraft()}
+                              className="px-4 py-2 rounded-xl bg-blue-50 text-blue-600 text-sm font-medium hover:bg-blue-100 transition"
+                            >
+                              {computeLoading ? 'Computing...' : 'Compute Draft'}
+                            </button>
+                            <button
+                              onClick={() => showToast('Approve all available scores', 'success')}
+                              className="px-4 py-2 rounded-xl bg-emerald-50 text-emerald-600 text-sm font-medium hover:bg-emerald-100 transition"
+                            >
+                              Approve All
+                            </button>
+                          </div>
                         </div>
-                        <p className="text-xs text-slate-400 mb-6">Review and submit scores for each team</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                          <div className="p-4 rounded-2xl bg-white/70 border border-white/60">
+                            <p className="text-xs text-slate-500">Submissions Scored</p>
+                            <p className="text-2xl font-semibold text-[#0b1b52]">{resultScoring.scoredCount ?? 0}/{resultScoring.totalSubmissions ?? 0}</p>
+                          </div>
+                          <div className="p-4 rounded-2xl bg-white/70 border border-white/60">
+                            <p className="text-xs text-slate-500">Completion</p>
+                            <p className="text-2xl font-semibold text-[#0b1b52]">{resultScoring.completionPercent ?? 0}%</p>
+                          </div>
+                          <div className="p-4 rounded-2xl bg-white/70 border border-white/60">
+                            <p className="text-xs text-slate-500">Draft Status</p>
+                            <p className="text-2xl font-semibold text-[#0b1b52]">{hackathonResults?.results?.length ? 'Ready' : 'Pending'}</p>
+                          </div>
+                        </div>
                         <div className="space-y-4">
-                          {teams.filter(t => t.pendingScores || !scores[t.code]).slice(0, 6).map(team => (
-                            <div key={team.code} className="flex items-center justify-between p-4 rounded-2xl bg-white/60 border border-white/60">
-                              <div className="flex items-center gap-3">
-                                <img src={`https://picsum.photos/seed/${team.code}/40/40`} alt={team.name} className="w-10 h-10 rounded-xl object-cover shadow-md" />
-                                <div>
-                                  <p className="text-sm font-semibold text-[#0b1b52]">{team.name}</p>
-                                  <p className="text-xs text-slate-500">
-                                    {scores[team.code] ? `Score: ${scores[team.code]}` : "Awaiting submission"}
-                                  </p>
+                          {(scoreReviewItems.length > 0 ? scoreReviewItems : teams).slice(0, 6).map((item, index) => {
+                            const title = item.title || item.name || `Team ${index + 1}`;
+                            const score = item.aggregatedScore !== undefined ? item.aggregatedScore.toFixed(2) : scores[item.code];
+                            const pending = item.scoresCount === 0 || item.pendingScores;
+                            return (
+                              <div key={item._id || item.code || index} className="flex items-center justify-between p-4 rounded-2xl bg-white/60 border border-white/60">
+                                <div className="flex items-center gap-3">
+                                  <img src={`https://picsum.photos/seed/${title}/40/40`} alt={title} className="w-10 h-10 rounded-xl object-cover shadow-md" />
+                                  <div>
+                                    <p className="text-sm font-semibold text-[#0b1b52]">{title}</p>
+                                    <p className="text-xs text-slate-500">
+                                      {score !== undefined ? `Score: ${score}` : 'Awaiting submission'}
+                                    </p>
+                                  </div>
                                 </div>
-                              </div>
-                              {!scores[team.code] && (
-                                <div className="flex items-center gap-2">
-                                  <select
-                                    className="px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-blue-400 bg-white"
-                                    defaultValue=""
-                                    onChange={(e) => e.target.value && submitScore(team.code, e.target.value)}
-                                  >
-                                    <option value="" disabled>Select score</option>
-                                    {[10, 9, 8, 7, 6, 5, 4, 3, 2, 1].map(s => (
-                                      <option key={s} value={s}>{s}/10</option>
-                                    ))}
-                                  </select>
-                                </div>
-                              )}
-                              {scores[team.code] && (
-                                <span className="px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium">
-                                  Reviewed
+                                <span className={`px-3 py-1.5 rounded-full text-xs font-medium ${pending ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                                  {pending ? 'Pending' : 'Reviewed'}
                                 </span>
-                              )}
-                            </div>
-                          ))}
+                              </div>
+                            );
+                          })}
                         </div>
-                        {teams.filter(t => !scores[t.code]).length === 0 && (
+                        {(scoreReviewItems.length === 0 || scoreReviewItems.every(item => item.aggregatedScore > 0)) && (
                           <div className="text-center py-8">
                             <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
-                            <p className="text-slate-500 font-medium">All scores have been reviewed!</p>
+                            <p className="text-slate-500 font-medium">Score review is up to date.</p>
                             <button
                               onClick={() => setActiveTab(2)}
                               className="mt-3 px-4 py-2 rounded-xl bg-blue-50 text-blue-600 text-sm hover:bg-blue-100 transition"
@@ -801,27 +852,29 @@ export default function Dashboard() {
                       <div className="py-6 text-center">
                         <Scale className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                         <p className="text-slate-500 font-medium">Tie Resolution</p>
-                        <p className="text-xs text-slate-400 mt-1">2 teams are currently tied.</p>
+                        <p className="text-xs text-slate-400 mt-1">
+                          {tiedResults.length > 0 ? `${tiedResults.length} team(s) are currently tied.` : 'No unresolved ties detected.'}
+                        </p>
                         <div className="mt-4 max-w-sm mx-auto space-y-2">
-                          {[
-                            { code: "CI", name: "Code Infinity", color: "from-sky-500 to-blue-600", score: "8.45" },
-                            { code: "HX", name: "HackX 5.0", color: "from-amber-500 to-orange-600", score: "8.45" },
-                          ].map(t => (
-                            <div key={t.code} className="flex items-center justify-between p-3 rounded-xl bg-white/60 border border-white/60">
+                          {tiedResults.length > 0 ? tiedResults.map(result => (
+                            <div key={result.submissionId} className="flex items-center justify-between p-3 rounded-xl bg-white/60 border border-white/60">
                               <div className="flex items-center gap-3">
-                                <img src={`https://picsum.photos/seed/${t.code}/32/32`} alt={t.name || t.code} className="w-8 h-8 rounded-lg object-cover" />
-                                <span className="text-sm font-medium text-[#0b1b52]">{t.name}</span>
+                                <img src={`https://picsum.photos/seed/${result.title}/32/32`} alt={result.title || result.submissionId} className="w-8 h-8 rounded-lg object-cover" />
+                                <span className="text-sm font-medium text-[#0b1b52]">{result.title || 'Untitled Submission'}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <span className="text-sm font-semibold text-[#0b1b52]">{t.score}</span>
+                                <span className="text-sm font-semibold text-[#0b1b52]">{result.aggregatedScore?.toFixed(2) || '0.00'}</span>
                                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-100 text-rose-600 font-medium">TIED</span>
                               </div>
                             </div>
-                          ))}
+                          )) : (
+                            <div className="text-slate-500 text-sm">All tie conflicts are resolved or no scores have tied ranks.</div>
+                          )}
                         </div>
                         <button
                           onClick={handleResolveTies}
-                          className="mt-4 px-6 py-2 rounded-xl bg-amber-50 text-amber-600 text-sm font-medium hover:bg-amber-100 transition"
+                          disabled={tiedResults.length === 0}
+                          className="mt-4 px-6 py-2 rounded-xl bg-amber-50 text-amber-600 text-sm font-medium hover:bg-amber-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           Resolve Ties Now
                         </button>
@@ -832,22 +885,29 @@ export default function Dashboard() {
                         <Trophy className="w-12 h-12 text-amber-400 mx-auto mb-3" />
                         <p className="text-slate-500 font-medium">Winners Declaration</p>
                         <p className="text-xs text-slate-400 mt-1">
-                          {winners.length > 0 ? `${winners.length} winner(s) declared.` : "No winners declared yet."}
+                          {published ? 'Final results are ready to publish.' : 'Review the top scoring submissions before publishing.'}
                         </p>
-                        {winners.length > 0 && (
+                        {topWinners.length > 0 ? (
                           <div className="mt-4 space-y-2 max-w-xs mx-auto">
-                            {winners.map((w, i) => (
-                              <div key={i} className="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-700 rounded-xl text-sm font-medium w-full justify-center">
-                                <Trophy className="w-4 h-4" /> {w}
+                            {topWinners.map((winner, i) => (
+                              <div key={winner.submissionId || i} className="inline-flex items-center gap-2 px-4 py-2 bg-amber-50 text-amber-700 rounded-xl text-sm font-medium w-full justify-between">
+                                <div className="flex items-center gap-2">
+                                  <Trophy className="w-4 h-4" />
+                                  <span>{winner.title || `Submission ${winner.rank}`}</span>
+                                </div>
+                                <span className="text-slate-600">Rank {winner.rank}</span>
                               </div>
                             ))}
                           </div>
+                        ) : (
+                          <div className="text-slate-500 text-sm mt-4">No winner draft available yet. Compute draft first.</div>
                         )}
                         <button
                           onClick={publishResults}
-                          className="mt-4 px-6 py-2 rounded-xl bg-emerald-50 text-emerald-600 text-sm font-medium hover:bg-emerald-100 transition"
+                          disabled={!canPublish || publishLoading}
+                          className="mt-4 px-6 py-2 rounded-xl bg-emerald-50 text-emerald-600 text-sm font-medium hover:bg-emerald-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          Publish Results
+                          {publishLoading ? 'Publishing...' : published ? 'Already Published' : 'Publish Results'}
                         </button>
                       </div>
                     )}
@@ -855,20 +915,21 @@ export default function Dashboard() {
                       <div className="py-6">
                         <p className="text-slate-600 font-medium mb-4">Evaluation Summary</p>
                         <div className="grid grid-cols-3 gap-4 text-center">
-                          {[[totalEvaluations, "Evaluations Total"], [
-                            (totalEvaluations + assignedJudges.reduce((a, j) => a + j.pending, 0)) === 0 
-                              ? "0%" 
-                              : Math.round((totalEvaluations / (totalEvaluations + assignedJudges.reduce((a, j) => a + j.pending, 0))) * 100) + "%", 
-                            "Completion Rate"
-                          ], ["8.6", "Avg Score"]].map(([v, l]) => (
-                            <div key={l} className="p-4 rounded-2xl bg-white/60 border border-white/60">
-                              <p className="text-2xl font-bold text-[#0b1b52]">{v}</p>
-                              <p className="text-xs text-slate-500 mt-1">{l}</p>
-                            </div>
-                          ))}
+                          <div className="p-4 rounded-2xl bg-white/60 border border-white/60">
+                            <p className="text-2xl font-bold text-[#0b1b52]">{resultScoring.totalSubmissions ?? totalEvaluations}</p>
+                            <p className="text-xs text-slate-500 mt-1">Teams Scored</p>
+                          </div>
+                          <div className="p-4 rounded-2xl bg-white/60 border border-white/60">
+                            <p className="text-2xl font-bold text-[#0b1b52]">{evaluationRate}</p>
+                            <p className="text-xs text-slate-500 mt-1">Completion Rate</p>
+                          </div>
+                          <div className="p-4 rounded-2xl bg-white/60 border border-white/60">
+                            <p className="text-2xl font-bold text-[#0b1b52]">{hackathonResults?.summary?.totalScored ?? '0'}</p>
+                            <p className="text-xs text-slate-500 mt-1">Submissions With Scores</p>
+                          </div>
                         </div>
                         <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {assignedJudges.map(j => (
+                          {assignedJudges.length > 0 ? assignedJudges.map(j => (
                             <div key={j._realId} className="flex items-center justify-between p-3 rounded-xl bg-white/60 border border-white/60">
                               <div className="flex items-center gap-2">
                                 <img src={j.avatar} alt={j.initials} className="w-7 h-7 rounded-lg object-cover" />
@@ -879,8 +940,7 @@ export default function Dashboard() {
                               </div>
                               <span className="text-xs font-bold text-[#0b1b52]">{j.avg}</span>
                             </div>
-                          ))}
-                          {assignedJudges.length === 0 && (
+                          )) : (
                             <p className="text-xs text-slate-400 text-center py-4 sm:col-span-2">No judges assigned to this hackathon.</p>
                           )}
                         </div>
@@ -983,7 +1043,7 @@ export default function Dashboard() {
                               Edit Assignment
                             </button>
                             <button
-                              onClick={() => removeJudgeFromTeam(null, selectedJudge.name)}
+                              onClick={() => removeJudgeFromTeam()}
                               className="px-4 py-2 rounded-2xl bg-rose-50 text-rose-600 text-xs font-medium hover:bg-rose-100 transition hover:scale-[1.03]"
                             >
                               Remove from All
@@ -1074,23 +1134,22 @@ export default function Dashboard() {
                   <h3 className="text-base font-semibold text-[#0b1b52]">Tie Resolution</h3>
                   <button onClick={() => setModal({ type: "allTies" })} className="text-xs text-blue-600 hover:underline">View All</button>
                 </div>
-                <p className="text-xs text-slate-500 mt-1">2 teams have tied scores</p>
+                <p className="text-xs text-slate-500 mt-1">{tiedResults.length} team{tiedResults.length === 1 ? '' : 's'} have tied scores</p>
                 <div className="mt-4 space-y-2">
-                  {[
-                    { code: "CI", name: "Code Infinity", color: "from-sky-500 to-blue-600", score: "8.45" },
-                    { code: "HX", name: "HackX 5.0", color: "from-amber-500 to-orange-600", score: "8.45" },
-                  ].map(t => (
-                    <div key={t.code} className="flex items-center justify-between p-3 rounded-xl bg-white/60 border border-white/60">
+                  {tiedResults.length > 0 ? tiedResults.map(result => (
+                    <div key={result.submissionId} className="flex items-center justify-between p-3 rounded-xl bg-white/60 border border-white/60">
                       <div className="flex items-center gap-3">
-                        <img src={`https://picsum.photos/seed/${t.code}/32/32`} alt={t.name} className="w-8 h-8 rounded-lg object-cover" />
-                        <span className="text-sm font-medium text-[#0b1b52]">{t.name}</span>
+                        <img src={`https://picsum.photos/seed/${result.title}/32/32`} alt={result.title || result.submissionId} className="w-8 h-8 rounded-lg object-cover" />
+                        <span className="text-sm font-medium text-[#0b1b52]">{result.title || 'Untitled Submission'}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-[#0b1b52]">{t.score}</span>
+                        <span className="text-sm font-semibold text-[#0b1b52]">{result.aggregatedScore?.toFixed(2) || '0.00'}</span>
                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-100 text-rose-600 font-medium">TIED</span>
                       </div>
                     </div>
-                  ))}
+                  )) : (
+                    <div className="text-slate-500 text-sm">No currently tied teams.</div>
+                  )}
                 </div>
                 <button
                   onClick={handleResolveTies}
@@ -1174,19 +1233,25 @@ export default function Dashboard() {
               <p className="text-xs text-slate-400 text-center py-4">No system judges found.</p>
             )}
           </div>
-          <div className="mt-5 flex gap-3 justify-end">
-            <button 
-              onClick={() => setModal(null)} 
-              className="px-4 py-2 rounded-xl border border-slate-200 text-sm text-slate-600 hover:bg-slate-50"
-            >
-              Cancel
-            </button>
-            <button 
-              onClick={saveManageJudges} 
-              className="px-5 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-700 text-white text-sm font-medium shadow hover:shadow-lg transition"
-            >
-              Save Assignments
-            </button>
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
+            {manageSelectedJudgeIds.length === 0 && (
+              <p className="text-xs text-rose-500">Select at least one judge before you save the assignment.</p>
+            )}
+            <div className="flex gap-3 justify-end w-full sm:w-auto">
+              <button 
+                onClick={() => setModal(null)} 
+                className="px-4 py-2 rounded-xl border border-slate-200 text-sm text-slate-600 hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={saveManageJudges} 
+                disabled={manageSelectedJudgeIds.length === 0}
+                className={`px-5 py-2 rounded-xl text-white text-sm font-medium shadow transition ${manageSelectedJudgeIds.length === 0 ? "bg-slate-300 text-slate-600 cursor-not-allowed shadow-none" : "bg-gradient-to-r from-blue-500 to-blue-700 hover:shadow-lg"}`}
+              >
+                Save Assignments
+              </button>
+            </div>
           </div>
         </Modal>
       )}

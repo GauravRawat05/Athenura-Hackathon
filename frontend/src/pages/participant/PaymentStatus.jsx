@@ -449,6 +449,7 @@ export default function PaymentStatus() {
   const navigate = useNavigate();
 
   const status   = location.state?.status || "success"; // success | failed
+  const errorMessage = location.state?.errorMessage;
   const hackathon = location.state?.hackathon || {
     name: "TechBurst 2025",
     mode: "Team",
@@ -605,7 +606,7 @@ export default function PaymentStatus() {
             <p className="status-msg">
               {isSuccess
                 ? `You have successfully registered for ${hackathon.name}. Check your dashboard for details and upcoming updates!`
-                : "Your payment could not be processed. Please check your details and try again, or use a different payment method."
+                : (errorMessage || "Your payment could not be processed. Please check your details and try again, or use a different payment method.")
               }
             </p>
 

@@ -65,6 +65,58 @@ class JudgingService {
     };
   }
 
+  // Replace hackathon judge set based on provided judgeIds.
+  // - Adds newly selected judges
+  // - Removes deselected judges
+  async updateHackathonJudges(hackathonId, judgeIds, adminId) {
+    const hackathon = await Hackathon.findById(hackathonId);
+    if (!hackathon) {
+      throw new ApiError(404, "Hackathon not found");
+    }
+
+    // Validate judges are valid & role=JUDGE
+    const judges = await User.find({ _id: { $in: judgeIds }, role: userRoles.JUDGE }).select('_id');
+    if (judges.length !== judgeIds.length) {
+      throw new ApiError(400, "One or more invalid judge IDs, or user is not a Judge");
+    }
+
+    // Existing assignments for this hackathon
+    const existingAssignments = await JudgeAssignment.find({ hackathonId }).select('judgeId');
+    const existingSet = new Set(existingAssignments.map(a => a.judgeId.toString()));
+
+    const targetSet = new Set(judgeIds.map(id => id.toString()));
+
+    const toAddIds = [...targetSet].filter(id => !existingSet.has(id));
+    const toRemoveIds = [...existingSet].filter(id => !targetSet.has(id));
+
+    // Add missing ones
+    const toAddAssignments = toAddIds.map((id) => ({
+      judgeId: id,
+      hackathonId,
+      assignedBy: adminId,
+      assigned: true
+    }));
+
+    if (toAddAssignments.length > 0) {
+      await JudgeAssignment.insertMany(toAddAssignments, { ordered: false });
+    }
+
+    // Remove deselected ones
+    if (toRemoveIds.length > 0) {
+      await JudgeAssignment.deleteMany({
+        hackathonId,
+        judgeId: { $in: toRemoveIds }
+      });
+    }
+
+    return {
+      hackathonId,
+      addedCount: toAddAssignments.length,
+      removedCount: toRemoveIds.length,
+      finalCount: targetSet.size,
+    };
+  }
+
   async getJudgeAssignments(judgeId) {
     return await judgingRepository.findAssignmentsByJudge(judgeId);
   }

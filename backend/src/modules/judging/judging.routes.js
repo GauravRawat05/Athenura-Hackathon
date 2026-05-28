@@ -23,12 +23,22 @@ router.route("/admin/judges").get(
   asyncHandler(judgingController.getAllJudges)
 );
 
+// Add-only (kept for backward compatibility)
 router.route("/admin/hackathons/:hackathonId/assign").post(
   verifyJWT,
   restrictTo("Admin", "SuperAdmin"),
   validateParams(hackathonIdParamValidation),
   validate(assignJudgesValidation),
   asyncHandler(judgingController.assignJudges)
+);
+
+// Replace hackathon judge set (adds selected, removes deselected)
+router.route("/admin/hackathons/:hackathonId/assign-update").post(
+  verifyJWT,
+  restrictTo("Admin", "SuperAdmin"),
+  validateParams(hackathonIdParamValidation),
+  validate(assignJudgesValidation),
+  asyncHandler(judgingController.updateHackathonJudges)
 );
 
 router.route("/admin/hackathons/:hackathonId/judges").get(

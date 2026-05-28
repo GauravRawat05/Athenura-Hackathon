@@ -30,6 +30,10 @@ export const hackathonService = {
   },
   adminDeleteHackathon: (id) => api.delete(`/admin/hackathons/${id}`),
   adminListRegistrations: (hackathonId, params) => api.get(`/admin/hackathons/${hackathonId}/registrations`, { params }),
+  adminGetResultProgress: (hackathonId) => api.get(`/admin/results/progress/${hackathonId}`),
+  adminGetHackathonResults: (hackathonId, params) => api.get(`/admin/results/hackathon/${hackathonId}`, { params }),
+  adminPublishResults: (hackathonId) => api.post(`/admin/results/publish/${hackathonId}`),
+  adminComputeResults: (hackathonId) => api.post(`/admin/hackathons/${hackathonId}/results/compute`),
 
   getWinners: (id) => api.get(`/hackathons/${id}/winners`),
 };

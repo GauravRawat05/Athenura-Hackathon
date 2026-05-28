@@ -35,13 +35,49 @@ class RegistrationService {
                 if (existingRegistration.registrationStatus === REGISTRATION_STATUSES.CONFIRMED) {
                     throw new ApiError(400, 'You are already registered and paid for this hackathon.');
                 } else if (existingRegistration.registrationStatus === REGISTRATION_STATUSES.PENDING_PAYMENT) {
+                    // Update registration if type or team changed
+                    let needsUpdate = false;
+                    let newAmount = existingRegistration.amount;
+
+                    if (existingRegistration.registrationType !== registrationType) {
+                        existingRegistration.registrationType = registrationType;
+                        needsUpdate = true;
+                    }
+                    if (registrationType === 'team' && String(existingRegistration.teamId) !== String(teamId)) {
+                        existingRegistration.teamId = teamId;
+                        needsUpdate = true;
+                    }
+
+                    if (needsUpdate) {
+                        if (registrationType === 'solo') newAmount = hackathon.soloFee || 0;
+                        else if (registrationType === 'intern') newAmount = hackathon.internFee || 0;
+                        else if (registrationType === 'team') newAmount = hackathon.teamFee || 0;
+                        
+                        existingRegistration.amount = newAmount;
+                        await Registration.updateOne(
+                            { _id: existingRegistration._id },
+                            { $set: { 
+                                registrationType: existingRegistration.registrationType,
+                                teamId: existingRegistration.teamId,
+                                amount: existingRegistration.amount
+                            } },
+                            { session }
+                        );
+                    }
+
                     let payment = existingRegistration.paymentId 
                         ? await paymentRepository.findById(existingRegistration.paymentId, session) 
                         : await paymentRepository.findByRegistrationId(existingRegistration._id, session);
                         
-                    if (!payment) {
-                        // Self-healing: create the missing payment record
-                        const amountInPaise = (existingRegistration.amount || hackathon.soloFee || hackathon.registrationFee || 0) * 100;
+                    // If the expected amount doesn't match the existing payment, force recreation
+                    const expectedAmountInPaise = newAmount * 100;
+                    if (payment && payment.amount !== expectedAmountInPaise) {
+                        payment = null; // Trigger creation of a new payment record
+                    }
+
+                    if (!payment && newAmount > 0) {
+                        // Self-healing: create the missing/updated payment record
+                        const amountInPaise = newAmount * 100;
                         const currency = existingRegistration.currency || hackathon.currency || 'INR';
                         
                         payment = await paymentService.createPaymentRecord({
@@ -68,6 +104,19 @@ class RegistrationService {
                             currency: payment.currency,
                             razorpayKey: envConfig.razorpayKeyId,
                             requiresPayment: true,
+                        };
+                    } else if (!payment && newAmount === 0) {
+                        // Handle transition to a free mode
+                        existingRegistration.registrationStatus = REGISTRATION_STATUSES.CONFIRMED;
+                        existingRegistration.confirmedAt = new Date();
+                        await Registration.updateOne(
+                            { _id: existingRegistration._id }, 
+                            { $set: { registrationStatus: REGISTRATION_STATUSES.CONFIRMED, confirmedAt: existingRegistration.confirmedAt } }, 
+                            { session }
+                        );
+                        return {
+                            registrationId: existingRegistration._id,
+                            requiresPayment: false,
                         };
                     }
                 }

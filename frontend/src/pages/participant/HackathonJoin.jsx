@@ -124,17 +124,18 @@ export default function HackathonJoin() {
             id: raw._id,
             title: raw.title,
             status,
-            fees: raw.fees || {},
+            fees: { solo: raw.soloFee, team: raw.teamFee, intern: raw.internFee },
             currency: raw.currency || "$",
-            feeNum: raw.registrationFee || 0,
-            mode: raw.allowedModes?.[0]?.toLowerCase() || 'team',
+            feeNum: Math.min(...[raw.soloFee, raw.teamFee].filter(f => f != null && f >= 0)),
+            modes: raw.allowedModes || [], // Should be an array like ["Solo", "Team"]
             teamSize: { min: raw.minTeamSize || 2, max: raw.maxTeamSize || 4 },
           };
           if (mounted) {
             setH(mapped);
+            // Default to first allowed mode
             setForm(f => ({
               ...f,
-              teamMode: mapped.mode === "solo" ? "solo" : "create"
+              teamMode: mapped.modes.includes("Solo") ? "solo" : "create"
             }));
           }
         }
@@ -271,7 +272,7 @@ export default function HackathonJoin() {
         setRegistrationResult(res?.data?.data || {});
         setSubmitted(true);
       } else if (form.teamMode === "create") {
-        // Create Team first
+        // 1. Create Team
         const teamRes = await api.post(`/teams/hackathons/${id}/teams`, {
           teamName: form.teamName
         });
@@ -280,36 +281,40 @@ export default function HackathonJoin() {
           throw new Error("Failed to create team");
         }
         
-        // Invite members (if any)
+        // 2. Invite members (if any)
         const emailRegex = /\S+@\S+\.\S+/;
         const activeEmails = form.teammates.filter(email => email && email.trim() && emailRegex.test(email));
         for (const email of activeEmails) {
           try {
             await api.post(`/teams/${createdTeam._id}/invitations`, { email });
           } catch (e) {
-            
+            console.error(`Failed to invite ${email}:`, e);
           }
         }
         
-        // Register Team for Hackathon
+        // 3. Register for Hackathon
         const regRes = await hackathonService.register(id, {
           registrationType: "team",
           teamId: createdTeam._id,
           hackathonId: id
         });
-        setRegistrationResult(regRes?.data?.data || {});
+        const regData = regRes?.data?.data || {};
+        setRegistrationResult(regData);
         setSubmitted(true);
+
+        // Payment check
+        if (regData.requiresPayment && window.Razorpay) {
+          handlePayment(regData, h);
+        }
       } else if (form.teamMode === "join") {
-        // Join Team with Invite Code
+        // 1. Join Team (accept invitation)
         const acceptRes = await api.post(`/teams/invitations/${form.inviteCode}/accept`);
-        const joinedTeamId = acceptRes.data?.data?.teamId;
+        const joinedTeamId = acceptRes.data?.data?.teamId || acceptRes.data?.data?.team?._id;
         
-        // Note: Joining a team might not automatically register the user for the hackathon
-        // depending on your backend logic. Assuming the 'register' endpoint is needed
-        // even after joining a team.
+        // 2. Register for Hackathon
         const regRes = await hackathonService.register(id, {
           registrationType: "team",
-          teamId: joinedTeamId || form.teamId,
+          teamId: joinedTeamId,
           hackathonId: id
         });
         const regData = regRes?.data?.data || {};
@@ -317,45 +322,49 @@ export default function HackathonJoin() {
         setSubmitted(true);
 
         if (regData.requiresPayment && window.Razorpay) {
-          const options = {
-            key: import.meta.env.VITE_RAZORPAY_KEY_ID || regData.razorpayKey || "rzp_test_SokmKPc76a4dtb",
-            amount: regData.amount, // amount is already in paise from backend
-            currency: regData.currency || "INR",
-            name: "Athenura Hackathons",
-            description: `Registration fee for ${h.title}`,
-            order_id: regData.orderId,
-            handler: async function (response) {
-              try {
-                await paymentService.verifyPayment(
-                  regData.registrationId,
-                  regData.orderId,
-                  response.razorpay_payment_id,
-                  response.razorpay_signature
-                );
-                routerNavigate("/payment/status", { state: { status: "success", hackathon: h } });
-              } catch (verifyErr) {
-                routerNavigate("/payment/status", { state: { status: "failed", hackathon: h } });
-              }
-            },
-            prefill: {
-              name: form.name,
-              email: form.email,
-              contact: form.phone,
-            },
-            theme: { color: "#03045E" },
-          };
-          const rzp = new window.Razorpay(options);
-          rzp.open();
+          handlePayment(regData, h);
         }
       }
     } catch (err) {
-      
       const msg = err?.response?.data?.message || err?.response?.data?.errors?.[0] || err.message || "Registration failed";
       setErrors({ apiError: msg });
     } finally {
       setLoadingSubmit(false);
     }
   };
+
+  const handlePayment = (regData, hackathon) => {
+    const options = {
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID || regData.razorpayKey || "rzp_test_SokmKPc76a4dtb",
+      amount: regData.amount,
+      currency: regData.currency || "INR",
+      name: "Athenura Hackathons",
+      description: `Registration fee for ${hackathon.title}`,
+      order_id: regData.orderId,
+      handler: async function (response) {
+        try {
+          await paymentService.verifyPayment(
+            regData.registrationId,
+            regData.orderId,
+            response.razorpay_payment_id,
+            response.razorpay_signature
+          );
+          routerNavigate("/payment/status", { state: { status: "success", hackathon: hackathon } });
+        } catch (verifyErr) {
+          routerNavigate("/payment/status", { state: { status: "failed", hackathon: hackathon } });
+        }
+      },
+      prefill: {
+        name: form.name,
+        email: form.email,
+        contact: form.phone,
+      },
+      theme: { color: "#03045E" },
+    };
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+  };
+
 
   const back = () => {
     setErrors({});
@@ -446,7 +455,7 @@ export default function HackathonJoin() {
                   Your registration for <strong style={{ color: C.accentBlue }}>{h.title}</strong> is pending payment.
                 </p>
                 <p style={{ color: "#d97706", fontSize: 13, fontWeight: 600, margin: "0 0 36px" }}>
-                  Please complete the entry fee payment of ${h.feeNum} to secure your spot.
+                  Please complete the entry fee payment of {h.currency || 'INR'} {form.teamMode === "solo" ? (h.fees?.solo || h.feeNum) : (h.fees?.team || h.feeNum)} to secure your spot.
                 </p>
                 <button
                   onClick={() => {
@@ -492,7 +501,7 @@ export default function HackathonJoin() {
                     boxShadow: "0 4px 16px rgba(217,119,6,0.25)",
                   }}
                 >
-                  Proceed to Payment 💳
+                  Proceed to Payment
                 </button>
               </>
             ) : (
@@ -605,7 +614,7 @@ export default function HackathonJoin() {
             {h.title}
           </h1>
           <p style={{ margin: 0, color: "#90E0EF", fontSize: 14 }}>
-            💳 Registration fee: {h.feeNum === 0 ? "Free" : `${h.currency}${h.feeNum}`}
+            💳 Registration fee: {h.feeNum === 0 ? "Free" : "Paid"}
           </p>
         </div>
 
@@ -1012,7 +1021,7 @@ export default function HackathonJoin() {
                     : null,
                   {
                     label: "Entry Fee",
-                    value: h.feeNum === 0 ? "Free 🎁" : `${h.currency}${h.feeNum}`,
+                    value: h.feeNum === 0 ? "Free 🎁" : "Paid 💳",
                   },
                 ]
                   .filter(Boolean)
@@ -1187,9 +1196,12 @@ export default function HackathonJoin() {
               {loadingSubmit ? (
                 "Processing..."
               ) : step === STEPS.length - 1 ? (
-                h.feeNum === 0
-                  ? "Complete Registration 🚀"
-                  : `Pay $${h.feeNum} & Register 🚀`
+                (() => {
+                    const selectedFee = form.teamMode === "solo" ? (h.fees?.solo || 0) : (h.fees?.team || 0);
+                    return selectedFee === 0
+                      ? "Complete Registration 🚀"
+                      : `Pay ${h.currency || 'INR'} ${selectedFee} & Register 🚀`;
+                  })()
               ) : (
                 "Continue →"
               )}
