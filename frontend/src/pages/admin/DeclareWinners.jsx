@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Trophy, Users, Award, FileBadge, Globe,
@@ -67,13 +67,12 @@ const ALL_TEAMS = [
   "CloudCoders", "QuantumLeap", "HackHeroes", "DevStorm",
 ];
 
-const TABS_SHORT = ["Winners", "Certs", "Preview", "Publish"];
-const TABS_LONG  = ["Winners Selection", "Certificate Mgmt", "Result Preview", "Publish Results"];
+const TABS_SHORT = ["Winners", "Preview", "Publish"];
+const TABS_LONG  = ["Winners Selection", "Result Preview", "Publish Results"];
 
 const TIMELINE_INIT = [
   { title: "Judging Completed",    sub: "May 18, 2026 · 05:30 PM", status: "done"    },
   { title: "Winners Selection",    sub: "In Progress",              status: "active"  },
-  { title: "Certificate Generation", sub: "Pending",               status: "pending" },
   { title: "Results Publication",  sub: "Pending",                  status: "pending" },
 ];
 
@@ -577,7 +576,6 @@ function PreviewTab({ winners, published }) {
 function PublishTab({ published, onPublish, publishing }) {
   const checks = [
     { label: "Winners finalized",      done: true  },
-    { label: "Certificates generated", done: false },
     { label: "Results previewed",      done: true  },
   ];
   return (
@@ -633,7 +631,6 @@ function ResultSummary({ winners, certCount, published, onViewDetails, onReset, 
   const rows = [
     { icon: Users,     label: "Total Teams",     value: "128" },
     { icon: Award,     label: "Winners",          value: "3 / 3" },
-    { icon: FileBadge, label: "Certs Generated",  value: certCount > 0 ? String(certCount) : "0" },
     { icon: Clock,     label: "Deadline",         value: "May 20, 2026" },
   ];
   return (
@@ -709,19 +706,13 @@ function ResultSummary({ winners, certCount, published, onViewDetails, onReset, 
           Quick Actions
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          <button onClick={onGenerateCerts} style={{
-            padding: "9px 0", borderRadius: 10,
-            background: "linear-gradient(135deg,#10b981,#059669)", color: "#fff",
-            fontSize: 12, fontWeight: 600, boxShadow: "0 3px 10px rgba(16,185,129,.3)",
-            whiteSpace: "nowrap",
-          }}>Generate</button>
           <button onClick={onPreview} style={{
             padding: "9px 0", borderRadius: 10,
             border: "1.5px solid #e2e8f0", background: "rgba(255,255,255,.8)",
             color: "#475569", fontSize: 12, fontWeight: 600, whiteSpace: "nowrap",
           }}>Preview</button>
           <button onClick={onReset} style={{
-            gridColumn: "1 / -1", padding: "9px 0", borderRadius: 10,
+            padding: "9px 0", borderRadius: 10,
             border: "1.5px solid #fecaca", background: "#fef2f2", color: "#dc2626",
             fontSize: 12, fontWeight: 600, whiteSpace: "nowrap",
           }}>Reset All</button>
@@ -896,7 +887,6 @@ function MobileSheet({ winners, certCount, published, onReset, onGenerateCerts, 
                 {[
                   { label: "Total Teams", value: "128" },
                   { label: "Winners", value: "3 / 3" },
-                  { label: "Certs", value: certCount > 0 ? String(certCount) : "0" },
                   { label: "Deadline", value: "May 20" },
                 ].map(r => (
                   <div key={r.label} style={{ padding: "9px 11px", borderRadius: 11, background: "#f8fafc", border: "1px solid #f1f5f9", minWidth: 0 }}>
@@ -905,9 +895,8 @@ function MobileSheet({ winners, certCount, published, onReset, onGenerateCerts, 
                   </div>
                 ))}
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
                 {[
-                  { label: "Generate Certs", action: onGenerateCerts, bg: "linear-gradient(135deg,#10b981,#059669)", color: "#fff", bdr: "none" },
                   { label: "Preview",        action: onPreview,        bg: "rgba(255,255,255,.8)",                  color: "#475569", bdr: "1.5px solid #e2e8f0" },
                   { label: "Publish",        action: onPublish,        bg: `linear-gradient(135deg,${T.accent},${T.accentDk})`, color: "#fff", bdr: "none" },
                   { label: "Reset All",      action: onReset,          bg: "#fef2f2",                               color: "#dc2626", bdr: "1.5px solid #fecaca" },
@@ -991,10 +980,10 @@ export default function ResultDeclaration() {
   const statsGrid = isXS || isMobile
     ? "repeat(2,1fr)"
     : isMD
-      ? "repeat(3,1fr)"
+      ? "repeat(2,1fr)"
       : isTablet
-        ? "repeat(3,1fr)"
-        : "repeat(5,1fr)";
+        ? "repeat(2,1fr)"
+        : "repeat(4,1fr)";
 
   const showSidebar = bp.w >= 900;
 
@@ -1004,9 +993,7 @@ export default function ResultDeclaration() {
     ? "1fr"
     : isMD
       ? "1fr"
-      : isTablet
-        ? "repeat(2,1fr)"
-        : "repeat(3,1fr)";
+      : "repeat(2,1fr)";
 
   const tabLabels = bp.w < 760 ? TABS_SHORT : TABS_LONG;
 
@@ -1017,7 +1004,6 @@ export default function ResultDeclaration() {
     { label: "Hackathon",    value: "AI Revolution 2026", delta: "Active",         deltaOk: true,  icon: Trophy,    iconBg: "#dbeafe", iconColor: "#2563eb" },
     { label: "Total Teams",  value: "128",                delta: "Participated",    deltaOk: null,  icon: Users,     iconBg: "#ccfbf1", iconColor: "#0f766e" },
     { label: "Winners",      value: "3",                  delta: "Positions filled",deltaOk: null,  icon: Award,     iconBg: "#ede9fe", iconColor: "#7c3aed" },
-    { label: "Certificates", value: String(certCount),    delta: certCount ? "Ready" : "Not generated", deltaOk: certCount > 0, icon: FileBadge, iconBg: "#e0f2fe", iconColor: "#0284c7" },
     { label: "Status",       value: published ? "Published" : "Draft", delta: published ? "Visible to all" : "Not published", deltaOk: published, icon: Globe, iconBg: "#dcfce7", iconColor: "#15803d" },
   ];
 
@@ -1150,9 +1136,8 @@ export default function ResultDeclaration() {
                       setOpenUid={setOpenUid}
                     />
                   )}
-                  {activeTab === 1 && <CertificateTab certCount={certCount} onGenerate={handleGenerateCerts} generating={generating} />}
-                  {activeTab === 2 && <PreviewTab winners={winners} published={published} />}
-                  {activeTab === 3 && <PublishTab published={published} onPublish={handlePublish} publishing={publishing} />}
+                  {activeTab === 1 && <PreviewTab winners={winners} published={published} />}
+                  {activeTab === 2 && <PublishTab published={published} onPublish={handlePublish} publishing={publishing} />}
                 </motion.div>
               </AnimatePresence>
             </Card>
@@ -1164,9 +1149,8 @@ export default function ResultDeclaration() {
                 winners={winners} certCount={certCount} published={published}
                 onViewDetails={w => setModal({ type: "details", data: w })}
                 onReset={handleReset}
-                onGenerateCerts={handleGenerateCerts}
-                onPreview={() => setActiveTab(2)}
-                onPublish={() => setActiveTab(3)}
+                onPreview={() => setActiveTab(1)}
+                onPublish={() => setActiveTab(2)}
               />
             </motion.div>
           )}
@@ -1174,9 +1158,8 @@ export default function ResultDeclaration() {
 
         <div style={{ display: "grid", gridTemplateColumns: bottomGrid, gap: isXS ? 10 : 18, minWidth: 0 }}>
           {[
-            <CertificateProgress certCount={certCount} onManage={() => setActiveTab(1)} />,
             <ResultTimeline timeline={timeline} onExport={() => showToast("Timeline exported!", "success")} />,
-            <TopScores winners={winners} onViewAll={() => setModal({ type: "allScores" })} onPublish={() => setActiveTab(3)} />,
+            <TopScores winners={winners} onViewAll={() => setModal({ type: "allScores" })} onPublish={() => setActiveTab(2)} />,
           ].map((el, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .5 + i * .08 }} style={{ minWidth: 0 }}>
               {el}
@@ -1191,9 +1174,8 @@ export default function ResultDeclaration() {
           <MobileSheet
             winners={winners} certCount={certCount} published={published}
             onReset={handleReset}
-            onGenerateCerts={handleGenerateCerts}
-            onPreview={() => setActiveTab(2)}
-            onPublish={() => setActiveTab(3)}
+            onPreview={() => setActiveTab(1)}
+            onPublish={() => setActiveTab(2)}
           />
         </div>
       )}

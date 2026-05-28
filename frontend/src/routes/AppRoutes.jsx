@@ -1,6 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import AdminNotifications from '../pages/admin/AdminNotifications'
 import AdminLogin from '../pages/admin/auth/AdminLogin'
 import AdminRegister from '../pages/admin/auth/AdminRegister'
 import Login from '../pages/auth/Login'
@@ -31,7 +30,6 @@ import HackathonList from '../pages/admin/HackathonList'
 import UserManagement from '../pages/admin/UserManagement'
 import AssignJudges from '../pages/admin/AssignJudges'
 import DeclareWinners from '../pages/admin/DeclareWinners'
-import RevenueReports from '../pages/admin/RevenueReports'
 import UniversityManagement from '../pages/admin/UniversityManagement'
 import CertificateManagement from '../pages/admin/CertificateManagement'
 
@@ -126,10 +124,8 @@ export default function AppRoutes() {
       <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><UserManagement /></AdminLayout></ProtectedRoute>} />
       <Route path="/admin/hackathons/:id/judges" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><AssignJudges /></AdminLayout></ProtectedRoute>} />
       <Route path="/admin/hackathons/:id/winners" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><DeclareWinners /></AdminLayout></ProtectedRoute>} />
-      <Route path="/admin/reports" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><RevenueReports /></AdminLayout></ProtectedRoute>} />
       <Route path="/admin/universities" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><UniversityManagement /></AdminLayout></ProtectedRoute>} />
       <Route path="/admin/certificates" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><CertificateManagement /></AdminLayout></ProtectedRoute>} />
-      <Route path="/admin/notifications" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><AdminNotifications /></AdminLayout></ProtectedRoute>} />
 
       {/* Judge */}
       <Route path="/judge" element={<ProtectedRoute allowedRoles={['judge']}><JudgeDashboard /></ProtectedRoute>} />
