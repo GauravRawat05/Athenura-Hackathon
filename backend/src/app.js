@@ -13,7 +13,7 @@ import cookieParser from 'cookie-parser'
 import nodeCron from "node-cron";
 import { syncHackathonStatuses } from "./modules/admin/hackathons/adminHackathon.service.js";
 import { processPendingEmails } from "./modules/notifications/notification.cron.js";
-
+import { cleanExpiredRegistrations } from "./jobs/cleanExpiredRegistrations.job.js"; // Import the new job
 
 
 const app = express();
@@ -53,6 +53,9 @@ nodeCron.schedule("* * * * *", runHackathonStatusSync);
 
 // Schedule background email sending to prevent slow SMTP calls from causing server lag
 nodeCron.schedule("*/1 * * * *", processPendingEmails);
+
+// Schedule cleanup for expired registrations every 5 minutes
+nodeCron.schedule("*/5 * * * *", cleanExpiredRegistrations);
 
 // Run once on startup to sync any statuses missed during downtime
 runHackathonStatusSync();

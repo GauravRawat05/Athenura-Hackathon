@@ -1,22 +1,36 @@
-import { Router } from "express";
-import { verifyJWT } from "../../middleware/auth.middleware.js";
-import {
-  createOrder,
-  verifyPayment,
-  getPaymentStatus,
-  razorpayWebhook,
-} from "./payment.controller.js";
+// payment.routes.js
+import { Router } from 'express';
+import { verifyAndConfirmPayment, handleRazorpayWebhook } from './payment.controller.js';
+import { verifyAndConfirmSchema } from './payment.validation.js';
+import { validate } from '../../middleware/validate.middleware.js'; // Assuming a validation middleware
+import { verifyJWT } from '../../middleware/auth.middleware.js'; // Assuming auth middleware
+import express from 'express'; // For raw body parsing for webhook
 
 const router = Router();
 
-// Webhook endpoint does NOT need JWT, as it's called by Razorpay servers
-router.post("/webhooks/razorpay", razorpayWebhook);
+// Middleware to parse raw body for Razorpay webhook signature verification
+// This must be applied ONLY to the webhook route and BEFORE other body parsers
+// The `verify` function populates `req.rawBody`
+const rawBodyParser = express.json({
+    verify: (req, res, buf) => {
+        req.rawBody = buf;
+    },
+});
 
-// The rest are protected routes
-router.use(verifyJWT);
+// Route for verifying and confirming payment (frontend initiated)
+router.post(
+    '/verify-and-confirm',
+    verifyJWT, // Ensure user is logged in
+    validate(verifyAndConfirmSchema), // Validate request body
+    verifyAndConfirmPayment
+);
 
-router.post("/create-order", createOrder);
-router.post("/verify", verifyPayment);
-router.get("/:id/status", getPaymentStatus);
+// Route for Razorpay webhook
+// It's crucial this route uses rawBodyParser ONLY and not any other body parser (like general express.json())
+router.post(
+    '/webhook',
+    rawBodyParser, // Use raw body parser for webhook
+    handleRazorpayWebhook
+);
 
 export default router;

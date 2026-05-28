@@ -8,6 +8,11 @@ class UserRepository {
     return await User.findById(userId).select(selectFields)
   }
 
+  // Alias for findUserById to maintain consistent naming conventions across repositories
+  async findById(userId, selectFields = "") {
+    return await this.findUserById(userId, selectFields);
+  }
+
   
    // Find user by email
    

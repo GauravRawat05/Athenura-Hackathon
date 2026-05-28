@@ -9,7 +9,7 @@ import submissionPolicy from "./submission.policy.js";
 import uploadService from "./upload.service.js";
 import Team from "../teams/team.model.js";
 import Hackathon from "../admin/hackathons/hackathon.model.js";
-import Registration from "../registrations/registration.model.js";
+import {Registration} from "../registrations/registration.model.js";
 import ApiError from "../../libs/apiError.js";
 import { MAX_ASSETS_PER_SUBMISSION } from "./submission.constants.js";
 import { deleteFromCloudinary } from "../../config/cloudinary.js";

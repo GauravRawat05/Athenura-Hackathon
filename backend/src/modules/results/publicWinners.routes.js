@@ -7,7 +7,8 @@ import asyncHandler from "../../libs/asyncHandler.js";
 import { verifyJWT } from "../../middleware/auth.middleware.js";
 import publicWinnersController from "./publicWinners.controller.js";
 import { hackathonIdParamValidation } from "./publicWinners.validation.js";
-import { validate } from "../registrations/registration.validation.js";
+import { initiateRegistrationSchema } from "../registrations/registration.validation.js";
+import { validate } from '../../middleware/validate.middleware.js'; // Assuming a validation middleware
 
 const router = Router();
 

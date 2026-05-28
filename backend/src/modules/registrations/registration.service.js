@@ -1,337 +1,245 @@
-/**
-    registration.service.js
-    Contains the core business rules for registration.
-    */
-import mongoose from "mongoose";
-import registrationRepository from "./registration.repository.js";
-    import teamRepository from "../teams/team.repository.js";
+// registration.service.js
+import { Registration } from './registration.model.js';
+import registrationRepository  from './registration.repository.js';
+import { paymentService } from '../payments/payment.service.js';
+import { paymentRepository } from '../payments/payment.repository.js';
+import  hackathonRepository  from '../hackathons/hackathon.repository.js';
+import teamRepository  from '../teams/team.repository.js';
+import userRepository  from '../users/user.repository.js';
+import ApiError from '../../libs/apiError.js';
+import mongoose from 'mongoose';
+import { REGISTRATION_STATUSES, PAYMENT_STATUSES } from '../../constants/user.constants.js';
+import envConfig from '../../config/envConfig.js';
 
-    import User from "../users/user.model.js";
-    import Hackathon from "../admin/hackathons/hackathon.model.js";
-    import ApiError from "../../libs/apiError.js";
-    import { sendEmail, EMAIL_TYPES } from "../notifications/notification.mailer.js";
-import Registration from "./registration.model.js";
+const REGISTRATION_EXPIRY_MINUTES = 30;
 
 class RegistrationService {
+    async initiateHackathonRegistration(userId, hackathonId, registrationType, teamId, internDetails) {
+        const session = await mongoose.startSession();
+        session.startTransaction();
+        try {
+            const hackathon = await hackathonRepository.findById(hackathonId);
+            if (!hackathon) {
+                throw new ApiError(404, 'Hackathon not found.');
+            }
+            // Registration is allowed if status is 'upcoming' or 'ongoing'
+            // if (!['upcoming', 'ongoing'].includes(hackathon.status)) {
+            //     throw new ApiError(400, 'Registration is not open for this hackathon.');
+            // }
+            if (new Date() > hackathon.registrationDeadline) {
+                throw new ApiError(400, 'Registration deadline has passed for this hackathon.');
+            }
 
-  /**
-   * Register a user or team for a hackathon
-   * @param {Object} params - { hackathonId, mode, userId, teamId, notes }
-   * @param {String} callerId - UUID of the authenticated user making request
-   * @returns {Promise<Object>} Registration summary object
-   */
-  async registerForHackathon({ hackathonId, mode, userId, teamId, notes }, callerId) {
-    const session = await mongoose.startSession();
-    session.startTransaction();
+            const existingRegistration = await registrationRepository.findByUserAndHackathon(userId, hackathonId);
+            if (existingRegistration) {
+                if (existingRegistration.registrationStatus === REGISTRATION_STATUSES.CONFIRMED) {
+                    throw new ApiError(400, 'You are already registered and paid for this hackathon.');
+                } else if (existingRegistration.registrationStatus === REGISTRATION_STATUSES.PENDING_PAYMENT) {
+                    let payment = existingRegistration.paymentId 
+                        ? await paymentRepository.findById(existingRegistration.paymentId, session) 
+                        : await paymentRepository.findByRegistrationId(existingRegistration._id, session);
+                        
+                    if (!payment) {
+                        // Self-healing: create the missing payment record
+                        const amountInPaise = (existingRegistration.amount || hackathon.soloFee || hackathon.registrationFee || 0) * 100;
+                        const currency = existingRegistration.currency || hackathon.currency || 'INR';
+                        
+                        payment = await paymentService.createPaymentRecord({
+                            registrationId: existingRegistration._id,
+                            amount: amountInPaise,
+                            currency: currency,
+                            paymentStatus: PAYMENT_STATUSES.CREATED,
+                            razorpayOrderId: `temp_${new mongoose.Types.ObjectId().toString()}`,
+                        }, session);
 
-    try {
-    // Validate caller exists and is verified
-    const caller = await User.findById(callerId).select("isEmailVerified fullName email");
-    if (!caller) {
-      throw new ApiError(404, "Caller user not found");
-    }
-    if (!caller.isEmailVerified) {
-      throw new ApiError(403, "Email verification required. Please verify your email before registering.");
-    }
+                        existingRegistration.paymentId = payment._id;
+                        await Registration.updateOne({ _id: existingRegistration._id }, { $set: { paymentId: payment._id } }, { session });
 
-    // Fetch hackathon
-    const hackathon = await Hackathon.findById(hackathonId);
-    if (!hackathon) {
-      throw new ApiError(404, "Hackathon not found");
-    }
+                        const razorpayOrder = await paymentService.createRazorpayOrder(amountInPaise, currency, payment._id.toString());
+                        payment.razorpayOrderId = razorpayOrder.id;
+                        await payment.save({ session });
+                    }
 
-    // Registration deadline check - users can register before hackathon starts
-    // only the registration deadline matters
-    if (new Date() > new Date(hackathon.registrationDeadline)) {
-      throw new ApiError(422, "Registration deadline has passed. Cannot register for this hackathon.");
-    }
+                    if (payment && payment.paymentStatus !== PAYMENT_STATUSES.COMPLETED) {
+                        return {
+                            registrationId: existingRegistration._id,
+                            orderId: payment.razorpayOrderId,
+                            amount: payment.amount,
+                            currency: payment.currency,
+                            razorpayKey: envConfig.razorpayKeyId,
+                            requiresPayment: true,
+                        };
+                    }
+                }
+                throw new ApiError(400, `Your previous registration is ${existingRegistration.registrationStatus}. Cannot proceed.`);
+            }
 
-    // Check if the user is already registered for this hackathon (solo or as part of a team)
-    const existingRegistration = await this.registrationRepo.hasUserRegisteredForHackathon(hackathonId, callerId);
-    if (existingRegistration) {
-      throw new ApiError(409, "You are already registered for this hackathon.");
-    }
+            let team = null;
+            if (registrationType === 'team') {
+                if (!teamId) {
+                    throw new ApiError(400, 'Team ID is required for team registrations.');
+                }
+                team = await teamRepository.findById(teamId);
+                if (!team) {
+                    throw new ApiError(404, 'Team not found.');
+                }
+                if (!team.hackathonId.equals(hackathonId)) {
+                    throw new ApiError(400, 'Team does not belong to this hackathon.');
+                }
+                if (team.members.length < hackathon.minTeamSize || team.members.length > hackathon.maxTeamSize) {
+                    throw new ApiError(400, `Team must have between ${hackathon.minTeamSize} and ${hackathon.maxTeamSize} members.`);
+                }
+                const userIsTeamMember = team.members.some(
+                    (member) => member.userId.equals(userId) && member.status === 'accepted'
+                );
+                if (!userIsTeamMember) {
+                    throw new ApiError(403, 'You are not an active member of this team.');
+                }
+                for (const member of team.members) {
+                    const memberRegistration = await registrationRepository.findByUserAndHackathon(member.userId, hackathonId);
+                    if (memberRegistration) {
+                        throw new ApiError(400, `Team member ${member.userId} is already registered for this hackathon.`);
+                    }
+                }
+            } else if (teamId) {
+                throw new ApiError(400, 'Team ID is not allowed for solo or intern registrations.');
+            }
 
-    // Mode allowed? (handles "both" as wildcard)
-    const allowed = [].concat(hackathon.allowedModes || hackathon.mode || []);
-    const allowedLower = allowed.map(m => (typeof m === 'string' ? m.toLowerCase() : m));
-    const modeLower = mode?.toLowerCase();
-    const isAllowed = allowedLower.includes(modeLower) || allowedLower.includes('both');
-    if (!isAllowed) {
-      throw new ApiError(400, `This hackathon does not allow ${mode} registrations`);
-    }
+            if (registrationType === 'intern') {
+                if (!internDetails.isIntern && (!internDetails.internProofUrl && !internDetails.universityEmail)) {
+                    throw new ApiError(400, 'Intern registration requires confirmation or proof (document/university email).');
+                }
+            }
 
-    // Dispatch to mode-specific flow
-    if (modeLower === "solo") {
-      const result = await this.registerSolo({ hackathon, userId: userId || callerId, notes, caller: caller }, { session });
-      await session.commitTransaction();
-      return result;
-    } else if (modeLower === "team") {
-      const result = await this.registerTeam({ hackathon, teamId, callerId, notes }, { session });
-      await session.commitTransaction();
-      return result;
-    } else {
-      throw new ApiError(400, "Invalid registration mode. Use 'solo' or 'team'");
-    }
-    } catch (error) {
-      await session.abortTransaction();
-      throw error;
-    } finally {
-      session.endSession();
-    }
-  }
+            let calculatedAmount = 0;
+            const currency = hackathon.currency || 'INR';
 
-  /**
-   * Solo registration flow
-   * @private
-   */
-  async registerSolo({ hackathon, userId, notes, caller }, options = {}) {
-    // Only self-registration
-    if (userId.toString() !== caller._id.toString()) {
-      throw new ApiError(403, "You can only register yourself for solo mode");
-    }
+            if (registrationType === 'solo') {
+                calculatedAmount = hackathon.soloFee || 0;
+            } else if (registrationType === 'intern') {
+                calculatedAmount = hackathon.internFee || 0;
+            } else if (registrationType === 'team') {
+                calculatedAmount = hackathon.teamFee || 0;
+            } else {
+                throw new ApiError(400, 'Invalid registration type.');
+            }
 
-    // Build registration data
-    const fee = caller.isInternIdVerified ? hackathon.internFee : hackathon.soloFee;
-    const regData = {
-      hackathonId: hackathon._id,
-      userId,
-      teamId: null,
-      mode: "solo",
-      participantIds: [userId],
-      totalAmount: fee,
-      currency: hackathon.currency,
-      notes,
-      status: fee > 0 ? "pending" : "confirmed",
-      paymentStatus: fee > 0 ? "pending" : "completed"
-    };
+            // --- 6. Create Registration Record ---
+            const expiresAt = new Date(Date.now() + REGISTRATION_EXPIRY_MINUTES * 60 * 1000);
+            const registrationData = {
+                userId,
+                hackathonId,
+                teamId: registrationType === 'team' ? team._id : null,
+                registrationType,
+                amount: calculatedAmount,
+                currency,
+                registrationStatus: calculatedAmount > 0 ? REGISTRATION_STATUSES.PENDING_PAYMENT : REGISTRATION_STATUSES.CONFIRMED,
+                expiresAt: calculatedAmount > 0 ? expiresAt : null,
+                confirmedAt: calculatedAmount > 0 ? null : new Date(),
+            };
 
-    if (fee === 0) {
-      regData.confirmedAt = new Date();
-      regData.paymentCompletedAt = new Date();
-    }
+            const [newRegistration] = await registrationRepository.createRegistration(registrationData, session);
 
-    // Create with duplicate protection
-    let registration;
-    try {
-      registration = await this.registrationRepo.create(regData, options);
-    } catch (error) {
-      if (error.code === 11000) {
-        throw new ApiError(409, "You are already registered for this hackathon");
-      }
-      throw error;
-    }
+            let paymentResult = { requiresPayment: false };
 
-    // Send confirmation email if registration is confirmed (free hackathon)
-    if (registration.status === "confirmed") {
-      try {
-        await sendEmail(caller.email, EMAIL_TYPES.REGISTRATION_CONFIRMATION, {
-          hackathonTitle: hackathon.title,
-          startDate: hackathon.startDate,
-          endDate: hackathon.endDate,
-          fullName: caller.fullName
-        });
-      } catch (emailError) {
-        console.error("Failed to send registration confirmation email:", emailError.message);
-      }
-    }
+            if (calculatedAmount > 0) {
+                const amountInPaise = calculatedAmount * 100;
+                // --- 7. Create Payment Record (only for paid) ---
+                const newPayment = await paymentService.createPaymentRecord({
+                    registrationId: newRegistration._id,
+                    amount: amountInPaise,
+                    currency: currency,
+                    paymentStatus: PAYMENT_STATUSES.CREATED,
+                    razorpayOrderId: `temp_${new mongoose.Types.ObjectId().toString()}`,
+                }, session);
 
-    return {
-      registrationId: registration._id,
-      hackathonId: registration.hackathonId,
-      mode: registration.mode,
-      teamId: registration.teamId,
-      status: registration.status,
-      paymentStatus: registration.paymentStatus,
-      requiresPayment: fee > 0,
-      message: fee > 0
-        ? "Registration successful. Please complete payment to confirm."
-        : "Registration successful. You are confirmed!"
-    };
-  }
+                newRegistration.paymentId = newPayment._id;
+                await newRegistration.save({ session });
 
-  /**
-   * Team registration flow (existing team only)
-   * @private
-   */
-  async registerTeam({ hackathon, teamId, callerId, notes }, options = {}) {
-    if (!teamId) {
-      throw new ApiError(400, "teamId is required for team registration");
-    }
+                const razorpayOrder = await paymentService.createRazorpayOrder(amountInPaise, currency, newPayment._id.toString());
+                newPayment.razorpayOrderId = razorpayOrder.id;
+                await newPayment.save({ session });
 
-    // Fetch team with members
-    const team = await teamRepository.findById(teamId);
-    if (!team) {
-      throw new ApiError(404, "Team not found");
-    }
+                console.log('[DEBUG] Razorpay Order Created:', razorpayOrder);
+                paymentResult = {
+                    registrationId: newRegistration._id,
+                    orderId: razorpayOrder.id,
+                    amount: razorpayOrder.amount,
+                    currency: razorpayOrder.currency,
+                    razorpayKey: envConfig.razorpayKeyId,
+                    requiresPayment: true,
+                };
+                console.log('[DEBUG] Payment Result:', paymentResult);
+            } else {
+                // Payment result for free hackathon
+                paymentResult = {
+                    registrationId: newRegistration._id,
+                    requiresPayment: false,
+                };
+            }
 
-    // Verify team belongs to this hackathon
-    if (team.hackathonId.toString() !== hackathon._id.toString()) {
-      throw new ApiError(400, "This team is not registered for this hackathon");
-    }
+            await session.commitTransaction();
+            return paymentResult;
 
-    // Only team leader can register
-    if (team.leader.toString() !== callerId.toString()) {
-      throw new ApiError(403, "Only team leader can register the team");
-    }
-
-    // Check team size (accepted members only)
-    const acceptedCount = teamRepository.getAcceptedMemberCount(team);
-    if (acceptedCount < hackathon.minTeamSize) {
-      throw new ApiError(
-        400,
-        `Team size (${acceptedCount}) is below minimum requirement of ${hackathon.minTeamSize}. Please wait for more members to accept invitations or add more members.`
-      );
-    }
-    if (acceptedCount > hackathon.maxTeamSize) {
-      throw new ApiError(
-        400,
-        `Team size (${acceptedCount}) exceeds maximum limit of ${hackathon.maxTeamSize}. Team size cannot exceed ${hackathon.maxTeamSize}.`
-      );
-    }
-
-    // Get accepted member IDs
-    const acceptedMemberIds = teamRepository.getAcceptedMemberIds(team);
-
-     // Verify all accepted members are verified
-     const unverifiedUsers = await User.find({
-       _id: { $in: acceptedMemberIds },
-       isEmailVerified: false
-     }).select("email");
-     if (unverifiedUsers.length > 0) {
-       const unverifiedEmails = unverifiedUsers.map(u => u.email).join(", ");
-       throw new ApiError(403, `Following members need to verify their email: ${unverifiedEmails}`);
-     }
-
-     // Duplicate checks are now handled atomically by database unique indexes.
-     // The registration creation will throw a duplicate key error if any participant
-     // already has an active registration for this hackathon.
-
-     // Build registration data
-     const regData = {
-       hackathonId: hackathon._id,
-       teamId,
-       mode: "team",
-       userId: null,
-       participantIds: acceptedMemberIds,
-       totalAmount: hackathon.teamFee,
-       currency: hackathon.currency,
-       notes,
-       status: hackathon.teamFee > 0 ? "pending" : "confirmed",
-       paymentStatus: hackathon.teamFee > 0 ? "pending" : "completed"
-     };
-
-    if (hackathon.teamFee === 0) {
-      regData.confirmedAt = new Date();
-      regData.paymentCompletedAt = new Date();
-    }
-
-    // Create with duplicate key protection (atomic via unique indexes)
-    let registration;
-    try {
-      registration = await this.registrationRepo.create(regData, options);
-    } catch (error) {
-      if (error.code === 11000) {
-        const keyPattern = error.keyPattern || {};
-        if (keyPattern.teamId) {
-          throw new ApiError(409, "This team is already registered for this hackathon");
-        } else if (keyPattern.participantIds) {
-          throw new ApiError(409, "A team member is already registered in another team or as a solo participant for this hackathon");
-        } else {
-          throw new ApiError(409, "Duplicate registration");
+        } catch (error) {
+            await session.abortTransaction();
+            throw error;
+        } finally {
+            session.endSession();
         }
-      }
-      throw error;
     }
 
-    // Send confirmation emails if registration is confirmed (free hackathon)
-    if (registration.status === "confirmed") {
-      try {
-        // Get all participant emails
-        const participants = await User.find({ _id: { $in: acceptedMemberIds } }).select("email fullName");
-        for (const participant of participants) {
-          await sendEmail(participant.email, EMAIL_TYPES.REGISTRATION_CONFIRMATION, {
-            hackathonTitle: hackathon.title,
-            startDate: hackathon.startDate,
-            endDate: hackathon.endDate,
-            fullName: participant.fullName
-          });
+    async getRegistrationById(registrationId, session) {
+        const registration = await registrationRepository.findById(registrationId, session);
+        if (!registration) {
+            throw new ApiError(404, 'Registration not found.');
         }
-      } catch (emailError) {
-        console.error("Failed to send team registration confirmation emails:", emailError.message);
-      }
+        return registration;
     }
 
-    return {
-      registrationId: registration._id,
-      hackathonId: registration.hackathonId,
-      mode: registration.mode,
-      teamId: registration.teamId,
-      status: registration.status,
-      paymentStatus: registration.paymentStatus,
-      requiresPayment: hackathon.registrationFee > 0,
-      message: hackathon.registrationFee > 0
-        ? "Team registration successful. Please complete payment to confirm."
-        : "Team registration successful. Your team is confirmed!"
-    };
-  }
-
-  /**
-   * Cancel a registration
-   * Only allowed if status is 'pending' or 'confirmed'
-   */
-  async cancelRegistration(registrationId, userId, reason) {
-    const registration = await this.registrationRepo.findById(registrationId);
-    if (!registration) {
-      throw new ApiError(404, "Registration not found");
+    async confirmRegistration(registrationId, session) {
+        const registration = await registrationRepository.findById(registrationId, session);
+        if (!registration) {
+            throw new ApiError(404, 'Registration not found.');
+        }
+        if (registration.registrationStatus === REGISTRATION_STATUSES.CONFIRMED) {
+            return registration;
+        }
+        registration.registrationStatus = REGISTRATION_STATUSES.CONFIRMED;
+        registration.confirmedAt = new Date();
+        await registration.save({ session });
+        return registration;
     }
 
-    // Authorization: user must be either the registered user (solo) or team leader (team)
-    let isAuthorized = false;
-    if (registration.mode === "solo" && registration.userId?.toString() === userId.toString()) {
-      isAuthorized = true;
-    } else if (registration.mode === "team") {
-      const team = await teamRepository.findById(registration.teamId);
-      if (team && team.leader.toString() === userId.toString()) {
-        isAuthorized = true;
-      }
+    async failRegistration(registrationId, session) {
+        const registration = await registrationRepository.findById(registrationId, session);
+        if (!registration) {
+            throw new ApiError(404, 'Registration not found.');
+        }
+        if (registration.registrationStatus === REGISTRATION_STATUSES.CONFIRMED) {
+            return registration;
+        }
+        registration.registrationStatus = REGISTRATION_STATUSES.FAILED;
+        await registration.save({ session });
+        return registration;
     }
 
-    if (!isAuthorized) {
-      throw new ApiError(403, "You are not authorized to cancel this registration");
+    async expireRegistration(registrationId, session) {
+        const registration = await registrationRepository.findById(registrationId, session);
+        if (!registration) {
+            throw new ApiError(404, 'Registration not found.');
+        }
+        if (registration.registrationStatus === REGISTRATION_STATUSES.CONFIRMED) {
+            return registration;
+        }
+        registration.registrationStatus = REGISTRATION_STATUSES.EXPIRED;
+        await registration.save({ session });
+        return registration;
     }
 
-    // Business rules
-    if (registration.status === "cancelled") {
-      throw new ApiError(400, "Registration is already cancelled");
+    async getUserRegistrations(userId) {
+        return await Registration.find({ userId }).populate('hackathonId');
     }
-
-    // If payment already completed, require reason
-    if (registration.paymentStatus === "completed" && !reason) {
-      throw new ApiError(400, "Cancellation reason is required when payment is completed");
-    }
-
-    return await this.registrationRepo.cancel(registrationId, reason);
-  }
-
-  /**
-   * Get user's own registrations (including cancelled)
-   */
-  async getMyRegistrations(userId, filters = {}) {
-    // Get all team IDs where user is an accepted member
-    const teamIds = await this.registrationRepo.getTeamIdsByUser(userId);
-
-    return await this.registrationRepo.findUserRegistrationsWithDetails(
-      userId, 
-      teamIds, 
-      filters
-    );
-  }
 }
 
-const registrationService = new RegistrationService();
-// NOTE: wire repository correctly (prevents runtime crash)
-// Keeping controller/service layering intact.
-RegistrationService.prototype.registrationRepo = registrationRepository;
-
-export default registrationService;
+export const registrationService = new RegistrationService();

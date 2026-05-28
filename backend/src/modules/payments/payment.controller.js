@@ -1,53 +1,46 @@
-import asyncHandler from "../../libs/asyncHandler.js";
-import { paymentService } from "./payment.service.js";
-import ApiResponse from "../../libs/apiResponse.js";
-import ApiError from "../../libs/apiError.js";
+// payment.controller.js
+import asyncHandler from '../../libs/asyncHandler.js';
+import ApiResponse  from '../../libs/apiResponse.js';
+import { paymentService } from './payment.service.js';
+import { verifyAndConfirmSchema } from './payment.validation.js';
+import { validate } from '../../middleware/validate.middleware.js'; // Assuming a validation middleware exists
+import envConfig  from '../../config/envConfig.js'; // For webhook secret
 
-export const createOrder = asyncHandler(async (req, res) => {
-  const { amount, currency, receipt } = req.body;
-  
-  if (!amount) {
-    throw new ApiError(400, "Amount is required");
-  }
+// Endpoint: POST /payments/verify-and-confirm
+const verifyAndConfirmPayment = asyncHandler(async (req, res) => {
+    console.log('[PaymentController] verifyAndConfirmPayment body:', req.body);
+    // Validation handled by 'validate' middleware using verifyAndConfirmSchema
+    const { registrationId, razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
-  const orderData = await paymentService.createOrder(req.user._id, amount, currency, receipt);
+    // Call service layer
+    await paymentService.verifyAndConfirmPayment(
+        req.user._id, // User performing the verification
+        registrationId,
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature
+    );
 
-  res.status(201).json(new ApiResponse(201, orderData, "Order created successfully"));
+    // Return response
+    return res.status(200).json(
+        new ApiResponse(200, null, 'Payment successfully verified and registration confirmed.')
+    );
 });
 
-export const verifyPayment = asyncHandler(async (req, res) => {
-  const { razorpayOrderId, razorpayPaymentId, razorpaySignature } = req.body;
-  
-  const payment = await paymentService.verifyPayment(
-    req.user._id,
-    razorpayOrderId,
-    razorpayPaymentId,
-    razorpaySignature
-  );
+// Endpoint: POST /payments/webhook
+const handleRazorpayWebhook = asyncHandler(async (req, res) => {
+    // Razorpay sends `X-Razorpay-Signature` header and raw body
+    const razorpaySignature = req.headers['x-razorpay-signature'];
+    const webhookSecret = envConfig.razorpayWebhookSecret; // Ensure this is securely loaded from env
 
-  res.status(200).json(new ApiResponse(200, payment, "Payment verified successfully"));
+    // The raw body is required for signature verification
+    // Assuming express.json() is configured with { verify: (req, res, buf) => { req.rawBody = buf; } }
+    const rawBody = req.rawBody; // Make sure this is populated by Express middleware
+
+    await paymentService.handleRazorpayWebhook(razorpaySignature, rawBody, webhookSecret);
+
+    // Always return 200 OK to Razorpay immediately to avoid retries
+    return res.status(200).json({ status: 'ok' });
 });
 
-export const getPaymentStatus = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  
-  const payment = await paymentService.getPaymentStatus(id, req.user._id);
-
-  res.status(200).json(new ApiResponse(200, payment, "Payment status fetched successfully"));
-});
-
-export const razorpayWebhook = asyncHandler(async (req, res) => {
-  // Webhooks from Razorpay will contain the signature in the headers
-  const signature = req.headers["x-razorpay-signature"];
-  
-  if (!signature) {
-    throw new ApiError(400, "Missing razorpay signature");
-  }
-
-  // The webhook body needs to be the raw body or correctly parsed JSON
-  // In Express, body-parser already parses it as JSON, we just stringify it in service
-  await paymentService.handleWebhook(req.body, signature);
-
-  // Razorpay expects a quick 2xx response
-  res.status(200).send("OK");
-});
+export { verifyAndConfirmPayment, handleRazorpayWebhook };

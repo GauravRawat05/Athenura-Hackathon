@@ -22,7 +22,9 @@
      judgeSecretKey : String(process.env.JUDGE_SECRET_KEY ), 
      universitySecretKey : String(process.env.UNIVERSITY_SECRET_KEY ),
      adminSecretKey : String(process.env.ADMIN_SECRET_KEY ),
-     clientUrl : String(process.env.CLIENT_URL )
-
+     clientUrl : String(process.env.CLIENT_URL ),
+     razorpayKeyId : String(process.env.RAZORPAY_KEY_ID),
+     razorpayKeySecret : String(process.env.RAZORPAY_KEY_SECRET),
+     razorpayWebhookSecret : String(process.env.RAZORPAY_WEBHOOK_SECRET)
    }
    export default envConfig

@@ -8,7 +8,7 @@ import submissionPolicy from "./submission.policy.js"
 import ApiError from "../../libs/apiError.js"
 import Hackathon from "../admin/hackathons/hackathon.model.js"
 import Team from "../teams/team.model.js"
-import Registration from "../registrations/registration.model.js"
+import {Registration} from "../registrations/registration.model.js"
 
 class SubmissionService {
 

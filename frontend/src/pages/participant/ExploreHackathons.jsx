@@ -71,7 +71,7 @@ function StatCard({ icon, value, label, delay }) {
 }
 
 // ── Hackathon Explore Card ─────────────────────────────────
-function HackathonExploreCard({ h, index, isRegistered }) {
+function HackathonExploreCard({ h, index, registration }) {
   const [ref, inView] = useInView();
   const [hovered, setHovered] = useState(false);
   const navigate = useNavigate();
@@ -79,6 +79,9 @@ function HackathonExploreCard({ h, index, isRegistered }) {
   const st = statusConfig[h.status] || statusConfig.upcoming;
   const dl = daysLeft(h.registrationDeadline);
   const isPastDeadline = new Date(h.registrationDeadline) < new Date();
+  
+  const isRegistered = !!registration;
+  const isPendingPayment = registration?.registrationStatus === 'PENDING_PAYMENT';
 
   return (
     <div ref={ref} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
@@ -193,20 +196,36 @@ function HackathonExploreCard({ h, index, isRegistered }) {
               <div style={{
                 display: "inline-flex", alignItems: "center", gap: 4,
                 padding: "6px 12px", borderRadius: 10,
-                background: "#dcfce7", color: "#16a34a",
+                background: isPendingPayment ? "#fef3c7" : "#dcfce7", 
+                color: isPendingPayment ? "#d97706" : "#16a34a",
                 fontSize: 11, fontWeight: 700,
-              }}><IconCheck /> Registered</div>
-              <button
-                onClick={() => navigate("/my-hackathons")}
-                style={{
-                  background: "#f1f5f9", border: "1px solid #cbd5e1",
-                  borderRadius: 10, padding: "6px 12px", color: "#475569",
-                  fontSize: 11, fontWeight: 600, cursor: "pointer",
-                  fontFamily: "'Poppins',sans-serif", transition: "background 0.2s",
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background = "#e2e8f0"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "#f1f5f9"; }}
-              >Workspace</button>
+              }}><IconCheck /> {isPendingPayment ? "Pending" : "Registered"}</div>
+              
+              {isPendingPayment ? (
+                <button
+                  onClick={() => navigate(`/dashboard/hackathons/${h.id}/join`)}
+                  style={{
+                    background: "linear-gradient(135deg, #d97706, #f59e0b)", border: "none",
+                    borderRadius: 10, padding: "6px 12px", color: "#fff",
+                    fontSize: 11, fontWeight: 600, cursor: "pointer",
+                    fontFamily: "'Poppins',sans-serif", transition: "transform 0.2s",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; }}
+                >Pay Now</button>
+              ) : (
+                <button
+                  onClick={() => navigate("/my-hackathons")}
+                  style={{
+                    background: "#f1f5f9", border: "1px solid #cbd5e1",
+                    borderRadius: 10, padding: "6px 12px", color: "#475569",
+                    fontSize: 11, fontWeight: 600, cursor: "pointer",
+                    fontFamily: "'Poppins',sans-serif", transition: "background 0.2s",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "#e2e8f0"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "#f1f5f9"; }}
+                >Workspace</button>
+              )}
             </div>
           ) : isPastDeadline ? (
             <button disabled style={{
@@ -244,7 +263,7 @@ export default function ExploreHackathons() {
   const [searchQuery, setSearchQuery] = useState("");
   
   const [hackathonsList, setHackathonsList] = useState([]);
-  const [registeredIds, setRegisteredIds] = useState(new Set());
+  const [registeredMap, setRegisteredMap] = useState(new Map());
   const [loading, setLoading] = useState(true);
   
   const navigate = useNavigate();
@@ -260,13 +279,20 @@ export default function ExploreHackathons() {
         // Fetch my registrations
         const regRes = await hackathonService.getMyRegistrations();
         const regs = regRes?.data?.data || [];
-        const regIds = new Set(regs.map(r => r.hackathonId?._id || r.hackathonId));
+        const regMap = new Map();
+        regs.forEach(r => {
+          const hid = r.hackathonId?._id || r.hackathonId;
+          regMap.set(hid, r);
+        });
 
         const mapped = rawHacks.map(hack => {
           const statusMap = { upcoming: 'upcoming', ongoing: 'ongoing', past: 'completed', judging: 'completed', draft: 'upcoming' };
           const status = statusMap[hack.status] || 'upcoming';
           const prize = hack.prizePool != null ? `${hack.currency === 'INR' ? '₹' : '$'}${Number(hack.prizePool).toLocaleString('en-IN')}` : '₹0';
-          const fee = hack.registrationFee === 0 ? 'Free' : `${hack.currency === 'INR' ? '₹' : '$'}${Number(hack.registrationFee).toLocaleString('en-IN')}`;
+          
+          // Use soloFee as fee if registrationFee is 0, or handle based on hackathon rules.
+          // The API response shows 'registrationFee' for some and 'soloFee', 'teamFee' for others.
+          const fee = (hack.registrationFee === 0 || hack.registrationFee == null) ? 'Free' : `${hack.currency === 'INR' ? '₹' : '$'}${Number(hack.registrationFee).toLocaleString('en-IN')}`;
           
           return {
             id: hack._id,
@@ -275,7 +301,7 @@ export default function ExploreHackathons() {
             status,
             minTeamSize: hack.minTeamSize || 2,
             maxTeamSize: hack.maxTeamSize || 4,
-            mode: hack.allowedModes?.[0]?.toLowerCase() || 'team',
+            mode: (hack.allowedModes && hack.allowedModes[0]) || 'team',
             prize,
             fee,
             feeNum: hack.registrationFee || 0,
@@ -290,7 +316,7 @@ export default function ExploreHackathons() {
 
         if (mounted) {
           setHackathonsList(mapped);
-          setRegisteredIds(regIds);
+          setRegisteredMap(regMap);
         }
       } catch (err) {
         
@@ -315,7 +341,7 @@ export default function ExploreHackathons() {
   // Dynamic statistics
   const stats = {
     totalActive: hackathonsList.filter(h => h.status !== 'completed').length,
-    joinedCount: registeredIds.size,
+    joinedCount: registeredMap.size,
     totalPrizePool: (() => {
       const sum = hackathonsList.filter(h => h.status !== 'completed').reduce((acc, curr) => acc + curr.prizeNum, 0);
       return `₹${sum.toLocaleString('en-IN')}`;
@@ -473,7 +499,7 @@ export default function ExploreHackathons() {
               key={h.id}
               h={h}
               index={i}
-              isRegistered={registeredIds.has(h.id)}
+              registration={registeredMap.get(h.id)}
             />
           ))}
         </div>

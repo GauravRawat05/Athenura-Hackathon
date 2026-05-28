@@ -3,7 +3,7 @@
   Contains the core business rules for hackathon.
  */
 import Hackathon from '../admin/hackathons/hackathon.model.js';
-import Registration from '../registrations/registration.model.js';
+import {Registration} from '../registrations/registration.model.js';
 import Team from '../teams/team.model.js';
 
 // Statuses where the problem statement must be hidden from non-admin callers
