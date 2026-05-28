@@ -188,6 +188,10 @@ const styles = `
     color: #00b4d8; font-weight: 700;
   }
 
+  .otp-row { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; width: 100%; }
+  .otp-box { width: 45px; height: 55px; border: 2px solid #e0f4fa; border-radius: 12px; font-size: 22px; font-weight: 700; text-align: center; color: #03045E; background: #f8fdff; outline: none; transition: all 0.3s; font-family: 'Poppins', sans-serif; }
+  .otp-box:focus { border-color: #00b4d8; background: #fff; box-shadow: 0 0 0 4px rgba(0,180,216,0.10); }
+
   .fp-btn {
     width: 100%;
     background: linear-gradient(135deg, #03045E 0%, #0096c7 100%);
@@ -238,6 +242,7 @@ export default function ForgotPassword() {
     try {
       await authService.resetPassword({ email, otp: otp.join(""), newPassword: newPw });
       setStep(4);
+      setTimeout(() => navigate("/login"), 2500);
     } catch (err) {
       setErrors({ newPw: "Password reset failed" });
     } finally {
@@ -285,7 +290,13 @@ export default function ForgotPassword() {
                 <button className="fp-btn" onClick={handleStep3}>RESET</button>
               </>
             )}
-            {step === 4 && <h1 className="fp-title">SUCCESS!</h1>}
+            {step === 4 && (
+              <>
+                <h1 className="fp-title">SUCCESS!</h1>
+                <p className="fp-subtitle">Your password has been successfully reset.</p>
+                <button className="fp-btn" onClick={() => navigate("/login")}>GO TO LOGIN</button>
+              </>
+            )}
           </div>
         </div>
       </div>

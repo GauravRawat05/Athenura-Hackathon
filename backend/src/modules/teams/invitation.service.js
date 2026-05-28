@@ -10,6 +10,7 @@
    //import registrationRepository from "../registrations/registration.repository.js";
    import { INVITATION_EXPIRY_MS, invitationStatus, teamRoles } from "./team.constants.js";
    import { sendEmail, EMAIL_TYPES } from "../notifications/notification.mailer.js";
+   import notificationService from "../notifications/notification.service.js";
    import mongoose from "mongoose";
    const ObjectId = mongoose.Types.ObjectId;
 
@@ -84,17 +85,29 @@ class InvitationService {
     const hackathonDetails = await this.getHackathonDetails(team.hackathonId, "title");
     hackathonTitle = hackathonDetails?.title || "Hackathon";
 
-    // Send invitation email
+    // Send invitation email and in-app notification
     try {
+      // 1. In-app notification
+      await notificationService.notify(invitedUser._id, {
+        title: "Team Invitation",
+        message: `You have been invited to join ${team.teamName} for ${hackathonTitle} by ${leader?.fullName || 'a team leader'}`,
+        type: "team_invitation",
+        data: {
+          teamId: team._id,
+          invitationId: invitation._id
+        }
+      });
+
+      // 2. Email notification
       await sendEmail(invitedUser.email, EMAIL_TYPES.TEAM_INVITATION, {
         teamName: team.teamName,
         hackathonTitle: hackathonTitle,
         invitedBy: leader?.fullName,
-        inviteLink: `/team-invitations/${unhashedToken}/accept`,
+        inviteLink: `/team/invite/${unhashedToken}`,
         fullName: invitedUser.fullName
       });
-    } catch (emailError) {
-      console.error("Failed to send team invitation email:", emailError.message);
+    } catch (error) {
+      console.error("Failed to send team invitation notifications:", error.message);
     }
 
     // Remove sensitive hashed token from response
@@ -103,7 +116,7 @@ class InvitationService {
 
     return {
       invitation: invitationData,
-      inviteLink: `/team-invitations/${unhashedToken}/accept`
+      inviteLink: `/team/invite/${unhashedToken}`
     };
   }
 
@@ -168,14 +181,23 @@ class InvitationService {
       const leader = invitation.invitedBy;
       const newMember = invitation.invitedUserId;
 
+      if (leader) {
+        await notificationService.notify(leader._id, {
+          title: "Invitation Accepted",
+          message: `${newMember?.fullName || 'A participant'} has joined your team ${team.teamName}`,
+          type: "invitation_accepted",
+          data: { teamId: team._id, memberId: newMember?._id }
+        });
+      }
+
       if (leader?.email) {
         await sendEmail(leader.email, EMAIL_TYPES.INVITATION_ACCEPTED, {
           teamName: team.teamName,
           memberName: newMember?.fullName || "A participant"
         });
       }
-    } catch (emailError) {
-      console.error("Failed to send invitation accepted notification:", emailError.message);
+    } catch (error) {
+      console.error("Failed to send invitation accepted notification:", error.message);
     }
 
     return { teamId: invitation.teamId._id };
@@ -209,14 +231,24 @@ class InvitationService {
     try {
       const leader = invitation.invitedBy;
       const decliner = invitation.invitedUserId;
+      
+      if (leader) {
+        await notificationService.notify(leader._id, {
+          title: "Invitation Declined",
+          message: `${decliner?.fullName || 'A participant'} has declined your invitation to join ${team?.teamName}`,
+          type: "invitation_declined",
+          data: { teamId: team?._id }
+        });
+      }
+
       if (leader?.email) {
         await sendEmail(leader.email, EMAIL_TYPES.INVITATION_DECLINED, {
           teamName: team?.teamName,
           memberName: decliner?.fullName || "A participant"
         });
       }
-    } catch (emailError) {
-      console.error("Failed to send invitation declined notification:", emailError.message);
+    } catch (error) {
+      console.error("Failed to send invitation declined notification:", error.message);
     }
 
     return { message: "Invitation declined successfully" };

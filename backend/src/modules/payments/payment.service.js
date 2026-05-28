@@ -69,6 +69,9 @@ class PaymentService {
         console.log('[PaymentService] verifyAndConfirmPayment called with:', { userId, registrationId, razorpay_order_id, razorpay_payment_id });
         const session = await mongoose.startSession();
         session.startTransaction();
+        
+        let registration; // Declare outside to use in post-transaction block
+        
         try {
             // --- 1. Fetch Payment Record ---
             const payment = await paymentRepository.findByRazorpayOrderId(razorpay_order_id, session);
@@ -77,7 +80,7 @@ class PaymentService {
             }
 
             // --- 2. Verify Registration Exists & Belongs to User ---
-            const registration = await registrationService.getRegistrationById(registrationId, session);
+            registration = await registrationService.getRegistrationById(registrationId, session);
             if (!registration || !registration._id.equals(payment.registrationId)) {
                 throw new ApiError(404, 'Registration not found or does not match payment record.');
             }
@@ -89,6 +92,7 @@ class PaymentService {
             if (payment.paymentStatus === PAYMENT_STATUSES.COMPLETED) {
                 // Idempotency: If already completed (e.g., by webhook), just return success
                 await session.commitTransaction();
+                session.endSession();
                 return;
             }
             if (payment.paymentStatus === PAYMENT_STATUSES.FAILED || payment.paymentStatus === PAYMENT_STATUSES.REFUNDED || payment.paymentStatus === PAYMENT_STATUSES.EXPIRED) {
@@ -146,17 +150,30 @@ class PaymentService {
 
             await registrationService.confirmRegistration(registration._id, session);
 
+            // Commit ONLY after all DB operations are complete
             await session.commitTransaction();
 
-            // --- 8. Emit socket event ---
-            // Assuming emitSocketEvent expects userId as a string
+        } catch (error) {
+            await session.abortTransaction();
+            console.error('Payment verification and confirmation failed:', error);
+            throw error;
+        } finally {
+            session.endSession();
+        }
+
+        // --- 8. EMIT SOCKET EVENT (outside transaction) ---
+        try {
             emitSocketEvent(registration.userId.toString(), 'registration.confirmed', {
                 registrationId: registration._id.toString(),
                 hackathonId: registration.hackathonId.toString(),
                 userId: registration.userId.toString(),
             });
+        } catch (socketError) {
+            console.error('[PaymentService] Non-fatal error emitting socket event:', socketError);
+        }
 
-            // --- 9. Send confirmation email ---
+        // --- 9. SEND CONFIRMATION EMAIL (outside transaction) ---
+        try {
             const user = await userRepository.findById(registration.userId);
             const hackathon = await hackathonRepository.findById(registration.hackathonId);
             if (user && hackathon) {
@@ -166,10 +183,6 @@ class PaymentService {
                         hackathonTitle: hackathon.title || 'the hackathon',
                         startDate: hackathon.startDate, // Assuming hackathon object has startDate
                         endDate: hackathon.endDate, // Assuming hackathon object has endDate
-                        // The template does not currently use registrationType or teamName directly,
-                        // but we can pass them if the template were to be enhanced.
-                        // registrationType: registration.registrationType,
-                        // teamName: registration.teamId ? (await teamRepository.findById(registration.teamId))?.name : undefined,
                     });
                 } catch (emailError) {
                     console.error('[PaymentService] Non-fatal error sending confirmation email:', emailError);
@@ -177,13 +190,8 @@ class PaymentService {
             } else {
                 console.warn(`Could not send confirmation email for registration ${registration._id}. User or Hackathon details not found.`);
             }
-
-            } catch (error) {
-            await session.abortTransaction();
-            console.error('Payment verification and confirmation failed:', error);
-            throw error;
-        } finally {
-            session.endSession();
+        } catch (userFetchError) {
+            console.error('[PaymentService] Non-fatal error fetching user/hackathon for email:', userFetchError);
         }
     }
 

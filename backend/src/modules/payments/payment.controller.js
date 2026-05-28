@@ -8,9 +8,16 @@ import envConfig  from '../../config/envConfig.js'; // For webhook secret
 
 // Endpoint: POST /payments/verify-and-confirm
 const verifyAndConfirmPayment = asyncHandler(async (req, res) => {
-    console.log('[PaymentController] verifyAndConfirmPayment body:', req.body);
-    // Validation handled by 'validate' middleware using verifyAndConfirmSchema
+    console.log('[PaymentController] verifyAndConfirmPayment request body:', JSON.stringify(req.body, null, 2));
+    
+    // Validate request body
     const { registrationId, razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+    // Validate fields exist
+    if (!registrationId || !razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+        console.error('[PaymentController] Missing required fields in request body:', req.body);
+        throw new ApiError(400, 'Missing required payment verification fields.');
+    }
 
     // Call service layer
     await paymentService.verifyAndConfirmPayment(

@@ -84,7 +84,7 @@ export default function HackathonJoin() {
   const [registrationResult, setRegistrationResult] = useState({});
   
   // Conditionally set STEPS based on hackathon mode
-  const [STEPS, setSteps] = useState(["Your Info", "Team Setup", "Confirm"]);
+  const [STEPS, setSteps] = useState(["Your Info", "Participation", "Confirm"]);
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   
@@ -130,6 +130,16 @@ export default function HackathonJoin() {
           // Determine fee correctly
           const fee = raw.registrationFee || (raw.soloFee || raw.teamFee || 0);
           
+          const rawModes = raw.mode || raw.allowedModes || [];
+          const modes = rawModes.map(m => m.toLowerCase());
+          const isSolo = modes.includes('solo');
+          const isTeam = modes.includes('team');
+          
+          let mode = 'team'; // default
+          if (isSolo && isTeam) mode = 'both';
+          else if (isSolo) mode = 'solo';
+          else if (isTeam) mode = 'team';
+
           const mapped = {
             id: raw._id,
             title: raw.title,
@@ -137,17 +147,22 @@ export default function HackathonJoin() {
             fee: fee === 0 ? "Free" : `${raw.currency || 'INR'} ${fee}`,
             feeNum: fee,
             currency: raw.currency || 'INR',
-            mode: raw.allowedModes?.[0]?.toLowerCase() || 'team', // Assuming 'solo' or 'team'
+            mode,
             teamSize: { min: raw.minTeamSize || 2, max: raw.maxTeamSize || 4 },
+            fees: {
+              solo: raw.soloFee,
+              team: raw.teamFee,
+              intern: raw.internFee
+            }
           };
           if (mounted) {
             setH(mapped);
-            // Adjust steps
+            // Adjust form default based on mode
             if (mapped.mode === "solo") {
-              setSteps(["Your Info", "Confirm"]);
+              setForm(f => ({ ...f, teamMode: "solo" }));
+            } else if (mapped.mode === "both") {
               setForm(f => ({ ...f, teamMode: "solo" }));
             } else {
-              setSteps(["Your Info", "Team Setup", "Confirm"]);
               setForm(f => ({ ...f, teamMode: "select" }));
             }
           }
@@ -168,7 +183,9 @@ export default function HackathonJoin() {
         const res = await api.get('/teams/me');
         if (res.data?.data) {
           // Filter teams for this hackathon
-          const filtered = res.data.data.filter(t => t.hackathonId === id);
+          const filtered = res.data.data.filter(t => 
+            (t.hackathonId?._id || t.hackathonId) === id
+          );
           setMyTeams(filtered);
           if (filtered.length > 0) {
             setForm(f => ({ ...f, teamId: filtered[0]._id, teamMode: "select" }));
@@ -276,7 +293,7 @@ export default function HackathonJoin() {
         e.email = "Valid email required";
       if (!form.college.trim()) e.college = "College/Organization is required";
     }
-    if (step === 1 && h.mode === "team") {
+    if (step === 1 && (h.mode === "team" || h.mode === "both")) {
       if (form.teamMode === "select" && !form.teamId)
         e.teamId = "Please select a team";
       if (form.teamMode === "join" && !form.inviteCode.trim())
@@ -458,7 +475,7 @@ export default function HackathonJoin() {
                   Your registration for <strong style={{ color: C.accentBlue }}>{h.title}</strong> is pending payment.
                 </p>
                 <p style={{ color: "#d97706", fontSize: 13, fontWeight: 600, margin: "0 0 36px" }}>
-                  Please complete the entry fee payment of ${h.feeNum} to secure your spot.
+                  Please complete the entry fee payment of {h.currency || 'INR'} {form.teamMode === "solo" ? (h.fees?.solo || h.feeNum) : (h.fees?.team || h.feeNum)} to secure your spot.
                 </p>
                 <button
                   onClick={() => {
@@ -504,7 +521,7 @@ export default function HackathonJoin() {
                     boxShadow: "0 4px 16px rgba(217,119,6,0.25)",
                   }}
                 >
-                  Proceed to Payment 💳
+                  Proceed to Payment
                 </button>
               </>
             ) : (
@@ -618,10 +635,10 @@ export default function HackathonJoin() {
           </h1>
           <p style={{ margin: 0, color: "#90E0EF", fontSize: 14 }}>
             💳 Registration fee: 
-            {h.fees?.solo > 0 && ` Solo: ${h.currency}${h.fees.solo}`}
-            {h.fees?.team > 0 && ` Team: ${h.currency}${h.fees.team}`}
-            {h.fees?.intern > 0 && ` Intern: ${h.currency}${h.fees.intern}`}
-            {!h.fees?.solo && !h.fees?.team && !h.fees?.intern && " Free"}
+            {h.fees?.solo > 0 && ` Solo: ${h.currency || 'INR'} ${h.fees.solo}`}
+            {h.fees?.team > 0 && ` Team: ${h.currency || 'INR'} ${h.fees.team}`}
+            {h.fees?.intern > 0 && ` Intern: ${h.currency || 'INR'} ${h.fees.intern}`}
+            {(!h.fees?.solo && !h.fees?.team && !h.fees?.intern) && " Free"}
           </p>
         </div>
 
@@ -820,7 +837,7 @@ export default function HackathonJoin() {
                   margin: 0,
                 }}
               >
-                {h.mode === "solo" ? "Participation Details" : "Team Setup"}
+                {h.mode === "solo" ? "Participation Details" : "Participation Mode"}
               </h2>
 
               {h.mode === "solo" ? (
@@ -844,8 +861,9 @@ export default function HackathonJoin() {
                     <label style={labelStyle}>
                       How would you like to participate?
                     </label>
-                    <div style={{ display: "flex", gap: 10 }}>
+                    <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                       {[
+                        ...(h.mode === "both" ? [{ val: "solo", label: "👤 Join as Solo" }] : []),
                         { val: "select", label: "📋 Select Existing Team" },
                         { val: "join", label: "🔗 Join with Code" },
                       ].map(({ val, label }) => (
@@ -854,7 +872,8 @@ export default function HackathonJoin() {
                           onClick={() => set("teamMode", val)}
                           style={{
                             flex: 1,
-                            padding: "12px 0",
+                            minWidth: 150,
+                            padding: "12px 10px",
                             borderRadius: 12,
                             background:
                               form.teamMode === val
@@ -989,21 +1008,29 @@ export default function HackathonJoin() {
                   { label: "College", value: form.college },
                   form.phone ? { label: "Phone", value: form.phone } : null,
                   form.github ? { label: "GitHub", value: form.github } : null,
-                  h.mode === "team" && form.teamMode === "select"
+                  (h.mode === "team" || h.mode === "both") && form.teamMode === "select"
                     ? { 
                         label: "Team Name", 
                         value: myTeams.find(t => t._id === form.teamId)?.teamName || "Selected Team" 
                       }
                     : null,
-                  h.mode === "team" && form.teamMode === "join"
+                  (h.mode === "team" || h.mode === "both") && form.teamMode === "join"
                     ? {
                         label: "Joining Team",
                         value: `Code: ${form.inviteCode}`,
                       }
                     : null,
+                  (h.mode === "both" && form.teamMode === "solo")
+                    ? {
+                        label: "Participation",
+                        value: "Solo"
+                      }
+                    : null,
                   {
                     label: "Entry Fee",
-                    value: h.fee === 0 ? "Free 🎁" : `${h.fee}`,
+                    value: form.teamMode === "solo"
+                             ? (h.fees?.solo === 0 ? "Free 🎁" : `${h.currency || 'INR'} ${h.fees?.solo}`)
+                             : (h.fees?.team === 0 ? "Free 🎁" : `${h.currency || 'INR'} ${h.fees?.team}`),
                   },
                 ]
                   .filter(Boolean)
@@ -1178,9 +1205,12 @@ export default function HackathonJoin() {
               {loadingSubmit ? (
                 "Processing..."
               ) : step === STEPS.length - 1 ? (
-                h.feeNum === 0
-                  ? "Complete Registration 🚀"
-                  : `Pay ${h.fee} & Register 🚀`
+                (() => {
+                    const selectedFee = form.teamMode === "solo" ? (h.fees?.solo || 0) : (h.fees?.team || 0);
+                    return selectedFee === 0
+                      ? "Complete Registration 🚀"
+                      : `Pay ${h.currency || 'INR'} ${selectedFee} & Register 🚀`;
+                  })()
               ) : (
                 "Continue →"
               )}

@@ -1,6 +1,7 @@
 // registration.model.js
 import mongoose from 'mongoose';
 import { REGISTRATION_STATUSES } from '../../constants/user.constants.js'; // Assuming this constant exists
+import {Payment} from "../payments/payment.model.js"; // Assuming a Payment model exists
 
 const registrationSchema = new mongoose.Schema(
     {

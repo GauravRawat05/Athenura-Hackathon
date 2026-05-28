@@ -9,6 +9,7 @@ import ApiError from "../../libs/apiError.js"
 import Hackathon from "../admin/hackathons/hackathon.model.js"
 import Team from "../teams/team.model.js"
 import {Registration} from "../registrations/registration.model.js"
+import { REGISTRATION_STATUSES } from "../../constants/user.constants.js"
 
 class SubmissionService {
 
@@ -36,29 +37,39 @@ class SubmissionService {
         throw new ApiError(409, "You already have a submission for this hackathon")
       }
 
-      // 3.5 Check if user/team is registered and confirmed
-      const registration = await Registration.findOne({
-        hackathonId,
-        participantIds: userId,
-        status: "confirmed"
-      }).session(session)
-      if (!registration) {
-        throw new ApiError(403, "You must have a confirmed registration to submit a project")
-      }
-
-      // 4. Check if user is in a team for this hackathon
+      // 3.5 Determine if user is part of a team for this hackathon
       let teamId = null
       const team = await Team.findOne({
         hackathonId,
         "members.userId": userId
       }).session(session)
 
+      // 3.6 Check if user/team is registered and confirmed
+      let registration = null
+      if (team) {
+        teamId = team._id
+        registration = await Registration.findOne({
+          hackathonId,
+          teamId: team._id,
+          registrationStatus: REGISTRATION_STATUSES.CONFIRMED
+        }).session(session)
+      } else {
+        registration = await Registration.findOne({
+          hackathonId,
+          userId,
+          registrationStatus: REGISTRATION_STATUSES.CONFIRMED
+        }).session(session)
+      }
+
+      if (!registration) {
+        throw new ApiError(403, "You must have a confirmed registration to submit a project")
+      }
+
       if (team) {
         // Enforce: Only team leader can make the submission
         if (team.leader.toString() !== userId.toString()) {
           throw new ApiError(403, "Only the team leader can create the submission")
         }
-        teamId = team._id
       }
 
       // 5. Create submission
@@ -105,11 +116,20 @@ class SubmissionService {
     }
 
     // 3. Check if user/team is still registered and confirmed
-    const registration = await Registration.findOne({
-      hackathonId: submission.hackathonId,
-      participantIds: userId,
-      status: "confirmed"
-    }).session(session)
+    let registration = null
+    if (submission.teamId) {
+      registration = await Registration.findOne({
+        hackathonId: submission.hackathonId,
+        teamId: submission.teamId,
+        registrationStatus: REGISTRATION_STATUSES.CONFIRMED
+      }).session(session)
+    } else {
+      registration = await Registration.findOne({
+        hackathonId: submission.hackathonId,
+        userId,
+        registrationStatus: REGISTRATION_STATUSES.CONFIRMED
+      }).session(session)
+    }
 
     if (!registration) {
       throw new ApiError(403, "You must have a confirmed registration to update this project")
