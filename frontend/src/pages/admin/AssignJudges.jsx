@@ -226,7 +226,8 @@ export default function Dashboard() {
     try {
       setLoading(true);
       
-      const [resJudges, resAssigned, resRegs, resProgress, resResults] = await Promise.all([
+    const [resJudges, resAssigned, resRegs, resProgress, resResults] = await Promise.all([ 
+
         judgingService.adminGetJudges(),
         judgingService.adminGetHackathonJudges(hackId),
         hackathonService.adminListRegistrations(hackId, { limit: 100 }),
@@ -437,7 +438,7 @@ export default function Dashboard() {
     }
     try {
       setLoading(true);
-      await judgingService.adminAssignJudges(activeHackathon._id, manageSelectedJudgeIds);
+      await judgingService.adminUpdateHackathonJudges(activeHackathon._id, manageSelectedJudgeIds);
       showToast("Hackathon judge assignments updated successfully!", "success");
       setModal(null);
       await fetchHackathonData();
@@ -476,20 +477,11 @@ export default function Dashboard() {
     }
   };
 
-  const removeJudgeFromTeam = async (teamCode, judgeName) => {
-    const judgeToRemove = assignedJudges.find(j => j.name === judgeName);
-    if (!judgeToRemove) return;
-    const nextJudgeIds = assignedJudges.filter(j => j.name !== judgeName).map(j => j._realId);
-    try {
-      setLoading(true);
-      await judgingService.adminAssignJudges(activeHackathon._id, nextJudgeIds);
-      showToast(`${judgeName} removed from hackathon judging panel`, "warning");
-      await fetchHackathonData();
-    } catch (err) {
-      showToast("Failed to remove judge", "error");
-    } finally {
-      setLoading(false);
-    }
+  // NOTE: Judge assignment is hackathon-wide (JudgeAssignment is keyed only by hackathonId + judgeId).
+  // Removing a judge from a specific team/submission is not supported.
+  // We therefore only allow judge assignment changes via the “Manage Judges” modal.
+  const removeJudgeFromTeam = async () => {
+    showToast("Use “Manage Judges” to modify hackathon-level judge assignment.", "info");
   };
 
   const submitScore = (teamCode, score) => {
@@ -729,15 +721,10 @@ export default function Dashboard() {
                                   </div>
                                 </div>
                                 <div className="col-span-7 flex flex-wrap items-center gap-2">
-                                  {team.judges.map((j) => (
-                                    <JudgeBadge key={j} name={j} onRemove={() => removeJudgeFromTeam(team.code, j)} />
-                                  ))}
-                                  <button
-                                    onClick={() => openAddJudge(team)}
-                                    className="w-6 h-6 rounded-full border border-dashed border-slate-300 flex items-center justify-center text-slate-400 hover:border-blue-400 hover:text-blue-500 transition"
-                                  >
-                                    <Plus className="w-3 h-3" />
-                                  </button>
+                                  <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100 whitespace-nowrap">
+                                    <ClipboardList className="w-3.5 h-3.5" />
+                                    All assigned judges evaluate this team
+                                  </span>
                                 </div>
                                 <div className="col-span-1 flex justify-end">
                                   <button
@@ -1056,7 +1043,7 @@ export default function Dashboard() {
                               Edit Assignment
                             </button>
                             <button
-                              onClick={() => removeJudgeFromTeam(null, selectedJudge.name)}
+                              onClick={() => removeJudgeFromTeam()}
                               className="px-4 py-2 rounded-2xl bg-rose-50 text-rose-600 text-xs font-medium hover:bg-rose-100 transition hover:scale-[1.03]"
                             >
                               Remove from All
