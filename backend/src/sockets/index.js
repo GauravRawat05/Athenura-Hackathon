@@ -11,6 +11,8 @@ import registerNotificationHandler from './handlers/notification.handler.js';
 import registerHackathonRoom from './rooms/hackathon.room.js';
 import registerUserRoom from './rooms/user.room.js';
 
+let ioInstance; // To store the io instance
+
 /**
  * Registers all socket event listeners on the provided io instance.
  * Called once from server.js during application startup.
@@ -21,6 +23,8 @@ export const initSockets = (io) => {
     console.error('[Socket] No io instance passed to initSockets — aborting');
     return;
   }
+
+  ioInstance = io; // Store the io instance
 
   // ── Connection Authentication Handshake Middleware ─────────────────
   io.use((socket, next) => {
@@ -62,4 +66,20 @@ export const initSockets = (io) => {
   });
 
   console.log('[Socket] Initialised');
+};
+
+/**
+ * Emits a Socket.IO event to a specific user (room) or to all connected clients.
+ * @param {string} userId - The ID of the user to emit the event to (or a generic room name).
+ * @param {string} eventName - The name of the event to emit.
+ * @param {object} payload - The data payload for the event.
+ */
+export const emitSocketEvent = (userId, eventName, payload) => {
+  if (!ioInstance) {
+    console.warn('[Socket] Attempted to emit event before Socket.IO was initialized.');
+    return;
+  }
+  // Assuming a convention where each user is in a room named after their userId
+  ioInstance.to(userId).emit(eventName, payload);
+  console.log(`[Socket] Emitted event '${eventName}' to user '${userId}' with payload:`, payload);
 };

@@ -24,6 +24,20 @@ router.post(
   asyncHandler(teamController.createTeam)
 );
 
+// Get all teams for current user
+router.get(
+  "/me",
+  verifyJWT,
+  asyncHandler(teamController.getMyTeams)
+);
+
+// Get all invitations for current user
+router.get(
+  "/invitations",
+  verifyJWT,
+  asyncHandler(teamController.getMyInvitations)
+);
+
 // Get team details
 router.get("/:teamId",
   verifyJWT,
@@ -50,14 +64,14 @@ router.post(
 
 // Accept team invitation
 router.post(
-  "/team-invitations/:token/accept",
+  "/invitations/:invitationId/accept",
   verifyJWT,
   asyncHandler(teamController.acceptInvitation)
 );
 
 // Decline team invitation
 router.post(
-  "/team-invitations/:token/decline",
+  "/invitations/:invitationId/decline",
   verifyJWT,
   asyncHandler(teamController.declineInvitation)
 );
@@ -68,6 +82,14 @@ router.delete(
   verifyJWT,
   asyncHandler(teamPolicy.isTeamLeader),
   asyncHandler(teamController.removeMember)
+);
+
+// Delete team (leader only)
+router.delete(
+  "/:teamId",
+  verifyJWT,
+  asyncHandler(teamPolicy.isTeamLeader),
+  asyncHandler(teamController.deleteTeam)
 );
 
 export default router;

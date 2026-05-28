@@ -14,6 +14,14 @@ class InvitationRepository {
     return await TeamInvitation.create(invitationData);
   }
 
+  async findById(invitationId) {
+    return await TeamInvitation.findById(invitationId).populate([
+      { path: "teamId" },
+      { path: "invitedUserId", select: USER_SAFE_FIELDS },
+      { path: "invitedBy", select: USER_SAFE_FIELDS }
+    ]);
+  }
+
   async findByToken(token) {
     return await TeamInvitation.findOne({ token }).populate([
       { path: "teamId" },
@@ -51,6 +59,11 @@ class InvitationRepository {
       { path: "invitedUserId", select: "fullName email" },
       { path: "invitedBy", select: "fullName email" }
     ]);
+  }
+  async findByInvitedUser(userId) {
+    return await TeamInvitation.find({ invitedUserId: userId, status: "pending" })
+      .populate({ path: "teamId", select: "teamName" })
+      .populate({ path: "invitedBy", select: "fullName" });
   }
 }
 

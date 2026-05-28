@@ -569,7 +569,7 @@ function ResultCard({ result, index }) {
                 color: tc.accentColor, background: "#e8f4fd",
                 padding: "4px 12px", borderRadius: 20,
               }}>
-                🏆 Prize: {result.prize}
+                 Prize: {result.prize}
               </span>
             )}
             {result.certificateReady && (

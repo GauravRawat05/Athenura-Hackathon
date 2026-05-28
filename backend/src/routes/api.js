@@ -17,7 +17,7 @@ import notificationRoute from '../modules/notifications/notification.routes.js';
 import certificateRoute from '../modules/certificates/certificate.routes.js';
 import teamRoute from '../modules/teams/team.routes.js';
 import adminHackathonRoute from '../modules/admin/hackathons/adminHackathon.routes.js';
-import registrationRoute from '../modules/registrations/registration.routes.js';
+import registrationRoute from '../modules/registrations/registration.routes.js'; // This is now a sub-router for /hackathons
 import submissionRoute from '../modules/submissions/submission.routes.js';
 import judgingRoute from '../modules/judging/judging.routes.js';
 import publicWinnersRoute from '../modules/results/publicWinners.routes.js';
@@ -30,10 +30,6 @@ import resultRoute from '../modules/results/result.routes.js';
 import { verifyJWT } from '../middleware/auth.middleware.js';
 
 const router = Router();
-
-// Unified registration endpoint for both solo and team registration
-// Placed BEFORE the generic hackathonRoute mount to ensure it matches first
-
 
 // Mount all module routers under /api
 router.use('/public', publicRoute);
@@ -48,8 +44,13 @@ router.use('/teams', teamRoute);
 // Public winners endpoint (JWT required, non-admin)
 router.use('/winners', publicWinnersRoute);
 
-router.use('/hackathons', hackathonRoute);
-router.use('/registrations', registrationRoute);
+// Specific registration route (e.g., initiate-registration) mounted under /hackathons
+// Place before the generic hackathonRoute to ensure specific routes are matched first
+// router.use('/hackathons', registrationRoute); // Mount registrationRoute here
+
+router.use('/hackathons', hackathonRoute); // Generic hackathon routes
+router.use('/registrations', registrationRoute); // Mount registration routes here for me endpoint
+
 router.use('/submissions', submissionRoute);
 
 router.use('/results', resultRoute);

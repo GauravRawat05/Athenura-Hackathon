@@ -182,7 +182,7 @@ export default function VerifyCertificate() {
                   <div className="text-base font-bold text-slate-200">
                     {cert.certificateType === "winner" ? (
                       <span className="text-amber-400 font-extrabold uppercase tracking-wide">
-                        🏆 Champion Winner {cert.rank && `(Rank #${cert.rank})`}
+                         Champion Winner {cert.rank && `(Rank #${cert.rank})`}
                       </span>
                     ) : cert.certificateType === "finalist" ? (
                       <span className="text-blue-400 font-extrabold uppercase tracking-wide">

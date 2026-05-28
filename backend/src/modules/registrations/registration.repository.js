@@ -1,154 +1,26 @@
-/**
-   registration.repository.js
-   Encapsulates database reads/writes for registration.
- */
-import Registration from "./registration.model.js";
+// registration.repository.js
+import {Registration}  from './registration.model.js';
 
 class RegistrationRepository {
-  /**
-   * Create a new registration
-   */
-  async create(registrationData, options = {}) {
-    // Using array for .create is required when passing a session/options
-    const [registration] = await Registration.create([registrationData], options);
-    return registration;
-  }
+    async createRegistration(data, session) {
+        return await Registration.create([data], { session });
+    }
 
-  /**
-   * Find registration by ID
-   */
-  async findById(registrationId, populateFields = [], options = {}) {
-    let query = Registration.findById(registrationId, null, options);
-    populateFields.forEach(field => {
-      query = query.populate(field);
-    });
-    return await query;
-  }
+    async findById(id, session) {
+        return await Registration.findById(id).session(session);
+    }
 
-  /**
-   * Find registration by hackathon ID and user ID (solo)
-   */
-  async findByHackathonAndUser(hackathonId, userId) {
-    return await Registration.findOne({
-      hackathonId,
-      userId,
-      mode: "solo"
-    });
-  }
+    async findByUserAndHackathon(userId, hackathonId, session) {
+        return await Registration.findOne({ userId, hackathonId }).session(session);
+    }
 
-  /**
-   * Find registration by hackathon ID and team ID (team)
-   */
-  async findByHackathonAndTeam(hackathonId, teamId) {
-    return await Registration.findOne({
-      hackathonId,
-      teamId,
-      mode: "team"
-    });
-  }
-
-   /**
-    * Check if user has any registration (solo or team) for a hackathon
-    * Excludes cancelled registrations to allow re-registration after cancellation.
-    */
-   async hasUserRegisteredForHackathon(hackathonId, userId) {
-     const teamIds = await this.getTeamIdsByUser(userId);
-     return await Registration.findOne({
-       hackathonId,
-       status: { $ne: "cancelled" },
-       $or: [{ userId }, { teamId: { $in: teamIds } }]
-     });
-   }
-
-  /**
-   * Get all team IDs where user is an accepted member
-   * Helper for checking if user is part of any team registration
-   */
-  async getTeamIdsByUser(userId) {
-    // Import Team model dynamically to avoid circular dependency
-    const { default: Team } = await import("../teams/team.model.js");
-    const teams = await Team.find({
-      "members.userId": userId,
-      "members.invitationStatus": "accepted"
-    });
-    return teams.map(t => t._id);
-  }
-
-  /**
-   * Find all registrations for a hackathon
-   */
-  async findByHackathon(hackathonId, filters = {}) {
-    const query = Registration.find({ hackathonId, ...filters });
-    return await query;
-  }
-
-  /**
-   * Find all registrations for a user
-   */
-  async findByUser(userId, filters = {}) {
-    return await Registration.find({ userId, ...filters });
-  }
-
-  /**
-   * Update registration status and related fields
-   */
-  async update(registrationId, updateData, options = {}) {
-    return await Registration.findByIdAndUpdate(
-      registrationId,
-      updateData,
-      { new: true, runValidators: true, ...options }
-    );
-  }
-
-  /**
-   * Update status to cancelled
-   */
-  async cancel(registrationId, reason, options = {}) {
-    return await Registration.findByIdAndUpdate(
-      registrationId,
-      {
-        status: "cancelled",
-        cancellationReason: reason,
-        cancelledAt: new Date()
-      },
-      { new: true, ...options }
-    );
-  }
-
-  /**
-   * Confirm registration after payment
-   */
-  async confirm(registrationId, options = {}) {
-    return await Registration.findByIdAndUpdate(
-      registrationId,
-      {
-        status: "confirmed",
-        paymentStatus: "completed",
-        paymentCompletedAt: new Date(),
-        confirmedAt: new Date()
-      },
-      { new: true, ...options }
-    );
-  }
-
-  /**
-   * Mark payment as failed
-   */
-  async markPaymentFailed(registrationId, options = {}) {
-    return await Registration.findByIdAndUpdate(
-      registrationId,
-      {
-        status: "payment_failed",
-        paymentStatus: "failed"
-      },
-      { new: true, ...options }
-    );
-  }
-
-  /**
-   * Get registrations for a user with specific populations and filters
-   */
-  async findUserRegistrationsWithDetails(userId, teamIds, filters = {}) {
+    async findExpiredPendingRegistrations(session) {
+        return await Registration.find({
+            registrationStatus: 'PENDING_PAYMENT',
+            expiresAt: { $lt: new Date() },
+        }).session(session);
+    }
+     async findUserRegistrationsWithDetails(userId, teamIds, filters = {}) {
     return await Registration.find({
       $or: [
         { userId },
@@ -163,7 +35,11 @@ class RegistrationRepository {
         select: '-password -refreshToken -emailOTP -emailVerificationToken'
       });
   }
+
+    // You might add more specific update methods if needed,
+    // or rely on fetching and then saving the model instance.
 }
 
 const registrationRepository = new RegistrationRepository();
+
 export default registrationRepository;

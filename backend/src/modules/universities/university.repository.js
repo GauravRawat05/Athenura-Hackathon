@@ -3,7 +3,7 @@
  * Encapsulates database reads for university and its students.
  */
 import User from '../users/user.model.js'
-import Registration from '../registrations/registration.model.js'
+import {Registration} from '../registrations/registration.model.js'
 import '../admin/hackathons/hackathon.model.js'
 
 class UniversityRepository {

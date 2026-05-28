@@ -5,7 +5,7 @@ export const hackathonService = {
   getHackathonById: (id) => api.get(`/hackathons/${id}`),
   getRegistrations: () => api.get('/registrations/me'),
   getMyRegistrations: (status) => api.get(`/registrations/me${status ? `?status=${status}` : ''}`),
-  register: (id, data) => api.post(`/registrations/${id}/register`, data),
+  register: (id, data) => api.post(`/registrations/${id}/initiate-registration`, data),
   getMySubmission: (hackathonId) => api.get(`/submissions/hackathons/${hackathonId}/submissions/me`),
   createSubmission: (hackathonId, data) => api.post(`/submissions/hackathons/${hackathonId}/submissions`, data),
   updateSubmission: (submissionId, data) => api.patch(`/submissions/${submissionId}`, data),

@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 const userNotifications = [
   { id: 1, type: "team_invite", unread: true, time: "2 min ago", title: "Team Invite Received", message: "Aryan Sharma invited you to join NeuralNinjas for Smart India Hackathon 2025." },
   { id: 2, type: "payment", unread: true, time: "1 hour ago", title: "Payment Successful", message: "Your registration fee ₹199 for HackWithInfy Spring Edition is confirmed." },
-  { id: 3, type: "result", unread: true, time: "3 hours ago", title: "Result Declared 🏆", message: "You ranked #3 in CodeStorm 2024! Check your results now." },
+  { id: 3, type: "result", unread: true, time: "3 hours ago", title: "Result Declared ", message: "You ranked #3 in CodeStorm 2024! Check your results now." },
   { id: 4, type: "certificate", unread: false, time: "1 day ago", title: "Certificate Ready", message: "Your Rank Certificate for CodeStorm 2024 is ready to download." },
   { id: 5, type: "register", unread: false, time: "2 days ago", title: "Registration Confirmed", message: "You have successfully registered for DevSprint National Challenge." },
   { id: 6, type: "submission", unread: false, time: "3 days ago", title: "Submission Received", message: "Your project submission for DevSprint Challenge has been received." },
