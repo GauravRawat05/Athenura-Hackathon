@@ -18,5 +18,6 @@ postman-to-pdf
 .vscode
 postman_collection.json
 *.md
+!reports/*.md
 .antigravitycli
 postman-collections
