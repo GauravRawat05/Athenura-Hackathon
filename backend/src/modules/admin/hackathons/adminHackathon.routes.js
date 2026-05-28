@@ -1,19 +1,20 @@
 /**
- * adminHackathon.routes.js
- * Defines Express routes for admin hackathon operations.
- */
+  * adminHackathon.routes.js
+  * Defines Express routes for admin hackathon operations.
+  */
 import { Router } from "express";
 import formidable from "formidable";
 import ApiError from "../../../libs/apiError.js";
 import asyncHandler from "../../../libs/asyncHandler.js";
 import adminHackathonController from "./adminHackathon.controller.js";
 import { verifyAdmin, verifyJWT } from "../../../middleware/auth.middleware.js";
-import { validate } from "../../../middleware/validate.middleware.js"; // Assuming a validation middleware exists
+import { validate } from "../../../middleware/validate.middleware.js";
 import { 
   createHackathonValidation, 
   updateHackathonValidation, 
   listRegistrationsValidation 
 } from "./adminHackathon.validation.js";
+import { overrideResultsBodyValidation } from "../results/adminResult.validation.js";
 
 const router = Router();
 
@@ -163,11 +164,31 @@ router.post(
   asyncHandler(adminHackathonController.computeResults)
 );
 
-// Override ranks/awards
+// Override ranks/awards - accepts frontend format { overrides: [{ submissionId, rank, awardCategory, notes }] }
 router.patch(
   "/:hackathonId/results/override",
   verifyJWT,
   verifyAdmin,
+  (req, res, next) => {
+    const { error, value } = overrideResultsBodyValidation.validate(req.body, {
+      abortEarly: false,
+      allowUnknown: true,
+      stripUnknown: true
+    });
+    if (error) {
+      const errors = error.details.map(err => ({
+        field: err.path.join('.'),
+        message: err.message.replace(/['"]/g, '')
+      }));
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors
+      });
+    }
+    req.body = value;
+    next();
+  },
   asyncHandler(adminHackathonController.overrideResults)
 );
 

@@ -1,7 +1,7 @@
 /**
-  adminResult.validation.js
-  Joi schemas for the Admin Result endpoints.
- */
+   adminResult.validation.js
+   Joi schemas for the Admin Result endpoints.
+   */
 import Joi from 'joi';
 
 const objectIdHex24 = Joi.string().hex().length(24).messages({
@@ -30,7 +30,7 @@ export const draftParamValidation = Joi.object({
   hackathonId: objectIdHex24.label('Hackathon ID').required()
 });
 
-// Body schema for PATCH /admin/results/draft/:hackathonId
+// Body schema for PATCH /admin/results/draft/:hackathonId (legacy format)
 // Accept either { draftId, rankOverride } for a single record update,
 // or { manualOrder: [submissionId, ...] } for a bulk reorder.
 export const updateDraftBodyValidation = Joi.object({
@@ -38,6 +38,19 @@ export const updateDraftBodyValidation = Joi.object({
   rankOverride: Joi.number().integer().min(1).optional(),
   manualOrder: Joi.array().items(objectIdHex24.label('Submission ID')).optional()
 }).or('draftId', 'manualOrder');
+
+// Body schema for PATCH /admin/hackathons/:hackathonId/results/override (frontend format)
+// Accepts { overrides: [{ submissionId, rank, awardCategory?, notes? }] }
+export const overrideResultsBodyValidation = Joi.object({
+  overrides: Joi.array().items(
+    Joi.object({
+      submissionId: objectIdHex24.label('Submission ID').required(),
+      rank: Joi.number().integer().min(1).required(),
+      awardCategory: Joi.string().valid('First Prize', 'Second Prize', 'Third Prize', 'Participant', '').optional(),
+      notes: Joi.string().allow('').optional()
+    })
+  ).min(1).required()
+});
 
 // Pagination query validation
 export const listQueryValidation = Joi.object({

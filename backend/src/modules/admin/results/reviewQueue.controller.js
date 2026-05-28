@@ -3,8 +3,9 @@
   Handles HTTP request/response flow for the Admin Review Queue:
   - GET  /admin/review-queue           → list items
   - POST /admin/review-queue/:queueId/resolve  → resolve pending item
-  Also exposes the progress endpoint indirectly through the service.
- */
+  - GET  /admin/results/progress/:hackathonId  → progress metrics
+  - GET  /admin/results/all-scores/:hackathonId  → all judge scores
+  */
 import mongoose from 'mongoose';
 import ApiResponse from '../../../libs/apiResponse.js';
 import ApiError from '../../../libs/apiError.js';
@@ -77,6 +78,24 @@ class ReviewQueueController {
 
     return res.status(200).json(
       new ApiResponse(200, result, 'Progress metrics fetched successfully')
+    );
+  }
+
+  /**
+   * GET /admin/results/all-scores/:hackathonId
+   * Returns all judge scores with submission and judge details for a hackathon.
+   */
+  async getAllJudgeScores(req, res) {
+    const { hackathonId } = req.params;
+
+    if (!mongoose.isValidObjectId(hackathonId)) {
+      throw new ApiError(400, 'Invalid hackathonId format');
+    }
+
+    const result = await reviewQueueService.getAllJudgeScores(hackathonId);
+
+    return res.status(200).json(
+      new ApiResponse(200, result, 'All judge scores fetched successfully')
     );
   }
 }
