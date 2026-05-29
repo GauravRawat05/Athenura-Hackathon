@@ -126,6 +126,8 @@ export default function AppRoutes() {
       <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><UserManagement /></AdminLayout></ProtectedRoute>} />
       <Route path="/admin/hackathons/:id/judges" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><AssignJudges /></AdminLayout></ProtectedRoute>} />
       <Route path="/admin/hackathons/:id/winners" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><DeclareWinners /></AdminLayout></ProtectedRoute>} />
+      <Route path="/admin/hackathons/:id/review-queue" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><DeclareWinners /></AdminLayout></ProtectedRoute>} />
+      <Route path="/admin/reports" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><RevenueReports /></AdminLayout></ProtectedRoute>} />
       <Route path="/admin/universities" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><UniversityManagement /></AdminLayout></ProtectedRoute>} />
       <Route path="/admin/certificates" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><CertificateManagement /></AdminLayout></ProtectedRoute>} />
 

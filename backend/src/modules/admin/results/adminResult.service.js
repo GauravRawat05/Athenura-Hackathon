@@ -2,7 +2,7 @@
   adminResult.service.js
   Business logic for Admin Result management:
     Progress view, draft operations, publish, CRUD.
- */
+  */
 import mongoose from 'mongoose';
 import ApiError from '../../../libs/apiError.js';
 import reviewQueueService from './reviewQueue.service.js';
@@ -18,6 +18,14 @@ import {
   emitResultsPublished,
   emitProgressUpdate
 } from '../../../sockets/publisher/socket.publisher.js';
+
+// Helper to derive award category from rank
+const getAwardCategoryFromRank = (rank) => {
+  if (rank === 1) return 'First Prize';
+  if (rank === 2) return 'Second Prize';
+  if (rank === 3) return 'Third Prize';
+  return 'Participant';
+};
 
 class AdminResultService {
 
@@ -338,11 +346,11 @@ class AdminResultService {
   }
 
   // ─────────────────────────────────────────────────────────────────
-  // Override — bulk rank/award override for published results
+  // Override — bulk rank/award override for drafted results
   // ─────────────────────────────────────────────────────────────────
 
   /**
-   * Override ranks and awards for all published results of a hackathon.
+   * Override ranks and awards for all drafted results of a hackathon.
    *
    * Request body shape:
    *   { overrides: [{ submissionId: ObjectId, rank: number, awardCategory: string, notes?: string }] }
@@ -350,8 +358,8 @@ class AdminResultService {
    * Behaviour:
    *   1. Validates every submissionId and rank before touching the DB.
    *   2. Updates ResultDraft (isLocked=false) records with the new manual overrides.
-   *   3. Updates the published Result records with the new ranks, awards and winners.
-   *   4. Deduplicates submissionIds so the caller cannot accidentally win twice.
+   *   3. Deduplicates submissionIds so the caller cannot accidentally win twice.
+   *   4. Derives awardCategory from rank if not provided or empty.
    * All failures abort before any DB write to avoid partial overrides.
    */
   async overrideResult(hackathonId, { overrides = [] }) {
@@ -366,9 +374,6 @@ class AdminResultService {
       throw new ApiError(400, '"overrides" must be a non-empty array');
     }
 
-    // Valid award categories (keenly matches what generateDraft uses)
-    const VALID_CATEGORIES = ['First Prize', 'Second Prize', 'Third Prize', 'Participant'];
-
     for (let i = 0; i < overrides.length; i++) {
       const entry = overrides[i];
 
@@ -377,12 +382,6 @@ class AdminResultService {
       }
       if (typeof entry.rank !== 'number' || entry.rank < 1) {
         throw new ApiError(400, `Entry ${i}: rank must be a positive number`);
-      }
-      if (!VALID_CATEGORIES.includes(entry.awardCategory)) {
-        throw new ApiError(
-          400,
-          `Entry ${i}: awardCategory must be one of ${VALID_CATEGORIES.join(', ')}`
-        );
       }
     }
 
@@ -395,7 +394,16 @@ class AdminResultService {
         throw new ApiError(400, `Duplicate submissionId "${key}" in overrides — each submission can only appear once`);
       }
       seen.add(key);
-      cleanOverrides.push(entry);
+
+      // Normalize awardCategory: derive from rank if empty or not provided
+      const normalizedAwardCategory = (entry.awardCategory && entry.awardCategory.trim() !== '')
+        ? entry.awardCategory
+        : getAwardCategoryFromRank(entry.rank);
+
+      cleanOverrides.push({
+        ...entry,
+        awardCategory: normalizedAwardCategory
+      });
     }
 
     // ── 3. Verify all target drafts exist before writing ────────────
@@ -434,22 +442,7 @@ class AdminResultService {
     }));
     await ResultDraft.bulkWrite(draftWrites);
 
-    // ── 5. Apply overrides to published Result table ────────────────
-    const resultWrites = cleanOverrides.map(({ submissionId, rank, awardCategory }) => ({
-      updateOne: {
-        filter: { hackathonId: oHId, submissionId: new mongoose.Types.ObjectId(submissionId), isPublished: true },
-        update: {
-          rank,
-          isWinner: rank <= 3,
-          awardCategory,
-          award: rank <= 3 ? 'Winner' : 'Participant',
-          updatedAt: new Date()
-        }
-      }
-    }));
-    const resultBulkResult = await Result.bulkWrite(resultWrites);
-
-    // ── 6. Re-derive a clean top-3 from the updated rankings ─────────
+    // ── 5. Re-derive a clean top-3 from the updated rankings ─────────
     //    This prevents ties or gaps in positions caused by manual overrides.
     //    We skip over self-referencing self-loops — new rank must differ from any sibling.
     const allUpdatedDrafts = await ResultDraft.find({
@@ -507,47 +500,129 @@ class AdminResultService {
       await ResultDraft.bulkWrite(rankFixWrites);
     }
 
-    // ── 7. Return a summary ─────────────────────────────────────────
+    // ── 6. Return a summary ─────────────────────────────────────────
     return {
       hackathonId,
-      draftsUpdated: resultBulkResult.modifiedCount + cleanOverrides.length,
+      draftsUpdated: cleanOverrides.length,
       overridesApplied: cleanOverrides.map(({ submissionId }) => submissionId.toString()),
       totalOverrides: cleanOverrides.length,
       ranksRebalanced: rankFixWrites.length
     };
   }
 
-  // ─────────────────────────────────────────────────────────────────
-  // Hackathon rankings (live — not yet published)
-  // ─────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
+// Hackathon rankings (live — not yet published)
+// Returns drafted results with team/user details populated for admin UI
+// ─────────────────────────────────────────────────────────────────
 
-  async getHackathonResults(hackathonId, { page = 1, limit = 20 }) {
-    const hackathon = await Hackathon.findById(hackathonId);
-    if (!hackathon) throw new ApiError(404, 'Hackathon not found');
+async getHackathonResults(hackathonId, { page = 1, limit = 20 }) {
+  const hackathon = await Hackathon.findById(hackathonId);
+  if (!hackathon) throw new ApiError(404, 'Hackathon not found');
 
-    const { aggregateScoresForHackathon } = await import('../../results/aggregation.service.js');
-    const { computeRankings } = await import('../../results/ranking.service.js');
+  // Check if draft exists
+  const drafts = await ResultDraft.find({ hackathonId })
+    .populate('userId', 'fullName email collegeOrUniversity')
+    .populate('teamId', 'teamName')
+    .populate('submissionId', 'title description githubLink videoLink')
+    .sort({ rank: 1 })
+    .lean();
 
-    const aggregatedScores = await aggregateScoresForHackathon(hackathonId);
-    const { rankedResults, unresolvedTies } = computeRankings(aggregatedScores);
-
+  // If no drafts exist, return empty results but still indicate hackathon status
+  if (drafts.length === 0) {
     return {
       hackathonId,
+      hackathonTitle: hackathon.title,
+      hackathon: {
+        _id: hackathon._id,
+        title: hackathon.title
+      },
       resultsPublished: hackathon.resultsPublished || false,
-      unresolvedTies,
-      results: rankedResults,
+      unresolvedTies: false,
+      results: [],
       summary: {
-        totalSubmissions: rankedResults.length,
-        totalScored: rankedResults.filter(r => r.scoresCount > 0).length,
+        totalSubmissions: 0,
+        totalScored: 0,
       },
       pagination: {
         page,
         limit,
-        total: rankedResults.length,
-        pages: 1
+        total: 0,
+        pages: 0
       }
     };
   }
+
+  // Transform draft records to include team/user info for frontend consumption
+  const results = await Promise.all(
+    drafts.map(async (draft) => {
+      // Get participants (team members or solo participant)
+      let participantNames = [];
+      let teamName = '';
+
+      if (draft.participantSnapshot) {
+        // Use snapshot if available (captured at draft time)
+        participantNames = [draft.participantSnapshot.fullName].filter(Boolean);
+        teamName = draft.participantSnapshot.teamName || '';
+      } else if (draft.userId && typeof draft.userId === 'object') {
+        // Fallback to populated userId
+        participantNames = [draft.userId.fullName].filter(Boolean);
+        teamName = draft.teamId && typeof draft.teamId === 'object' ? draft.teamId.teamName || '' : '';
+      } else if (draft.teamId && typeof draft.teamId === 'object') {
+        // Team exists
+        teamName = draft.teamId.teamName || '';
+        // Fetch team members
+        const Team = (await import('../../teams/team.model.js')).default;
+        const team = await Team.findById(draft.teamId._id).select('members').lean();
+        if (team && Array.isArray(team.members)) {
+          participantNames = team.members.map(m => String(m));
+        }
+      }
+
+      return {
+        submissionId: draft.submissionId && typeof draft.submissionId === 'object' ? draft.submissionId._id : draft.submissionId,
+        rank: draft.rank,
+        score: draft.score,
+        awardCategory: draft.awardCategory,
+        award: draft.award,
+        isWinner: draft.isWinner,
+        isOverride: !!draft.manualRankOverride,
+        team: teamName,
+        participantNames,
+        members: participantNames,
+        projectTitle: draft.submissionId && typeof draft.submissionId === 'object' ? draft.submissionId.title : '',
+        description: draft.submissionId && typeof draft.submissionId === 'object' ? draft.submissionId.description : '',
+        githubLink: draft.submissionId && typeof draft.submissionId === 'object' ? draft.submissionId.githubLink : '',
+        videoLink: draft.submissionId && typeof draft.submissionId === 'object' ? draft.submissionId.videoLink : '',
+        notes: draft.notes || '',
+        scoresCount: draft.scoresCount || 0
+      };
+    })
+  );
+
+  return {
+    hackathonId,
+    hackathonTitle: hackathon.title,
+    hackathon: {
+      _id: hackathon._id,
+      title: hackathon.title
+    },
+    resultsPublished: hackathon.resultsPublished || false,
+    unresolvedTies: results.filter(r => r.rank <= 3).some((r, i, arr) => 
+      arr.findIndex(x => x.rank === r.rank && x.score === r.score) !== i
+    ),
+    results,
+    summary: {
+      totalSubmissions: results.length,
+      totalScored: results.filter(r => r.scoresCount > 0).length,
+    },
+    pagination: {
+      page,
+      limit,
+      total: results.length,
+      pages: 1
+    }
+  };
+}
 }
 
 const adminResultService = new AdminResultService();

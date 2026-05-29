@@ -2,7 +2,7 @@
   reviewQueue.service.js
   Business logic for the Admin Review Queue — progress, queue listing,
   draft generation, and queue item resolution.
- */
+  */
 import mongoose from 'mongoose';
 import ApiError from '../../../libs/apiError.js';
 import Score from '../../judging/score.model.js';
@@ -426,6 +426,77 @@ class ReviewQueueService {
   // Alias kept for backward compat
   async getProgressService(hackathonId) {
     return this.getProgress(hackathonId);
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // GET /admin/results/all-scores/:hackathonId
+  // Returns all judge scores with submission and judge details for a hackathon
+  // ─────────────────────────────────────────────────────────────────
+  async getAllJudgeScores(hackathonId) {
+    const hackathon = await Hackathon.findById(hackathonId);
+    if (!hackathon) throw new ApiError(404, 'Hackathon not found');
+
+    // Fetch all scores with full details
+    const scores = await Score.find({ hackathonId: new mongoose.Types.ObjectId(hackathonId) })
+      .populate('judgeId', 'fullName email')
+      .populate({
+        path: 'submissionId',
+        select: 'title teamId userId',
+        populate: [
+          { path: 'teamId', select: 'teamName members' },
+          { path: 'userId', select: 'fullName email' }
+        ]
+      })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Group scores by submission with detailed judge information
+    const submissionMap = new Map();
+    scores.forEach(score => {
+      const submissionId = score.submissionId?._id?.toString();
+      if (!submissionId) return;
+
+      if (!submissionMap.has(submissionId)) {
+        const submission = score.submissionId;
+        submissionMap.set(submissionId, {
+          submissionId,
+          title: submission?.title || 'Untitled',
+          team: submission?.teamId ? {
+            name: submission.teamId.teamName || 'Unknown Team',
+            members: submission.teamId.members || []
+          } : null,
+          soloParticipant: submission?.userId ? {
+            id: submission.userId._id?.toString(),
+            name: submission.userId.fullName || 'Unknown',
+            email: submission.userId.email || ''
+          } : null,
+          scores: []
+        });
+      }
+
+      const judgeInfo = submissionMap.get(submissionId);
+
+      // Add judge score details
+      const scoreDetail = {
+        judgeId: score.judgeId?._id?.toString() || '',
+        judgeName: score.judgeId?.fullName || 'Unknown Judge',
+        judgeEmail: score.judgeId?.email || '',
+        totalScore: score.totalScore || 0,
+        criterionScores: score.criterionScores || [],
+        feedback: score.feedback || '',
+        status: score.status || 'submitted',
+        submittedAt: score.createdAt
+      };
+
+      judgeInfo.scores.push(scoreDetail);
+    });
+
+    return {
+      hackathonId,
+      hackathonTitle: hackathon.title,
+      totalScores: scores.length,
+      submissions: Array.from(submissionMap.values())
+    };
   }
 }
 
