@@ -750,10 +750,10 @@ function PublishControls({
 }) {
   const list = Array.isArray(resultsData?.results) ? resultsData.results : Array.isArray(resultsData) ? resultsData : [];
   const hasResults = list.length > 0;
-  const draftGenerated = Boolean(progress?.draftGenerated ?? progress?.resultsGenerated ?? progress?.isDraftGenerated);
+  const draftGenerated = Boolean(progress?.draftGenerated ?? progress?.resultsGenerated ?? progress?.isDraftGenerated ?? hasResults);
   const progressComplete = Boolean(progress?.completionPercent ?? progress?.completion?.isComplete ?? progress?.isComplete ?? progress?.scoring?.isComplete);
 
-  const canPublish = !published && hasResults && (draftGenerated || progressComplete);
+  const canPublish = !published && (hasResults || draftGenerated || progressComplete);
 
   const missing = [];
   if (!hasResults) missing.push("draft results");
@@ -1482,30 +1482,36 @@ const loadData = async () => {
 
     // Set progress data if available
     if (pRes) {
-      setProgress(pRes?.data ?? pRes);
+      const pBody = pRes?.data?.data || pRes?.data || pRes;
+      setProgress(pBody);
       const draftPublishedFlag = Boolean(
-        (pRes?.data ?? pRes)?.resultsPublished ?? (pRes?.data ?? pRes)?.published ?? (pRes?.data ?? pRes)?.isPublished
+        pBody?.resultsPublished ?? pBody?.published ?? pBody?.isPublished
       );
       setPublished(draftPublishedFlag);
     }
 
     // Set results data if available
     if (rRes) {
-      setResultsData(rRes?.data ?? rRes);
+      setResultsData(rRes?.data?.data || rRes?.data || rRes);
     }
 
     // Set queue items - extract array safely from response structure
-    // Backend returns: { statusCode, data: { data: [...], pagination: {...} }, message: "..." }
+    // Backend returns: { statusCode: 200, data: { data: [...], pagination: {...} }, message: "..." }
     if (queueRes) {
-      const queueData = queueRes?.data?.data;
-      setQueueItems(Array.isArray(queueData) ? queueData : []);
+      const qBody = queueRes?.data?.data;
+      // If qBody has a .data property that is an array, use that (paginated response)
+      // Otherwise if qBody itself is an array, use it
+      const items = Array.isArray(qBody?.data) ? qBody.data : (Array.isArray(qBody) ? qBody : []);
+      setQueueItems(items);
     } else {
       // If queue fetch failed, still set empty array to prevent loading state
       setQueueItems([]);
     }
 
     // Set hackathon data
-    setHackathon((rRes?.data ?? rRes)?.hackathon ?? (pRes?.data ?? pRes)?.hackathon ?? null);
+    const rBody = rRes?.data?.data || rRes?.data || rRes;
+    const pBodyAlt = pRes?.data?.data || pRes?.data || pRes;
+    setHackathon(rBody?.hackathon ?? pBodyAlt?.hackathon ?? null);
 
     // Clear local override buffer when reloading authoritative backend state
     setDraftOverrides({});
@@ -1577,8 +1583,9 @@ const loadData = async () => {
     try {
       const res = await hackathonService.adminGetReviewQueue(selectedHackathonId, "pending");
       // Ensure queueItems is always an array - handle cases where API returns object instead of array
-      const queueData = res?.data?.data;
-      setQueueItems(Array.isArray(queueData) ? queueData : []);
+      const qBody = res?.data?.data;
+      const items = Array.isArray(qBody?.data) ? qBody.data : (Array.isArray(qBody) ? qBody : []);
+      setQueueItems(items);
     } catch (e) {
       showToast("Failed to refresh queue", "error");
     }
@@ -1947,43 +1954,6 @@ const loadData = async () => {
 
                   {activeTab === 1 && (
                     <>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>
-                        <div style={{ display: "flex", flexDirection: "column" }}>
-                          <div style={{ fontWeight: 800, color: T.navy, fontSize: 14 }}>Draft generation</div>
-                          <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>Compute rankings and load draft results</div>
-                        </div>
-                        <button
-                          onClick={() => {
-                            setModal({ type: "confirmGenerate" });
-                          }}
-                          disabled={generatingDraft || published}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: 8,
-                            padding: "10px 14px",
-                            borderRadius: 12,
-                            background: published ? "#dbeafe" : generatingDraft ? "#dbeafe" : `linear-gradient(135deg,${T.accent},${T.accentDk})`,
-                            color: published ? "#1e40af" : "#fff",
-                            fontSize: 13,
-                            fontWeight: 700,
-                            boxShadow: published || generatingDraft ? "none" : "0 4px 14px rgba(59,130,246,.3)",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {generatingDraft ? (
-                            <>
-                              <Loader2 size={15} style={{ animation: "spin 1s linear infinite" }} /> Generating...
-                            </>
-                          ) : (
-                            <>
-                              <Trophy size={15} /> Generate Draft
-                            </>
-                          )}
-                        </button>
-                      </div>
-
                       <WinnersTable
                         resultsData={resultsData}
                         loading={loading}

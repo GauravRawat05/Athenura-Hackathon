@@ -24,6 +24,7 @@ import MyResults from '../pages/participant/MyResults'
 import ExploreHackathons from '../pages/participant/ExploreHackathons'
 import TeamsPage from '../pages/dashboard/TeamsPage'
 import Profile from '../pages/participant/Profile'
+// import RevenueReports from '../pages/admin/RevenueReports'
 
 import AdminDashboard from '../pages/admin/AdminDashboard'
 import CreateHackathon from '../pages/admin/CreateHackathon'
@@ -127,7 +128,7 @@ export default function AppRoutes() {
       <Route path="/admin/hackathons/:id/judges" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><AssignJudges /></AdminLayout></ProtectedRoute>} />
       <Route path="/admin/hackathons/:id/winners" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><DeclareWinners /></AdminLayout></ProtectedRoute>} />
       <Route path="/admin/hackathons/:id/review-queue" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><DeclareWinners /></AdminLayout></ProtectedRoute>} />
-      <Route path="/admin/reports" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><RevenueReports /></AdminLayout></ProtectedRoute>} />
+      {/* <Route path="/admin/reports" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><RevenueReports /></AdminLayout></ProtectedRoute>} /> */}
       <Route path="/admin/universities" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><UniversityManagement /></AdminLayout></ProtectedRoute>} />
       <Route path="/admin/certificates" element={<ProtectedRoute allowedRoles={['admin']}><AdminLayout><CertificateManagement /></AdminLayout></ProtectedRoute>} />
 

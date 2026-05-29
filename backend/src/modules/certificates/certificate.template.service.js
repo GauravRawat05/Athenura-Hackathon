@@ -5,22 +5,11 @@
  */
 import { CERTIFICATE_TYPES } from '../../utils/constants/certificateTypes.js';
 import { generateQrDataUrl } from './qr.service.js';
+import sharp from 'sharp';
+import fs from 'fs/promises';
 
 /**
  * Normalises and enriches the raw fields needed to render a certificate.
- * This is the single place where the shape of the certificate template payload
- * is defined — every caller (service layer, admin routes, jobs) goes through here.
- *
- * @param {object} params
- * @param {string} params.userName         — full name of the certificate recipient
- * @param {string} params.hackathonTitle   — title of the hackathon event
- * @param {string} params.teamName         — team name (may be null for solo participants)
- * @param {string} params.submissionTitle  — project / submission title
- * @param {string} [params.certificateType=CERTIFICATE_TYPES.PARTICIPATION]
- * @param {string} [params.awardCategory]  — human-readable award name for winners/finalists
- * @param {number} [params.rank=null]      — numeric rank (1-based), null for non-rank certs
- * @param {import('./certificate.constants.js').GENERATION_STATUS} [params.status]
- * @returns {object} fully-formed template data object
  */
 export function buildCertificatePayload({
   userName,
@@ -35,19 +24,16 @@ export function buildCertificatePayload({
   if (!userName) throw new Error('userName is required to build a certificate payload');
   if (!hackathonTitle) throw new Error('hackathonTitle is required to build a certificate payload');
 
-  // Normalise rank: must be a positive integer or null
   const normalisedRank = rank !== null && rank !== undefined
     ? Math.max(1, Math.floor(Number(rank)))
     : null;
 
-  // Build a human-readable "presented to" description based on the certificate type
   const description = buildDescription({
     certificateType,
     teamName,
     submissionTitle,
   });
 
-  // Build the award / rank badge text
   const badgeText = buildBadgeText({ certificateType, awardCategory, rank: normalisedRank });
 
   return {
@@ -63,6 +49,103 @@ export function buildCertificatePayload({
     status,
     issuedAt: new Date().toISOString(),
   };
+}
+
+/**
+ * Generates the certificate PNG image using sharp and SVG overlay.
+ */
+export async function generateCertificateImage({
+  participantName,
+  hackathonName,
+  certificateCode,
+  templatePath,
+  outputPath,
+}) {
+  const safeName = participantName
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;");
+
+  const safeHackathon = hackathonName
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;");
+
+  const safeCode = certificateCode
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;");
+
+  const svg = `
+  <svg width="1440" height="1020">
+      <!-- participant name -->
+      <text
+          x="720"
+          y="455"
+          text-anchor="middle"
+          font-size="${participantName.length > 20 ? 60 : 78}"
+          font-family="Georgia, serif"
+          font-weight="bold"
+          fill="white">
+          ${safeName}
+      </text>
+
+      <!-- hackathon name -->
+      <text
+          x="720"
+          y="620"
+          text-anchor="middle"
+          font-size="45"
+          font-family="Georgia, serif"
+          fill="#222">
+          ${safeHackathon}
+      </text>
+
+      <!-- certificate code -->
+      <text
+          x="1150"
+          y="920"
+          font-size="22"
+          font-family="Arial, sans-serif"
+          fill="#555">
+          ${safeCode}
+      </text>
+  </svg>
+  `;
+
+  await sharp(templatePath)
+    .composite([
+      {
+        input: Buffer.from(svg),
+        top: 0,
+        left: 0,
+      },
+    ])
+    .png()
+    .toFile(outputPath);
+
+  return outputPath;
+}
+
+/**
+ * Generates a random suffix for certificate codes.
+ */
+function randomSuffix(length = 4) {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return result;
+}
+
+/**
+ * Generates a unique certificate code in the format: CERT-YEAR-SEQUENCE-RANDOM
+ */
+export function generateCertificateCode(sequenceNumber) {
+  const year = new Date().getFullYear();
+  const padded = String(sequenceNumber).padStart(6, "0");
+  return `CERT-${year}-${padded}-${randomSuffix()}`;
 }
 
 /**
