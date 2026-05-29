@@ -1441,40 +1441,77 @@ export default function DeclareWinners() {
     return [{ value: "", label: "No award" }, ...arr.map((a) => ({ value: a, label: a }))];
   }, [resultsData]);
 
-  const loadData = async () => {
+const loadData = async () => {
     if (!isValidHackathonId) return;
     setLoading(true);
     setError("");
+    
+    // Fetch each request independently so one failure doesn't block others
+    // This ensures queue data shows even if progress/results endpoints have issues
+    let pRes, rRes, queueRes;
+    
     try {
-      const [pRes, rRes, queueRes] = await Promise.all([
-        hackathonService.adminGetResultProgress(selectedHackathonId),
-        hackathonService.adminGetHackathonResults(selectedHackathonId),
-        hackathonService.adminGetReviewQueue(selectedHackathonId, "pending"),
-      ]);
+      // Fetch progress data independently
+      pRes = await hackathonService.adminGetResultProgress(selectedHackathonId).catch(err => {
+        console.error("Progress fetch error:", err);
+        return null;
+      });
+    } catch (e) {
+      pRes = null;
+    }
 
+    try {
+      // Fetch results data independently - now properly passing params as second argument
+      rRes = await hackathonService.adminGetHackathonResults(selectedHackathonId, {}).catch(err => {
+        console.error("Results fetch error:", err);
+        return null;
+      });
+    } catch (e) {
+      rRes = null;
+    }
 
-setProgress(pRes?.data ?? pRes);
-       setResultsData(rRes?.data ?? rRes);
-       // Ensure queueItems is always an array - handle cases where API returns object instead of array
-       const queueData = queueRes?.data?.data;
-       setQueueItems(Array.isArray(queueData) ? queueData : []);
+    try {
+      // Fetch queue data independently - this is the critical data we need
+      queueRes = await hackathonService.adminGetReviewQueue(selectedHackathonId, "pending").catch(err => {
+        console.error("Queue fetch error:", err);
+        return null;
+      });
+    } catch (e) {
+      queueRes = null;
+    }
 
+    // Set progress data if available
+    if (pRes) {
+      setProgress(pRes?.data ?? pRes);
       const draftPublishedFlag = Boolean(
         (pRes?.data ?? pRes)?.resultsPublished ?? (pRes?.data ?? pRes)?.published ?? (pRes?.data ?? pRes)?.isPublished
       );
       setPublished(draftPublishedFlag);
-
-      setHackathon((rRes?.data ?? rRes)?.hackathon ?? (pRes?.data ?? pRes)?.hackathon ?? null);
-
-      // Clear local override buffer when reloading authoritative backend state.
-      setDraftOverrides({});
-    } catch (e) {
-      const msg = e?.response?.data?.message || e?.message || "Failed to load draft/results";
-      setError(msg);
-      showToast(msg, "error");
-    } finally {
-      setLoading(false);
     }
+
+    // Set results data if available
+    if (rRes) {
+      setResultsData(rRes?.data ?? rRes);
+    }
+
+    // Set queue items - extract array safely from response structure
+    // Backend returns: { statusCode, data: { data: [...], pagination: {...} }, message: "..." }
+    if (queueRes) {
+      const queueData = queueRes?.data?.data;
+      setQueueItems(Array.isArray(queueData) ? queueData : []);
+    } else {
+      // If queue fetch failed, still set empty array to prevent loading state
+      setQueueItems([]);
+    }
+
+    // Set hackathon data
+    setHackathon((rRes?.data ?? rRes)?.hackathon ?? (pRes?.data ?? pRes)?.hackathon ?? null);
+
+    // Clear local override buffer when reloading authoritative backend state
+    setDraftOverrides({});
+    
+    // Always set loading to false after all fetches complete
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -1487,8 +1524,8 @@ setProgress(pRes?.data ?? pRes);
   }, [selectedHackathonId]);
 
 
-  // Handle resolution of queue item
-  const handleResolveQueueItem = async (queueId, status) => {
+// Handle resolution of queue item
+   const handleResolveQueueItem = async (queueId, status) => {
     setResolvingId(queueId);
     try {
       const response = await hackathonService.adminResolveQueueItem(queueId, {
@@ -1507,14 +1544,19 @@ setProgress(pRes?.data ?? pRes);
           ...prev,
           reviewQueue: {
             ...prev.reviewQueue,
-            pending: (prev.reviewQueue?.pending || 0) - 1,
+            pending: Math.max(0, (prev.reviewQueue?.pending || 0) - 1),
             [status === "approved" ? "approved" : "rejected"]:
               (prev.reviewQueue?.[status === "approved" ? "approved" : "rejected"] || 0) + 1,
           },
         }));
       }
     } catch (e) {
-      showToast(e?.response?.data?.message || e?.message || `Failed to ${status} score`, "error");
+      // Show specific error message from backend if available
+      const errorMsg = e?.response?.data?.message || e?.message || `Failed to ${status} score`;
+      showToast(errorMsg, "error");
+      
+      // Note: We do NOT revert the optimistic update here because the state wasn't updated yet
+      // The UI will refresh on next load or the admin can retry
     } finally {
       setResolvingId(null);
       // Clear comment for this item

@@ -31,7 +31,9 @@ export const hackathonService = {
   adminDeleteHackathon: (id) => api.delete(`/admin/hackathons/${id}`),
   adminListRegistrations: (hackathonId, params) => api.get(`/admin/hackathons/${hackathonId}/registrations`, { params }),
   adminGetResultProgress: (hackathonId) => api.get(`/admin/results/progress/${hackathonId}`),
-  adminGetHackathonResults: (hackathonId, params) => api.get(`/admin/results/hackathon/${hackathonId}`, { params }),
+  // GET /admin/results/hackathon/:hackathonId - Admin get results for a hackathon
+// Accepts optional params for pagination/filters; defaults to empty object if not provided
+adminGetHackathonResults: (hackathonId, params = {}) => api.get(`/admin/results/hackathon/${hackathonId}`, { params }),
 
   // POST /admin/results/draft/:hackathonId - Generate draft from approved scores
   adminComputeResults: (hackathonId, payload) => api.post(
